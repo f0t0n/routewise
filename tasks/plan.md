@@ -1,38 +1,36 @@
-# Implementation Plan: release routewise 0.1.0
+# Implementation Plan: copy-paste install in the README (R4)
 
-Spec: [SPEC.md](../SPEC.md), "Development workflow", Ship row (amended 2026-11-14: the agent tags locally and drafts the notes when asked). Tasks: [todo.md](todo.md). Earlier plans: [done/](done/).
+Spec: [SPEC.md](../SPEC.md), R4, success criterion 9, Ship row (approved 2026-11-14, after the 0.1.0 release). Tasks: [todo.md](todo.md). Earlier plans: [done/](done/).
 
 ## Overview
 
-routewise 0.1.0 has been "unreleased" in `CHANGELOG.md` since the first commit; everything in it is on `main` and pushed. This release dates the changelog section, drafts the GitHub release notes, creates the annotated tag `v0.1.0` locally, and checks that the tag's archive is exactly what users should get. The maintainer pushes the tag and publishes the release from the host.
+The 0.1.0 release notes have a four-line install; the README only describes it in prose. Add the same block to the top of the README's "Install into a project", with the version in one `v=` variable, and a test that keeps that version equal to `pyproject.toml`. Docs only; it reaches users in the next release's archive (the 0.1.0 notes already carry the commands).
 
 ## Architecture Decisions
 
-- **Tag `v0.1.0`, annotated** (maintainer's choice): the usual name for GitHub releases; an annotated tag records who tagged and when. Message: `routewise 0.1.0`. No signing (`commit.gpgsign = false` in the sandbox; the maintainer can re-tag signed on the host if wanted).
-- **Version stays `0.1.0`** in `pyproject.toml`; only `CHANGELOG.md` changes from `(unreleased)` to `(2026-11-14)`.
-- **Release notes in `tasks/release-0.1.0.md`**, committed with the dated changelog in one commit, so the tag points at a tree that holds both. `tasks/` is `export-ignore`, so the notes never ship in the archive. They are written for users: what routewise does, how to install from the archive, what is in 0.1.0 (condensed from the changelog), requirements, and the link to the rules spec.
-- **The tag goes on that commit**, which must pass `make check` (the hook) before it is tagged.
+- **The test reads the README** (`tests/test_release.py`, next to the archive test): find the `v=<version>` line inside the shell block under "## Install into a project", compare with `version` from `pyproject.toml` (read with `tomllib`). No templating, no generated README. The test skips nothing: both files are in every checkout.
+- **Block content** follows the release notes, with `$v`: `cd your-project`, `v=0.1.0`, `curl -L "https://github.com/f0t0n/routewise/archive/refs/tags/v$v.tar.gz" | tar -xz`, `mv "routewise-$v" routewise`, `routewise/install`. The existing step 1 prose stays as the explanation (archive contents, submodule caveat), and the steps after it are unchanged.
+- **No new tag.** The change rides with the next release; the maintainer pushes `main`.
 
 ## Task List
 
-- [x] Task 1: Date the changelog and draft the release notes
-- [x] Task 2: Create the annotated tag `v0.1.0`
-- [x] Task 3: Verify the archive of `v0.1.0`
+- [ ] Task 1: README install block and the version test
 
 ### Checkpoint
-- [x] `make check` green; tag on the release commit; archive verified
+- [ ] `make check` green
 
-### Review, Ship
-- [x] Review: `reviewer` reads the notes against `CHANGELOG.md`, `README.md` and the code (claims true, install steps work)
-- [x] Ship: maintainer runs `git push origin main v0.1.0` and `gh release create v0.1.0 --title "routewise 0.1.0" --notes-file tasks/release-0.1.0.md` from the host, then checks the GitHub "Source code" archive
+### Verify, Review, Ship
+- [ ] Verify: the block, copied from the README and run literally in an empty git repo, installs routewise 0.1.0 from GitHub (9 files, `--check` exit 0)
+- [ ] Review: `reviewer` on the README diff and the test
+- [ ] Ship: maintainer pushes `main` from the host
 
 ## Risks and Mitigations
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| A review fix after tagging moves the release commit | Med | Review runs before Ship; if a fix is needed, delete the local tag (`git tag -d v0.1.0`, never pushed yet) and re-tag the new commit |
-| Notes promise something the code does not do | Med | `reviewer` checks every claim; install steps are the ones Task 3 runs |
-| GitHub's archive differs from `git archive` | Low | Both honour `export-ignore`; the maintainer checks the downloaded archive after publishing |
+| The test finds the wrong `v=` line, or none | Med | It requires exactly one `v=` line inside the first shell block of the install section, and fails with a clear message otherwise |
+| `curl \| tar` differs between macOS and Linux | Low | Both ship bsdtar or GNU tar with `-xz`; Verify runs it on Linux, and the maintainer already unpacked the archive on macOS |
+| The block is run inside an existing install (`routewise/` exists) | Low | `mv` then fails without overwriting; updating is a separate README section ("Updating") |
 
 ## Open Questions
 
