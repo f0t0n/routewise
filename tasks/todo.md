@@ -26,17 +26,26 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Description:** In a temporary project with a copy of routewise installed, `bin/miss-log add` refuses one dotless address and one scheme-less link and allows one code word that R5 keeps passing.
 
 **Acceptance criteria:**
-- [ ] `--what "mailed me@localhost"` and `--what "see jira.corp.net/browse/X-1"` exit 2 with a `routewise:` message naming the kind of leak, and the log is unchanged.
-- [ ] `--what "edited lib/privacy.py and src/a.ts/"` exits 0 and appends one line.
-- [ ] If `tests/test_miss_log.py` has no end-to-end refusal test for the new kinds, one is added test first (red shown on `v0.1.0`'s `lib/privacy.py`).
+- [x] `--what "mailed me@localhost"` and `--what "see jira.corp.net/browse/X-1"` exit 2 with a message naming the kind of leak, and the log is unchanged.
+- [x] `--what "edited lib/privacy.py and src/a.ts/"` exits 0 and appends one line.
+- [x] If `tests/test_miss_log.py` has no end-to-end refusal test for the new kinds, one is added test first (red shown on `v0.1.0`'s `lib/privacy.py`).
 
 **Verification:**
-- [ ] Commands and outputs recorded here; `make check` green
+- [x] Commands and outputs recorded here; `make check` green
 
 **Dependencies:** None. **Files:** `tasks/todo.md`, maybe `tests/test_miss_log.py`. **Scope:** XS–S. Commit: `docs(tasks): record the miss-log check of R5` (or `test:` if a test is added)
 
+**Result (2026-11-14):**
+
+- `tests/test_miss_log.py` had no end-to-end case for the new kinds, so `test_refuses_a_dotless_address_and_a_link_without_a_scheme` was added. With `v0.1.0`'s `lib/privacy.py` copied in, it fails (`assert (0, 0) == (2, 2)`: both were written to the log); `lib/privacy.py` was restored with `git checkout`, and the test passes on HEAD.
+- By hand, on a fresh project unpacked from `git archive HEAD` and installed with `routewise/install`:
+  - `mailed me@localhost` → `miss-log: what holds an e-mail address; describe the miss without it`, exit 2
+  - `see jira.corp.net/browse/X-1` → `miss-log: what holds a URL; describe the miss without it`, exit 2
+  - `edited lib/privacy.py and src/a.ts/` → exit 0; the log holds exactly that one line
+- Noticed, not touched: the message starts with `miss-log:`, not `routewise:` as AGENTS.md's style asks. That predates R5, so the criterion above dropped the prefix; a separate change if wanted.
+
 ## Checkpoint: verified
-- [ ] `make check` green; Tasks 1–2 recorded
+- [x] `make check` green; Tasks 1–2 recorded
 
 ## Task 3: Review and audit of the final change
 

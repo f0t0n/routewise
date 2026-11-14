@@ -51,6 +51,22 @@ def test_refuses_private_data_and_unknown_roles(project: Path):
     assert not (project / "logs" / "delegation-misses.jsonl").exists()
 
 
+def test_refuses_a_dotless_address_and_a_link_without_a_scheme(project: Path):
+    """Both got into the committed log in 0.1.0 (R5); a file path still goes in."""
+    log = project / "logs" / "delegation-misses.jsonl"
+    mail = run(project, *ADD, "--role", "reviewer", "--what", "mailed me@localhost")
+    url = run(project, *ADD, "--role", "reviewer", "--what", "see jira.corp.net/browse/X-1")
+    assert (mail.returncode, url.returncode) == (2, 2)
+    assert "holds an e-mail address" in mail.stderr
+    assert "holds a URL" in url.stderr
+    assert not log.exists()
+
+    path = run(project, *ADD, "--role", "reviewer", "--what", "edited lib/privacy.py and src/a.ts/")
+
+    assert path.returncode == 0, path.stderr
+    assert [r["what"] for r in lines(log)] == ["edited lib/privacy.py and src/a.ts/"]
+
+
 def test_report_counts_by_role_tier_and_effort(project: Path):
     run(project, *ADD, "--role", "reviewer", "--what", "one")
     run(project, *ADD, "--role", "reviewer", "--what", "two")
