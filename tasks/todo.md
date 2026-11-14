@@ -7,13 +7,13 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Description:** Change `## 0.1.0 (unreleased)` to `## 0.1.0 (2026-11-14)` in `CHANGELOG.md` and write `tasks/release-0.1.0.md`, the GitHub release body, from the changelog and README.
 
 **Acceptance criteria:**
-- [ ] `CHANGELOG.md` has `## 0.1.0 (2026-11-14)` and no `unreleased`.
-- [ ] The notes say what routewise does, how to install from the release archive (unpack as `routewise/`, run `routewise/install`), the requirements (Python 3.11+, bash; Claude Code 2.1.277+ for native `AGENTS.md`), what is in 0.1.0 (harnesses, five roles, `AGENTS.md` + `claude_md`, `--check`/`--uninstall`, miss log, safety rules), and link the rules spec and README.
-- [ ] Every claim in the notes matches the changelog and the code.
+- [x] `CHANGELOG.md` has `## 0.1.0 (2026-11-14)` and no `unreleased`.
+- [x] The notes say what routewise does, how to install from the release archive (unpack as `routewise/`, run `routewise/install`), the requirements (Python 3.11+, bash; Claude Code 2.1.277+ for native `AGENTS.md`), what is in 0.1.0 (harnesses, five roles, `AGENTS.md` + `claude_md`, `--check`/`--uninstall`, miss log, safety rules), and link the rules spec and README.
+- [x] Every claim in the notes matches the changelog and the code.
 
 **Verification:**
-- [ ] `make check` green (hook)
-- [ ] `git show --stat HEAD` lists `CHANGELOG.md`, `tasks/release-0.1.0.md` (and the ticked task files)
+- [x] `make check` green (hook)
+- [x] `git show --stat HEAD` lists `CHANGELOG.md`, `tasks/release-0.1.0.md` (and the ticked task files)
 
 **Dependencies:** the spec change and this plan committed first
 **Files:** `CHANGELOG.md`, `tasks/release-0.1.0.md`, `tasks/todo.md`, `tasks/plan.md`

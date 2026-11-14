@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0 (2026-11-14)
 
 - First release, extracted from a personal assistants repo: spec version 2 (default parallel cap 5), five read-only roles, `install` (with `--check` and `--uninstall`), `bin/miss-log`, templates for the binding and the delegation block, Claude Code and Antigravity CLI support.
 - Hardened before the first release (review and audit, 2026-11-14): broken delegation markers stop the run instead of losing text; CRLF and blank lines are kept; every write stays inside the project (no absolute or `..` paths, no symlinks out); a failed run writes nothing; settings are type-checked and a model name cannot add frontmatter; roles allow only known keys and read-only tools; a renamed copy of a generated agent is never deleted; dropped harnesses are cleaned up; a symlinked `routewise/` installs into the project that holds it; the miss-log filter also refuses tokens, keys, hosts, IP addresses, ticket IDs, UUIDs and home paths.
