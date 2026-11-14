@@ -54,8 +54,10 @@ Results 2026-11-14: tag `v0.1.0` is annotated (`git cat-file -t` → `tag`), tag
 - [x] `make check` green; `v0.1.0` on the release commit; archive verified
 
 ## Review
-- [ ] `reviewer` brief (role body, sonnet, medium): the notes against `CHANGELOG.md`, `README.md` and the code
-- [ ] Findings fixed (re-tag if the release commit moves) or answered
+- [x] `reviewer` brief (role body, sonnet, medium): the notes against `CHANGELOG.md`, `README.md` and the code
+- [x] Findings fixed (re-tag if the release commit moves) or answered
+
+Reviewed 2026-11-14 (`reviewer`, sonnet): four Required and three Optional findings, all fixed in `a1a4678`: "read-only" corrected to "no write or edit tools" with the `Bash` caveat (notes, README, CHANGELOG, SPEC S6); Explore on Haiku in 11 of 12 entries; the miss-log categories in CHANGELOG match `lib/privacy.py`; the README install table row indented; `--uninstall` says what it keeps; the `CLAUDE.md` caveat and the source of the version floors; CHANGELOG in the present tense. The fourth Optional (publish only after pushing the tag) was already the Ship order. The local tag was deleted (it was on `8dc5d4d`, never pushed) and re-created on `a1a4678`; its archive passed the Task 3 checks again.
 
 ## Ship
 - [ ] Maintainer, from the host: `git push origin main v0.1.0`

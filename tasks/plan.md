@@ -23,7 +23,7 @@ routewise 0.1.0 has been "unreleased" in `CHANGELOG.md` since the first commit; 
 - [x] `make check` green; tag on the release commit; archive verified
 
 ### Review, Ship
-- [ ] Review: `reviewer` reads the notes against `CHANGELOG.md`, `README.md` and the code (claims true, install steps work)
+- [x] Review: `reviewer` reads the notes against `CHANGELOG.md`, `README.md` and the code (claims true, install steps work)
 - [ ] Ship: maintainer runs `git push origin main v0.1.0` and `gh release create v0.1.0 --title "routewise 0.1.0" --notes-file tasks/release-0.1.0.md` from the host, then checks the GitHub "Source code" archive
 
 ## Risks and Mitigations
