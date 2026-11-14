@@ -82,9 +82,11 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green be
 **Description:** CHANGELOG `## Unreleased` holds one line per R7 item (from Tasks 1–5) and names any new refusal of Task 1; README Safety bullet still true; `tasks/release-0.1.2.md` drafted for users, with the update block from the README.
 
 **Acceptance criteria:**
-- [ ] Every example in the CHANGELOG and the notes probed against `finding()`; every behaviour claim in the notes is in the CHANGELOG; R5's "for 0.1.2" list in SPEC.md marked as done by R7 where it is.
+- [x] Every example in the CHANGELOG and the notes probed against `finding()`; every behaviour claim in the notes is in the CHANGELOG; R5's "for 0.1.2" list in SPEC.md marked as done by R7 where it is.
 
 **Verification:** `make check` green. **Dependencies:** checkpoint. **Files:** `CHANGELOG.md`, `README.md`, `SPEC.md` (the R5 list only), `tasks/release-0.1.2.md`, `tasks/todo.md`. **Scope:** XS. Commit: `docs: describe 0.1.2 and draft its release notes`
+
+**Result (2026-11-14):** CHANGELOG `## Unreleased` has one line per R7 item (written in Tasks 1–5). README Safety bullet: URL-encoded links and leaks next to text in another script added. `tasks/release-0.1.2.md` drafted; 21 examples probed against `finding()`, none wrong; a project installed from `daa469d` (0.1.1) and updated to HEAD prints `routewise: nothing to change`. SPEC.md R5's "for 0.1.2" list marked done by R7, with two notes: `foo.@bar` was already refused in 0.1.1, and **`see example。中国/x` is not covered by R7** (a `。` next to CJK ends a sentence by R5's rule); it stays with the `。` trade-offs, to be raised with the maintainer at the review checkpoint. An automated security check on `bfee316` raised the `wiki.corp.io#Раздел` kept gap (proposing to exclude only CJK after `?`/`#`, which would refuse `Почему foo.bar?Потому`); also for the checkpoint.
 
 ## Task 7: Release bump to 0.1.2
 

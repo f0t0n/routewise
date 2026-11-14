@@ -23,7 +23,7 @@ Spec: [SPEC.md](../SPEC.md), R7, success criterion 12 (approved 2026-11-14), wit
 - [x] Task 4: a JWT written with `。`
 - [x] Task 5: link ends `$`, `!/`, `:~:`, ASCII after `?` and `#`
 - [x] Checkpoint: verified (make check, differential check against 0.1.1)
-- [ ] Task 6: Docs and release notes for 0.1.2
+- [x] Task 6: Docs and release notes for 0.1.2
 - [ ] Task 7: Release bump to 0.1.2
 - [ ] Task 8: Review, one round under the stopping rule
 - [ ] Checkpoint: reviewed
