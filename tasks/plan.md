@@ -20,7 +20,7 @@ The 0.1.0 release notes have a four-line install; the README only describes it i
 - [x] `make check` green
 
 ### Verify, Review, Ship
-- [ ] Verify: the block, copied from the README and run literally in an empty git repo, installs routewise 0.1.0 from GitHub (9 files, `--check` exit 0)
+- [x] Verify: the block, copied from the README and run literally in an empty git repo, installs routewise 0.1.0 from GitHub (9 files, `--check` exit 0)
 - [ ] Review: `reviewer` on the README diff and the test
 - [ ] Ship: maintainer pushes `main` from the host
 

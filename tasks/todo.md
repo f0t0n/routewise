@@ -25,7 +25,9 @@ Note: the block starts at `v=` with "From the project root:" above it, instead o
 - [x] `make check` green
 
 ## Verify
-- [ ] The block copied out of `README.md` and run as a script in an empty git repo installs routewise 0.1.0 from GitHub: 9 files, a second run changes nothing, `--check` exits 0
+- [x] The block copied out of `README.md` and run as a script in an empty git repo installs routewise 0.1.0 from GitHub: 9 files, a second run changes nothing, `--check` exits 0
+
+Verified 2026-11-14: the block, extracted from `README.md` by the test's rule and run with `bash -e` in an empty git repo, downloaded the published `v0.1.0` archive from GitHub and installed routewise 0.1.0: 9 files, a second run and `--check` clean, the installed folder holds the 11 runtime entries.
 
 ## Review
 - [ ] `reviewer` brief (role body, sonnet, medium) on the README diff and the test
