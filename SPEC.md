@@ -1,6 +1,6 @@
 # Spec: routewise (the tool)
 
-Status: approved 2026-11-14 (R3 approved the same day); R4 added and approved after the 0.1.0 release; R5 (the 0.1.1 miss-log fix) approved 2026-11-14, after it was built (catch-up: Define and Plan had been skipped). Describes routewise 0.1.0 as built, plus three additions: a clean release archive (R1), routewise running on its own repo (R2), and commands spelled for the project they are written into (R3).
+Status: approved 2026-11-14 (R3 approved the same day); R4 added and approved after the 0.1.0 release; R5 (the 0.1.1 miss-log fix) approved 2026-11-14, after it was built (catch-up: Define and Plan had been skipped); R6 and the Ship row change (release notes for every release) approved 2026-11-14. Describes routewise 0.1.0 as built, plus three additions: a clean release archive (R1), routewise running on its own repo (R2), and commands spelled for the project they are written into (R3).
 
 This file specifies the **tool**: the installer, the miss log, the role files and templates, the safety rules they keep, and how this repo is developed. The **rules** the tool installs (tiers, roles, delegation, escalation, measurement) are a separate, project-agnostic document, [spec/SPEC-model-routing.md](spec/SPEC-model-routing.md), shipped unchanged into every project. When the two disagree on a rule, the rules spec wins; when they disagree on how a file is written, this spec wins.
 
@@ -35,6 +35,7 @@ What it must do:
     - **Still passing:** file paths, versions and ratios (`lib/privacy.py`, `docs/v0.1.0/`, `v1.25/`, `3.5/5`), `HEAD@{1}`, `@property`, every phrase 0.1.0 let through on purpose.
     - **Known trade-offs, refused on purpose:** a dotted name before a slash whose last part is all letters (`logger.info/debug`, `os.path/join`, `ASP.NET/Core`) and `a@b`, since they read exactly like a link or an address; the agent writes them with a space or "and".
     - **Known gaps, kept:** `me @localhost` (a space around a dotless `@` would refuse `used @property`), `root@master` and `me@main` (tag words), a bare host without a path (as in 0.1.0).
+12. **R6: One error prefix (0.1.1, bug fix).** Every error message routewise prints starts with `routewise: ` (Code Style), also those of `bin/miss-log`, which printed `miss-log: ` from Python in 0.1.0 while its bash wrapper printed `routewise: `. Exit code 2 and the message text after the prefix do not change. Usage errors from argparse keep its own form (`<prog>: error: ...`), as for `install`.
 
 ## Development workflow (every request)
 
@@ -56,7 +57,7 @@ Every request to change this repo, from a typo to a new harness, goes through th
 | **Build** (`/build`) | `incremental-implementation`, `test-driven-development`; `source-driven-development` when a harness behaviour is involved | One task at a time: failing test, code, `make check` green, one Conventional Commit per task. Docs and `CHANGELOG.md` move with the behaviour. | Each task green before the next. |
 | **Verify** (`/test`) | `test-driven-development`, `debugging-and-error-recovery` | `make check` on the whole change; for a harness fact, a live run recorded in rules spec section 13. A failure is debugged to its root cause, never skipped. | All checks green, evidence shown. |
 | **Review** (`/review`) | `code-review-and-quality` (five axes), `security-and-hardening` for paths, files and the miss log | Delegated per this repo's own delegation block: the `reviewer` subagent for the change, `auditor` for anything touching safety rules S1–S9. Findings fixed or answered. | No open Critical or Required finding. |
-| **Ship** (`/ship`) | `shipping-and-launch`, `git-workflow-and-versioning` | No deployment: version (`pyproject.toml` and the README install block, kept equal by a test) and `CHANGELOG.md` updated, release archive contents checked (R1), commits ready. For a release, when the maintainer asks, the agent dates the `CHANGELOG.md` section, creates the annotated tag locally, checks the archive of the tag, and drafts the release notes in `tasks/`. The maintainer pushes commits and tags and publishes the GitHub release from the host; agents never push from the sandbox. | Maintainer's go. |
+| **Ship** (`/ship`) | `shipping-and-launch`, `git-workflow-and-versioning` | No deployment: version (`pyproject.toml` and the README install block, kept equal by a test) and `CHANGELOG.md` updated, release archive contents checked (R1), commits ready. For every release the agent dates the `CHANGELOG.md` section, checks the archive of the release commit, and drafts the release notes in `tasks/release-<version>.md` (for users: what changed and how to update, condensed from `CHANGELOG.md`), which `reviewer` checks against the code. When the maintainer asks, the agent also creates the annotated tag locally. The maintainer pushes commits and tags and publishes the GitHub release from the host; agents never push from the sandbox. | Maintainer's go. |
 
 ## Tech Stack
 
@@ -183,6 +184,7 @@ def plan_block(plan: Plan, path: Path, body: str | None, linked: bool) -> None:
 8. Live runs on the current Claude Code show the generated `Explore` on the `fast` model and `AGENTS.md` reached through each `claude_md` import, recorded in rules spec section 13.
 9. (R4) The README's install block, run as written in an empty project, installs the version in `pyproject.toml`; a test fails if the two versions differ.
 10. (R5) `tests/test_privacy.py` refuses each leak named in R5 (the five reported cases, the old tool's refused list, and the gaps found in review and audit) and fails on 0.1.0; it allows each code word R5 keeps passing, and pins each trade-off R5 refuses on purpose. Every phrase allowed before 0.1.1 is still allowed.
+11. (R6) A test runs `bin/miss-log` into a refused entry and checks that stderr starts with `routewise: `; the file-error branch prints the same prefix.
 
 ## Decisions (from the open questions of draft 1)
 

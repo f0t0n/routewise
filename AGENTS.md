@@ -13,7 +13,7 @@ Follow the [agent-skills](https://github.com/addyosmani/agent-skills) lifecycle 
 3. **Build** (`/build`, `incremental-implementation` + `test-driven-development`): one task at a time, failing test first, `make check` green, one commit per task.
 4. **Verify** (`/test`): `make check` on the whole change; harness facts by a live run recorded in `spec/SPEC-model-routing.md` section 13.
 5. **Review** (`/review`, `code-review-and-quality`): delegate to the `reviewer` subagent, and to `auditor` for anything touching safety rules S1–S9; fix or answer every finding.
-6. **Ship** (`/ship`, `shipping-and-launch`): version, `CHANGELOG.md`, release archive contents checked; for a release, tag locally and draft the notes in `tasks/` when asked; the maintainer pushes commits and tags and publishes the release from the host.
+6. **Ship** (`/ship`, `shipping-and-launch`): version, `CHANGELOG.md`, release archive contents checked; for every release, draft the notes in `tasks/release-<version>.md`, and tag locally when asked; the maintainer pushes commits and tags and publishes the release from the host.
 
 ## Commands
 
