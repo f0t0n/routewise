@@ -354,15 +354,58 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 
 **Dependencies:** Task 14. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record round 6 of the 0.1.1 review`
 
+**Round 6 (2026-11-14):** fresh `reviewer` and `auditor` on `b6ce5c9`, scoped as round 5. `reviewer`: approve (Optional and Nits only); control 735 = repo 735; 38 mutants, all import. `auditor`: no Critical or Required; about 920k fuzzed inputs over seven versions. An automated security check on `b6ce5c9` raised the hex-SHA and case loosening. Every finding reproduced. One finding was my error: Task 14 removed U+F900–FAFF claiming NFKC maps it all into the kept ranges; 52 code points survive NFKC, among them ideographs used in Japanese names, so `山﨑。lib/x.py` was refused. The maintainer approved the calls below; R5 amended (`docs(spec): amend R5 after round 6…`).
+
+| # | From | Finding | Answer |
+|---|---|---|---|
+| 1 | auditor | `山﨑。lib/x.py` refused (wrong NFKC claim in Task 14) | Restore U+F900–FAFF; test with `﨑` (Task 16) |
+| 2 | auditor, regression of `b6ce5c9` | `(?i:` folds `ı`/`İ`: `anna@maın` passes | ASCII-only case, `(?ai:…)` (Task 16) |
+| 3 | security check | `user@deadbeef` passes (any 7–40 hex) | A SHA needs a digit (Task 16) |
+| 4 | reviewer | `(what is foo.bar?)`, `foo.bar?!`, `did foo.bar?, then` refused, against R5's wording | `?`/`#` need a URL character after them (Task 16) |
+| 5 | reviewer | Untested range edges: `가`, `⺀`, U+30000, the `_` exclusion | Tests (Task 16) |
+| 6 | reviewer | `foo.test.ts#L10`, `jquery.min.js?v=1`, `修复了问题1。src/a.ts`, `Привет。Мир/x` refused, not named | Named as trade-offs in R5; CHANGELOG and notes (Task 16) |
+| 7 | reviewer, Nit | `foo@abc123` (6 hex) refused | Trade-off named in R5; no code change |
+| 8 | auditor | JWT with `。` and a signature starting `-`/`_` passes (0.1.0 too) | 0.1.2, listed in R5 |
+| – | auditor | Cost 43 ms worst case; FF66–FF9F claim holds | No change |
+
+## Task 16: Fix the round-6 findings
+
+**Description:** One `fix:` commit for 1–6, test first. `CJK` gets U+F900–FAFF back (with a comment that NFKC leaves some of it alone); `TAG` folds ASCII case only and a SHA needs a digit; `LINK_END` takes `?` or `#` only before a letter, digit or `_ % = & / ~ + -`; tests for the range edges; the trade-off phrases pinned as refused.
+
+**Acceptance criteria:**
+- [ ] Red on HEAD for: `山﨑。lib/x.py` and the `?)`, `?!`, `?,` phrases as allowed; `anna@maın`, `anna@maİn`, `user@deadbeef` and `admin@facadeb` (hex with no digit) as leaks; green after. `admin@facade0` (hex with a digit) still passes as a SHA, by R5.
+- [ ] Every leak test still refused (no `?`/`#` case lost), every allowed case still allowed, also with invisible characters; `user/repo@e83a1b2` and the 40-hex pin still pass.
+- [ ] Range-edge tests `가。lib/x.py`, `⺀。lib/x.py`, `\U00030000。lib/x.py`, `foo_。bar/x` (allowed or refused as R5 says) added; the round-6 trade-off phrases pinned in `REFUSED_CODE_WORDS`.
+- [ ] I check the NFKC claim exhaustively this time: every code point of each range left in `CJK` or removed, listed by script, before relying on it.
+- [ ] Mutations with a control equal to the repo, each mutant checked to import; survivors named.
+- [ ] CHANGELOG 0.1.1 and the notes name the new trade-off examples, the digit rule for SHAs and the 0.1.2 JWT item.
+
+**Verification:**
+- [ ] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
+
+**Dependencies:** Task 15 round 6, R5 amended. **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: tighten tags, query ends and the CJK range after round 6`
+
+## Task 17: Round-7 review of the round-6 fix
+
+**Description:** Fresh `reviewer` and `auditor` together on the Task 16 commit, scoped to its changes plus the round-5 checks: criterion 10 against 0.1.0 on the developer-text corpus, no regression against 0.1.0 or any earlier 0.1.1 commit (`1aa6725^` to `b6ce5c9`), code, tests and docs match R5. Gaps of a kind 0.1.0 also had go to 0.1.2.
+
+**Acceptance criteria:**
+- [ ] Every finding fixed, answered or recorded for 0.1.2, and listed here; no open Critical or Required in scope.
+
+**Verification:**
+- [ ] `make check` green after any fix
+
+**Dependencies:** Task 16. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record round 7 of the 0.1.1 review`
+
 ## Follow-up (not in 0.1.1)
 
-- [ ] R7 for 0.1.2: G1–G3, H (and whatever round 6 records), with its own Define, Plan and false-positive check.
+- [ ] R7 for 0.1.2: G1–G3, H, the JWT item of round 6 (and whatever round 7 records), with its own Define, Plan and false-positive check.
 
 
 ## Checkpoint: reviewed
 - [ ] No open Critical or Required finding; maintainer has seen the findings
 
-## Task 16: Ship checks and the tag commands
+## Task 18: Ship checks and the tag commands
 
 **Description:** Check the release contents on the final commit and give the maintainer the exact tag and push commands.
 
@@ -375,7 +418,7 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Verification:**
 - [ ] `make check` green on the final commit
 
-**Dependencies:** Task 15. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
+**Dependencies:** Task 17. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
 
 ## Ship (maintainer, from the host)
 - [ ] `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>`
