@@ -28,14 +28,18 @@ OTHER_INVISIBLE = frozenset(
 ENCODED_AT = re.compile(r"%40|&#0*64;|&#x0*40;|&commat;|\\u0040|\\x40", re.IGNORECASE)
 CARD = re.compile(r"\b\d(?:[ -]?\d){12,18}\b")
 LETTER = r"[^\W\d_]"  # any letter, not only ASCII: anna@корп is an address too
-# A version, commit SHA or package tag after @, in any case, when it is the whole name
-# (HEAD@{1}, pkg@latest, foo@Latest, actions/checkout@v4, user/repo@e83a1b2): v2-gateway or
-# master-01 is a host.
-TAG = r"(?i:v\d+|[0-9a-f]{7,40}|latest|next|beta|alpha|canary|rc|stable|lts|main|master)(?![\w-])"
-# A link without a scheme ends its host with a TLD, maybe a port, then a path, query or anchor
-# (a "?" that ends a question is not one).
+# A version, commit SHA (7 to 40 hex digits, one a digit) or package tag after @, in any ASCII
+# case, when it is the whole name (HEAD@{1}, pkg@latest, foo@Latest, actions/checkout@v4,
+# user/repo@e83a1b2): v2-gateway, master-01, user@deadbeef and anna@maın are hosts.
+TAG = (
+    r"(?ai:v\d+|(?=[a-f]*\d)[0-9a-f]{7,40}"
+    r"|latest|next|beta|alpha|canary|rc|stable|lts|main|master)(?![\w-])"
+)
+# A link without a scheme ends its host with a TLD, maybe a port, then a path, or a query or
+# anchor that goes on with a URL character (a "?" that ends a question, also "?)" or "?!", is
+# not one).
 TLD = LETTER + r"{2,63}"
-LINK_END = r"(?::\d{1,5})?(?:/|[?#]\S)"
+LINK_END = r"(?::\d{1,5})?(?:/|[?#][\w%=&/~+-])"
 # File types that are also TLDs: README.md/ or lib.rs/ is a path; wiki.acme.md/ is a link.
 SOURCE_TYPES = (
     "md|py|rs|ts|tsx|js|jsx|mjs|cjs|json|toml|yaml|yml|txt|lock|cfg|ini|html|css|sh|rb|kt|go"
@@ -52,8 +56,9 @@ MARKUP_BEFORE_AT = r"""[\\"'*`_~]{0,3}"""
 MARKUP_AFTER_AT = r"[*`_~]{0,3}"
 # An ideographic full stop between letters or digits of any script but CJK and Hangul is a dot
 # (jira。corp。net, пример。рф); next to CJK or Hangul text it ends a sentence.
-# (NFKC has already mapped compatibility ideographs and half-width katakana into these.)
-CJK = "\u2e80-\u9fff\uac00-\ud7af\U00020000-\U0003ffff"
+# (NFKC maps all 58 half-width katakana into these; it leaves some compatibility ideographs such
+# as U+FA11 alone, so U+F900-FAFF stays.)
+CJK = "\u2e80-\u9fff\uac00-\ud7af\uf900-\ufaff\U00020000-\U0003ffff"
 DOT_STOP = re.compile(f"(?<=[^\\W_{CJK}])\u3002(?=[^\\W_{CJK}])")
 
 PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (

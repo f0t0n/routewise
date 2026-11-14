@@ -35,7 +35,7 @@ Extended after Task 2: R6 (bin/miss-log printed `miss-log: ` instead of `routewi
 - [ ] Task 13: Round-5 review, scoped to what 0.1.1 broke
 - [x] Task 14: Fix the round-5 findings
 - [ ] Task 15: Round-6 review, same scope as round 5
-- [ ] Task 16: Fix the round-6 findings
+- [x] Task 16: Fix the round-6 findings
 - [ ] Task 17: Round-7 review of the round-6 fix
 - [ ] Checkpoint: reviewed
 - [ ] Task 18: Ship checks and the tag commands

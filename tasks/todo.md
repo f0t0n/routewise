@@ -373,17 +373,25 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Description:** One `fix:` commit for 1–6, test first. `CJK` gets U+F900–FAFF back (with a comment that NFKC leaves some of it alone); `TAG` folds ASCII case only and a SHA needs a digit; `LINK_END` takes `?` or `#` only before a letter, digit or `_ % = & / ~ + -`; tests for the range edges; the trade-off phrases pinned as refused.
 
 **Acceptance criteria:**
-- [ ] Red on HEAD for: `山﨑。lib/x.py` and the `?)`, `?!`, `?,` phrases as allowed; `anna@maın`, `anna@maİn`, `user@deadbeef` and `admin@facadeb` (hex with no digit) as leaks; green after. `admin@facade0` (hex with a digit) still passes as a SHA, by R5.
-- [ ] Every leak test still refused (no `?`/`#` case lost), every allowed case still allowed, also with invisible characters; `user/repo@e83a1b2` and the 40-hex pin still pass.
-- [ ] Range-edge tests `가。lib/x.py`, `⺀。lib/x.py`, `\U00030000。lib/x.py`, `foo_。bar/x` (allowed or refused as R5 says) added; the round-6 trade-off phrases pinned in `REFUSED_CODE_WORDS`.
-- [ ] I check the NFKC claim exhaustively this time: every code point of each range left in `CJK` or removed, listed by script, before relying on it.
-- [ ] Mutations with a control equal to the repo, each mutant checked to import; survivors named.
-- [ ] CHANGELOG 0.1.1 and the notes name the new trade-off examples, the digit rule for SHAs and the 0.1.2 JWT item.
+- [x] Red on HEAD for: `山﨑。lib/x.py` and the `?)`, `?!`, `?,` phrases as allowed; `anna@maın`, `anna@maİn`, `user@deadbeef` and `admin@facadeb` (hex with no digit) as leaks; green after. `admin@facade0` (hex with a digit) still passes as a SHA, by R5.
+- [x] Every leak test still refused (no `?`/`#` case lost), every allowed case still allowed, also with invisible characters; `user/repo@e83a1b2` and the 40-hex pin still pass.
+- [x] Range-edge tests `가。lib/x.py`, `⺀。lib/x.py`, `\U00030000。lib/x.py`, `foo_。bar/x` (allowed or refused as R5 says) added; the round-6 trade-off phrases pinned in `REFUSED_CODE_WORDS`.
+- [x] I check the NFKC claim exhaustively this time: every code point of each range left in `CJK` or removed, listed by script, before relying on it.
+- [x] Mutations with a control equal to the repo, each mutant checked to import; survivors named.
+- [x] CHANGELOG 0.1.1 and the notes name the new trade-off examples, the digit rule for SHAs and the 0.1.2 JWT item.
 
 **Verification:**
-- [ ] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
+- [x] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
 
 **Dependencies:** Task 15 round 6, R5 amended. **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: tighten tags, query ends and the CJK range after round 6`
+
+**Result (2026-11-14):**
+
+- **Red on HEAD (`d10749a`):** 24 failed: `anna@maın`, `anna@maİn`, `user@deadbeef`, `admin@facadeb` as leaks; `山﨑。lib/x.py` and the `?)` `?!` `?,` phrase as allowed; their invisible-character copies. Already green, kept as guards: the round-6 trade-off pins, `admin@facade0`, the Hangul and Extension B edges, `foo_。bar/x`.
+- **Unicode claim, checked in full this time:** all 58 code points of U+FF66–FF9F become, after NFKC, either CJK or not a letter or digit, so that range stays out of `CJK`; U+F900–FAFF is back (52 of its code points survive NFKC).
+- **Green:** `TAG` is `(?ai:…)` with `(?=[a-f]*\d)` before the SHA; `CJK` includes U+F900–FAFF; `LINK_END` takes `?` or `#` only before `[\w%=&/~+-]`. No leak test started passing (the URL-character assumption of the R5 amendment holds).
+- **Mutations:** control equal to the repo every run, each mutant checked to import. Killed: `(?i:`, no digit rule, U+F900–FAFF dropped, Hangul start, Extension end, `LINK_END` back to `\S`, `\w` narrowed, `_` allowed beside `。`, and each of `% = & / ~ + -` after splitting the anchor cases one per character. My mistakes on the way: `⺀` (U+2E80) is a symbol, so it never tested the range (now `人々`, U+3005 is a letter); `#%…` and `#-section` in one phrase hid each other's mutant; `#~x` is a home folder path anyway (now `#~1`); a "drop =" mutant replaced the `=` of the assignment and broke the import (caught by the import check, rerun).
+- **Docs:** CHANGELOG 0.1.1 and the notes name the SHA digit rule, the new trade-off examples, that a question ending in `?)` passes, and the JWT item for 0.1.2.
 
 ## Task 17: Round-7 review of the round-6 fix
 

@@ -142,6 +142,20 @@ LEAKS_SINCE_0_1_1 = [
     "ask anna%40corp。com",
     "server 1\u200b0。0。0。1",
     "ssh anna@" + "deadbeef" * 5 + "a",  # 41 hex digits: a SHA is at most 40 (R5)
+    # Round 6: case folds in ASCII only, and a SHA has a digit (R5).
+    "ask anna@ma\u0131n",
+    "ask anna@ma\u0130n",
+    "ssh user@deadbeef",
+    "ssh admin@facadeb",
+    # A query or anchor that goes on with each URL character R5 names, one per case.
+    "see wiki.corp.io#%E2%9C%93",
+    "see wiki.corp.io#-section",
+    "see wiki.corp.io#/settings",
+    "see wiki.corp.io?=x",
+    "see wiki.corp.io?&a=1",
+    "see wiki.corp.io#~1",  # not #~x: ~ and a letter is a home folder path
+    "see wiki.corp.io?+q",
+    "see wiki.corp.io#_top",
 ]
 # Code words refused on purpose since 0.1.1: they read exactly like a link or an address.
 REFUSED_CODE_WORDS = [
@@ -155,6 +169,12 @@ REFUSED_CODE_WORDS = [
     "Class.method#overload and config.key#section",
     "repo.name#123",
     "ticket abc.def?x=1",
+    # Named after round 6: two-dot file names, a 6-digit SHA, a number before 。 after CJK, and
+    # 。 between words of another script with no space.
+    "see foo.test.ts#L10 and jquery.min.js?v=1",
+    "pinned foo@abc123",
+    "修复了问题1。src/a.ts",
+    "Привет。Мир/x",
     "改了config。lib/x.py",
     "路由用了GPT-4。Next.js/React",
 ]
@@ -234,6 +254,15 @@ CLEAN_SINCE_ROUND_4 = [
     "豈。lib/x.py",
     "ﾃｽﾄ。lib/x.py",
     "\U00020000。lib/x.py",
+    # Round 6: a compatibility ideograph NFKC leaves alone, the edges of the CJK ranges, and a
+    # question that ends with ?) ?! or ?, (R5).
+    "山\ufa11。lib/x.py",
+    "人々。lib/x.py",  # 々 (U+3005) is a letter near the start of the CJK range
+    "\uac00。lib/x.py",
+    "\U00030000。lib/x.py",
+    "(what is foo.bar?) and foo.bar?! and did foo.bar?, then",
+    "pinned admin@facade0",  # hex with a digit is a SHA (R5)
+    "renamed foo_。bar/x",  # 。 after _ is not between letters or digits (R5)
 ]
 # Every character R5 counts as invisible, one per range and every one 0.1.1 listed first.
 INVISIBLE = [
