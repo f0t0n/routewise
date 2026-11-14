@@ -18,7 +18,7 @@ Spec: [SPEC.md](../SPEC.md), R7, success criterion 12 (approved 2026-11-14), wit
 ## Task List
 
 - [x] Task 1: G1, ASCII word boundaries
-- [ ] Task 2: G2, URL-encoded scheme
+- [x] Task 2: G2, URL-encoded scheme
 - [ ] Task 3: G3, a backslash before a dotless `@`
 - [ ] Task 4: a JWT written with `。`
 - [ ] Task 5: link ends `$`, `!/`, `:~:`, ASCII after `?` and `#`

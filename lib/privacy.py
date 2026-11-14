@@ -103,7 +103,10 @@ PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         "an e-mail address",
     ),
     (
-        re.compile(WORD_START + r"[a-z][a-z0-9+.-]*://|" + WORD_START + r"www\.\w", re.IGNORECASE),
+        re.compile(
+            WORD_START + r"[a-z][a-z0-9+.-]*(?:://|%3A%2F%2F)|" + WORD_START + r"www\.\w",
+            re.IGNORECASE,
+        ),
         "a URL",
     ),
     # A link without a scheme (example.com/page, //host.corp:8080/x): a host that starts a

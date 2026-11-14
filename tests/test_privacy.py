@@ -160,6 +160,9 @@ LEAKS_SINCE_0_1_1 = [
     "密钥AKIA" + "IOSFODNN7EXAMPLE",
     "编号123e4567-e89b-12d3-a456-426614174000",
     "服务器2001:db8::1上",
+    # 0.1.2 (R7 G2): a URL-encoded link.
+    "next=https%3A%2F%2Fjira.corp.net%2Fbrowse%2FX-1",
+    "next=https%3a%2f%2fjira.corp.net",
     # Round 6: case folds in ASCII only, and a SHA has a digit (R5).
     "ask anna@ma\u0131n",
     "ask anna@ma\u0130n",
@@ -284,6 +287,8 @@ CLEAN_SINCE_ROUND_4 = [
     # An ASCII letter or digit is still part of the word (R7 G1).
     "xAKIA" + "IOSFODNN7EXAMPLE",
     "v10.0.0.12",
+    "ratio 100%3A and a%3Ab and 50%2F%2F",  # encoded : or / alone is not a link (R7 G2)
+    "path C%3A%2Ftemp was wrong",  # an encoded :/ with one slash is not a scheme (R7 G2)
 ]
 # Every character R5 counts as invisible, one per range and every one 0.1.1 listed first.
 INVISIBLE = [

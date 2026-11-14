@@ -27,10 +27,12 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green be
 **Description:** Test first: `next=https%3A%2F%2Fjira.corp.net%2F…` and the lower-case form fail on HEAD. Then the scheme rule also takes `%3A%2F%2F` (any case).
 
 **Acceptance criteria:**
-- [ ] Both red on HEAD, green after; `100%3A` or `a%3Ab` alone stays allowed (an allowed test).
-- [ ] Mutations on the new alternative and its case flag; survivors named.
+- [x] Both red on HEAD, green after; `100%3A` or `a%3Ab` alone stays allowed (an allowed test).
+- [x] Mutations on the new alternative and its case flag; survivors named.
 
 **Verification:** as Task 1. **Dependencies:** Task 1. **Files:** as Task 1. **Scope:** XS. Commit: `fix: catch a URL-encoded link (R7 G2)`
+
+**Result (2026-11-14):** red on HEAD (`a6c27d6`): both encoded links and their guard copies (8). Green: the scheme rule takes `(?:://|%3A%2F%2F)` under its existing `re.IGNORECASE`. Allowed pins: `100%3A`, `a%3Ab`, `50%2F%2F`, `C%3A%2Ftemp`. Mutations (control 899, then 903): no encoded alternative, `%3A` only, upper case only all killed; `%3A%2F` only survived until `C%3A%2Ftemp` was added, then killed.
 
 ## Task 3: G3, a backslash before a dotless `@`
 
