@@ -4,7 +4,8 @@ High precision by design: every pattern matches only text that is almost surely 
 normal descriptions of code (logger.info, @property, GPT-4, a git SHA, a long test name) pass.
 It cannot catch a person's name, a bare host name or an internal ID; the agent is told to
 describe the miss in its own words. Text is normalised first (NFKC, zero-width characters
-removed), so a full-width or small at sign or a split token does not hide a leak.
+removed, an ideographic full stop read as a dot), so a full-width or small at sign, a
+full stop or a split token does not hide a leak.
 """
 
 import re
@@ -12,6 +13,21 @@ import unicodedata
 
 ZERO_WIDTH = re.compile("[​-‍⁠﻿­]")
 CARD = re.compile(r"\b\d(?:[ -]?\d){12,18}\b")
+LETTER = r"[^\W\d_]"  # any letter, not only ASCII: anna@корп is an address too
+# A version or package tag after @ (HEAD@{1}, pkg@latest, actions/checkout@v4), when it is the
+# whole name: v2-gateway or master-01 is a host.
+TAG = r"(?:v\d+(?:\.\d+)*|latest|next|beta|alpha|canary|rc|stable|lts|main|master)(?![\w-])"
+# A link without a scheme ends its host with a TLD, maybe a port, then a path, query or anchor
+# (a "?" that ends a question is not one).
+TLD = LETTER + r"{2,63}"
+LINK_END = r"(?::\d{1,5})?(?:/|[?#]\S)"
+# File types that are also TLDs: README.md/ or lib.rs/ is a path; wiki.acme.md/ is a link.
+SOURCE_TYPES = (
+    "md|py|rs|ts|tsx|js|jsx|mjs|cjs|json|toml|yaml|yml|txt|lock|cfg|ini|html|css|sh|rb|kt|go"
+    "|java|cpp|hpp"
+)
+DEEP_HOST = r"[\w-]+(?:\.[\w-]+)+\." + TLD
+SHALLOW_HOST = r"[\w-]+\.(?!(?:" + SOURCE_TYPES + r")(?![\w-]))" + TLD
 
 PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (
@@ -24,8 +40,15 @@ PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b"), "a token or key"),
     (re.compile(r"\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\."), "a token or key"),
     (re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"), "a token or key"),
-    # An e-mail: a word right before the @ (so @property and @mentions pass), a dotted domain.
-    (re.compile(r"\w[\w.+-]*\s?@\s?[\w-]+(?:\.[\w-]+)+"), "an e-mail address"),
+    # An e-mail: a word right before the @ (so @property and @mentions pass), a dotted domain
+    # with a letter in it (so react@18.3.1 passes).
+    (
+        re.compile(r"\w[\w.+-]*\s?@\s?(?=[\w.-]*" + LETTER + r")[\w-]+(?:\.[\w-]+)+"),
+        "an e-mail address",
+    ),
+    # One without a dot (me@localhost): the domain starts with a letter and is not a tag. No
+    # space around the @ here, so "used @property" passes.
+    (re.compile(r"\w[\w.+-]*@(?!" + TAG + ")" + LETTER + r"[\w-]*"), "an e-mail address"),
     (
         re.compile(
             r"\w+\s*(?:\(at\)|\[at\]|\{at\}|\sat\s)\s*[\w-]+"
@@ -35,6 +58,16 @@ PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         "an e-mail address",
     ),
     (re.compile(r"\b[a-z][a-z0-9+.-]*://|\bwww\.\w", re.IGNORECASE), "a URL"),
+    # A link without a scheme (example.com/page, //host.corp:8080/x): a host that starts a
+    # word. One with a single dot must not follow a lone slash (src/a.ts/) or end in a source
+    # file type (README.md/); one with more dots may (proxy/jira.corp.net/x).
+    (
+        re.compile(
+            r"(?<![\w@-])(?:" + DEEP_HOST + r"|(?<![^/]/)" + SHALLOW_HOST + ")" + LINK_END,
+            re.IGNORECASE,
+        ),
+        "a URL",
+    ),
     (
         re.compile(r"\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b"),
         "an IP address",
@@ -61,7 +94,7 @@ PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
 
 
 def normal(text: str) -> str:
-    return ZERO_WIDTH.sub("", unicodedata.normalize("NFKC", text))
+    return ZERO_WIDTH.sub("", unicodedata.normalize("NFKC", text)).replace("\u3002", ".")
 
 
 def luhn(digits: str) -> bool:
