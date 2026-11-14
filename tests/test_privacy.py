@@ -132,6 +132,16 @@ LEAKS_SINCE_0_1_1 = [
     "jane\u200eat\u200eexample\u200edot\u200ecom",
     "jane\u200e(at)\u200eexample\u200e(dot)\u200ecom",
     "x\u200eＡＫＩＡ" + "ABCDEFGHIJKLMNOP",
+    # Round 5: 。 is a dot beside any letter or digit but CJK and Hangul (R5); 。 in a decoded
+    # view and after an invisible character.
+    "see пример。рф/x",
+    "see café。com/x",
+    "see ελ。gr/x",
+    "ip ١٠。٠。٠。١",
+    "ask anna@**пример。рф**",
+    "ask anna%40corp。com",
+    "server 1\u200b0。0。0。1",
+    "ssh anna@" + "deadbeef" * 5 + "a",  # 41 hex digits: a SHA is at most 40 (R5)
 ]
 # Code words refused on purpose since 0.1.1: they read exactly like a link or an address.
 REFUSED_CODE_WORDS = [
@@ -139,6 +149,14 @@ REFUSED_CODE_WORDS = [
     "os.path/join and json.loads/dumps",  # likewise any dotted name with a letter-only last part
     "ASP.NET/Core",
     "matrix product a@b",  # reads as user@host: write "a @ b"
+    "pip install foo@git",
+    # Named after round 5 (R5): a dotted name before ? or # with text, and an ASCII word, 。 and
+    # an ASCII path after CJK text, which cannot be told from jira。corp。net/x.
+    "Class.method#overload and config.key#section",
+    "repo.name#123",
+    "ticket abc.def?x=1",
+    "改了config。lib/x.py",
+    "路由用了GPT-4。Next.js/React",
 ]
 CLEAN = [
     "missed an unchecked return value in the parser",
@@ -206,6 +224,16 @@ CLEAN_SINCE_ROUND_4 = [
     "wrote x@'a.b' in the test",
     "computed a[i]@m.T and f(x)@w.T",
     "100%40 off foo.bar",
+    # Round 5: SHA pins and tags in any case (R5).
+    "pinned user/repo@e83a1b2 and foo@Latest",
+    "uses actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3",
+    "Привет, это тест",  # Cyrillic prose, no 。
+    "pinned user/repo@b4ffde65f46336ab88eb53be808477a3936bae11",  # 40 hex, starts with a letter
+    # 。 next to each CJK or Hangul range ends a sentence (R5).
+    "라우팅을 고쳤다。lib/x.py",
+    "豈。lib/x.py",
+    "ﾃｽﾄ。lib/x.py",
+    "\U00020000。lib/x.py",
 ]
 # Every character R5 counts as invisible, one per range and every one 0.1.1 listed first.
 INVISIBLE = [

@@ -28,9 +28,10 @@ OTHER_INVISIBLE = frozenset(
 ENCODED_AT = re.compile(r"%40|&#0*64;|&#x0*40;|&commat;|\\u0040|\\x40", re.IGNORECASE)
 CARD = re.compile(r"\b\d(?:[ -]?\d){12,18}\b")
 LETTER = r"[^\W\d_]"  # any letter, not only ASCII: anna@корп is an address too
-# A version or package tag after @ (HEAD@{1}, pkg@latest, actions/checkout@v4), when it is the
-# whole name: v2-gateway or master-01 is a host.
-TAG = r"(?:v\d+|latest|next|beta|alpha|canary|rc|stable|lts|main|master)(?![\w-])"
+# A version, commit SHA or package tag after @, in any case, when it is the whole name
+# (HEAD@{1}, pkg@latest, foo@Latest, actions/checkout@v4, user/repo@e83a1b2): v2-gateway or
+# master-01 is a host.
+TAG = r"(?i:v\d+|[0-9a-f]{7,40}|latest|next|beta|alpha|canary|rc|stable|lts|main|master)(?![\w-])"
 # A link without a scheme ends its host with a TLD, maybe a port, then a path, query or anchor
 # (a "?" that ends a question is not one).
 TLD = LETTER + r"{2,63}"
@@ -49,9 +50,11 @@ SHALLOW_HOST = r"[\w-]+\.(?!(?:" + SOURCE_TYPES + r")(?![\w-]))" + TLD
 # the @: those are code (a[i]@m.T, f"{user}@{cfg.domain}", obj@"pkg.json").
 MARKUP_BEFORE_AT = r"""[\\"'*`_~]{0,3}"""
 MARKUP_AFTER_AT = r"[*`_~]{0,3}"
-# An ideographic full stop between ASCII letters or digits is a dot (jira。corp。net); after CJK
-# text it ends a sentence.
-ASCII_STOP = re.compile(r"(?<=[A-Za-z0-9])\u3002(?=[A-Za-z0-9])")
+# An ideographic full stop between letters or digits of any script but CJK and Hangul is a dot
+# (jira。corp。net, пример。рф); next to CJK or Hangul text it ends a sentence.
+# (NFKC has already mapped compatibility ideographs and half-width katakana into these.)
+CJK = "\u2e80-\u9fff\uac00-\ud7af\U00020000-\U0003ffff"
+DOT_STOP = re.compile(f"(?<=[^\\W_{CJK}])\u3002(?=[^\\W_{CJK}])")
 
 PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (
@@ -137,7 +140,7 @@ def views(text: str) -> list[str]:
     for gap in (" ", ""):
         spaced = "".join(gap if invisible(c) else c for c in text)
         for decoded in (spaced, ENCODED_AT.sub("@", spaced)):
-            out.append(ASCII_STOP.sub(".", unicodedata.normalize("NFKC", decoded)))
+            out.append(DOT_STOP.sub(".", unicodedata.normalize("NFKC", decoded)))
     return list(dict.fromkeys(out))  # normal text gives four equal views
 
 

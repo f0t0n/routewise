@@ -324,16 +324,23 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Description:** One `fix:` commit for A, D, E, F, test first. `ASCII_STOP` (renamed for what it does) reads `。` as a dot between letters or digits that are not CJK or Hangul; `TAG` also accepts a 7–40 hex SHA and ignores case; the two `。` cases become leak tests; B and C phrases become pinned trade-off tests (refused on purpose); the CHANGELOG gains the notes' behaviour claims.
 
 **Acceptance criteria:**
-- [ ] Red on HEAD for the A leaks (`пример。рф/x`, `café。com/x`, `ελ。gr/x`, `١٠。٠。٠。١`, `anna@**пример。рф**`) and the D phrases as allowed tests (`user/repo@e83a1b2`, `actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3`, `foo@Latest`); green after.
-- [ ] Every allowed case still passes, CJK prose with `。` included, also with invisible characters; the B and C phrases are pinned in `REFUSED_CODE_WORDS`.
-- [ ] `anna%40corp。com` and `1<ZWSP>0。0。0。1` are leak tests.
-- [ ] Mutations re-run with a control equal to the repo and each mutant checked to import; survivors named.
-- [ ] CHANGELOG 0.1.1 names `。` beside non-CJK letters, SHA pins, the wider trade-offs and the notes' behaviour claims; notes and README in line.
+- [x] Red on HEAD for the A leaks (`пример。рф/x`, `café。com/x`, `ελ。gr/x`, `١٠。٠。٠。١`, `anna@**пример。рф**`) and the D phrases as allowed tests (`user/repo@e83a1b2`, `actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3`, `foo@Latest`); green after.
+- [x] Every allowed case still passes, CJK prose with `。` included, also with invisible characters; the B and C phrases are pinned in `REFUSED_CODE_WORDS`.
+- [x] `anna%40corp。com` and `1<ZWSP>0。0。0。1` are leak tests.
+- [x] Mutations re-run with a control equal to the repo and each mutant checked to import; survivors named.
+- [x] CHANGELOG 0.1.1 names `。` beside non-CJK letters, SHA pins, the wider trade-offs and the notes' behaviour claims; notes and README in line.
 
 **Verification:**
-- [ ] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
+- [x] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
 
 **Dependencies:** Task 13 round 5, R5 amended. **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `README.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: read 。 as a dot beside any non-CJK letter and let SHA pins pass`
+
+**Result (2026-11-14):**
+
+- **Red on HEAD (`4475df4`):** 24 failed: the five `。` leaks beside non-CJK letters (`пример。рф/x`, `café。com/x`, `ελ。gr/x`, `١٠。٠。٠。١`, `anna@**пример。рф**`), `user/repo@e83a1b2 and foo@Latest` as allowed, and their invisible-character guard copies. Already green on HEAD, kept as guards: `anna%40corp。com`, `1<ZWSP>0。0。0。1`, the B and C trade-off pins, and a 40-hex SHA starting with a digit (the dotless rule never matched it; `e83a1b2` shows the bug).
+- **Green:** `DOT_STOP` (was `ASCII_STOP`) reads `。` as a dot between letters or digits that are not CJK or Hangul; `TAG` accepts a 7–40 hex SHA and ignores case (`(?i:…)`).
+- **Mutations:** control 731 = repo 731, each mutant checked to import. Killed: `。` ASCII only, no CJK exclusion either side, each needed range (after adding Hangul and CJK Extension B prose tests), SHA dropped, `{8,40}`, `{7,39}`, case-sensitive. Survived as equivalent, so removed as dead code: U+F900–FAFF and U+FF66–FF9F (NFKC maps them into the kept ranges first). `{7,41}` survived until a 41-hex name was added as a leak; then killed (control 735).
+- **Docs:** CHANGELOG 0.1.1 names `。` beside non-CJK letters, SHA pins and case, the wider trade-offs, `anna%40corp.com`, `redirect=%40example.com/path` and that old entries are not re-checked; the notes match. `make check`: 855 passed.
 
 ## Task 15: Round-6 review, same scope as round 5
 
