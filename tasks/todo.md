@@ -78,14 +78,14 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). One Conventional Commit p
 **Description:** `.gitattributes` marks every development file `export-ignore` (SPEC.md project structure: `SPEC.md`, `AGENTS.md`, `tasks/`, `tests/`, `Makefile`, `pyproject.toml`, `uv.lock`, `pyrightconfig.json`, `.githooks/`, `.gitignore`, `.gitattributes`, `routewise.toml`, `ROUTING-BINDING.md`, `.claude/`, `logs/`). A test ties the shipped set to the tested set. README recommends the archive.
 
 **Acceptance criteria:**
-- [ ] `tests/test_release.py`: top-level entries of `git ls-files` without `export-ignore` equal `conftest.COPY` plus `README.md`, `ADOPT.md`, `LICENSE`, `CHANGELOG.md`; skipped outside a git checkout. Fails before `.gitattributes` exists.
-- [ ] README "Install into a project" step 1: download the release's "Source code" archive (or `git archive`) into `routewise/`; a submodule or subtree works but brings the development files. `ADOPT.md` step 1 unchanged in substance.
-- [ ] `CHANGELOG.md` line for R1.
+- [x] `tests/test_release.py`: top-level entries of `git ls-files` without `export-ignore` equal `conftest.COPY` plus `README.md`, `ADOPT.md`, `LICENSE`, `CHANGELOG.md`; skipped outside a git checkout. Fails before `.gitattributes` exists.
+- [x] README "Install into a project" step 1: download the release's "Source code" archive (or `git archive`) into `routewise/`; a submodule or subtree works but brings the development files. `ADOPT.md` step 1 unchanged in substance.
+- [x] `CHANGELOG.md` line for R1.
 
 **Verification:**
-- [ ] `uv run pytest tests/test_release.py` fails first, then passes
-- [ ] `git archive --worktree-attributes HEAD | tar -t` (before commit) shows only runtime files
-- [ ] `make check` green
+- [x] `uv run pytest tests/test_release.py` fails first, then passes
+- [x] `git archive --worktree-attributes HEAD | tar -t` (before commit) shows only runtime files
+- [x] `make check` green
 
 **Dependencies:** Task 3 (so the self-install files exist and are covered)
 **Files:** `.gitattributes`, `tests/test_release.py`, `tests/conftest.py` (export the shipped-docs list beside `COPY`), `README.md`, `CHANGELOG.md`

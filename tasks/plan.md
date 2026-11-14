@@ -32,7 +32,7 @@ Four small changes, built in the order that keeps every commit green: commit the
 - [x] `make check` green including the self drift check; a deliberately unre-installed role change fails it (then reverted)
 
 ### Phase 3: Release archive
-- [ ] Task 4: `export-ignore` every development file, one-list test, README install from the archive
+- [x] Task 4: `export-ignore` every development file, one-list test, README install from the archive
 
 ### Checkpoint C (end of Build)
 - [ ] `make check` green; all SPEC.md success criteria for R1 and R2 met

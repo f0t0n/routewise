@@ -1,0 +1,25 @@
+# Release archives (GitHub "Source code" downloads, `git archive`) ship only the runtime
+# files: install, bin/, lib/, roles/, harness.toml, templates/, spec/ and the four docs
+# (spec R1). Everything below is for developing routewise; tests/test_release.py fails if
+# a tracked file is neither runtime nor listed here.
+
+# Spec, agent instructions and plans
+/SPEC.md export-ignore
+/AGENTS.md export-ignore
+/tasks export-ignore
+
+# Tests and tooling
+/tests export-ignore
+/Makefile export-ignore
+/pyproject.toml export-ignore
+/uv.lock export-ignore
+/pyrightconfig.json export-ignore
+/.githooks export-ignore
+/.gitignore export-ignore
+/.gitattributes export-ignore
+
+# routewise installed on its own repo (spec R2)
+/routewise.toml export-ignore
+/ROUTING-BINDING.md export-ignore
+/.claude export-ignore
+/logs export-ignore

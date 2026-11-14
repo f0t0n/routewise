@@ -18,7 +18,7 @@ Supported harnesses: Claude Code (`cc`) and Antigravity CLI (`agy`; its agents f
 
 ## Install into a project
 
-1. Copy this folder into the project root as `routewise/` (or add it as a git submodule or subtree).
+1. Download a release's "Source code" archive (or run `git archive` on a tag) and unpack it into the project root as `routewise/`. The archive holds only what a project needs: `install`, `bin/`, `lib/`, `roles/`, `harness.toml`, `templates/`, `spec/` and the docs. A git submodule or subtree works too, but brings this repo's development files (tests, `SPEC.md`, `AGENTS.md`, its own agents); make sure your test runner and linters skip `routewise/`.
 2. From the project root, run:
 
    ```sh

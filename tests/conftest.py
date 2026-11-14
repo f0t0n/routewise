@@ -8,6 +8,8 @@ import pytest
 
 HOME = Path(__file__).resolve().parent.parent
 COPY = ("install", "harness.toml", "bin", "lib", "roles", "spec", "templates")
+# Shipped in a release archive beside COPY (spec R1); everything else is export-ignore.
+SHIPPED_DOCS = ("README.md", "ADOPT.md", "LICENSE", "CHANGELOG.md")
 
 
 @pytest.fixture
