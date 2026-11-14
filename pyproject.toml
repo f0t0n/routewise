@@ -1,6 +1,6 @@
 [project]
 name = "routewise"
-version = "0.1.1"
+version = "0.1.2"
 description = "Model routing and delegation for coding and assistant agents: tiered read-only subagents, a parallel cap, an escalation ladder and a miss log."
 readme = "README.md"
 license = "MIT"

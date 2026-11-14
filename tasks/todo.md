@@ -93,9 +93,11 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green be
 **Description:** `pyproject.toml`, `uv.lock`, both README `v=` lines to `0.1.2`; CHANGELOG `## Unreleased` becomes `## 0.1.2 (<date>)`.
 
 **Acceptance criteria:**
-- [ ] The R4 version test passes; `make check` green.
+- [x] The R4 version test passes; `make check` green.
 
 **Dependencies:** Task 6. **Files:** `pyproject.toml`, `uv.lock`, `README.md`, `CHANGELOG.md`. **Scope:** XS. Commit: `build: release 0.1.2`
+
+**Result (2026-11-14):** `pyproject.toml`, `uv.lock` and both README `v=` lines say `0.1.2`; CHANGELOG `## 0.1.2 (2026-11-14)`; the R4 version test passes; the notes' update block now equals README "Updating".
 
 ## Task 8: Review, one round under the stopping rule
 
