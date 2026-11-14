@@ -1,6 +1,6 @@
-# Implementation Plan: release archive (R1), routewise on its own repo (R2), workflow docs
+# Implementation Plan: release archive (R1), routewise on its own repo (R2), commands spelled per project (R3), workflow docs
 
-Spec: [SPEC.md](../SPEC.md), approved 2026-11-14 (R1, R2, S9, success criteria 5–7, decisions 1–4). Tasks: [todo.md](todo.md).
+Spec: [SPEC.md](../SPEC.md), approved 2026-11-14 (R1, R2, S9, success criteria 5–8, decisions 1–5); amended the same day with R3 (Tasks 5–6), found while building R2. Tasks: [todo.md](todo.md).
 
 ## Overview
 
@@ -14,6 +14,9 @@ Four small changes, built in the order that keeps every commit green: commit the
 - **One list of runtime files:** `tests/conftest.py` `COPY` (plus the four shipped docs) is the source of truth. A new `tests/test_release.py` compares it with `git ls-files` minus `export-ignore` (via `git check-attr`), so the shipped set cannot drift from the tested set. The test skips outside a git checkout (for example an extracted archive).
 - **Self-install settings:** `harnesses = ["cc"]` (no `.agents/` here), `fragment = "dev"`, `cap = 5`, `claude_md = "auto"` (no CLAUDE.md in the repo, so no import block), the default miss log `logs/delegation-misses.jsonl`, committed.
 - **Review without the new agents in this session:** generated agents load when a Claude Code session starts, so this session cannot start `reviewer` or `auditor` by name. The review briefs a subagent with the role file's body and its tier as the model (`reviewer`: sonnet, `auditor`: opus), which is what the generated agent would be.
+
+- **R3: one function spells the re-install command,** `rerun(root)` in `install.py`: `./install --project .` when the project is the routewise folder, otherwise `label(HOME / "install", root)` (normally `routewise/install`). `block.start_line(command)` builds the start marker and `block.START` stays as `start_line("routewise/install")`, so the vendored output and every existing test are byte-identical; `block.insert` takes the start line as an argument with `START` as the default. `roles.render` takes the command for the agent marker. Detection (`START_KEY`, `MARKER_LINE`) does not change.
+- **R3 in the binding:** `templates/binding.md` gets `{{install}}`, `{{roles}}`, `{{harness}}` and `{{miss_log}}` placeholders, filled in `plan_first_run` with the same `label(...)` calls already used for `{{spec}}`. The binding is written on the first run only, so this repo's hand-corrected binding is untouched.
 
 ## Task List
 
@@ -34,8 +37,12 @@ Four small changes, built in the order that keeps every commit green: commit the
 ### Phase 3: Release archive
 - [x] Task 4: `export-ignore` every development file, one-list test, README install from the archive
 
+### Phase 4: Commands spelled per project (R3)
+- [ ] Task 5: The start marker and the agent marker name the project's own re-install command
+- [ ] Task 6: The binding template spells routewise paths from the project root
+
 ### Checkpoint C (end of Build)
-- [ ] `make check` green; all SPEC.md success criteria for R1 and R2 met
+- [ ] `make check` green; all SPEC.md success criteria for R1, R2 and R3 met
 
 ### Verify, Review, Ship
 - [ ] Verify: `make check`; `git archive HEAD | tar -t` lists exactly the R1 runtime files; a fresh project installed from that archive passes success criterion 2
@@ -52,7 +59,8 @@ Four small changes, built in the order that keeps every commit green: commit the
 | The self drift check makes every commit slower | Low | One extra `--check` run, under a second |
 | CLAUDE files above the maintainer's clone print warnings during `make check` | Low | Warnings do not change the exit code; noted, not suppressed |
 | `.claude/agents/` in this repo changes the agents a Claude Code session here uses | Low | Intended (dogfooding): the generated `Explore` replaces the built-in one, as the live checks showed |
+| R3 changes the marker text of files already written | Low | Only the trailing command changes; detection keys are untouched and tested (an old-format agent and block are still recognised and rewritten once) |
 
 ## Open Questions
 
-- `ROUTING-BINDING.md` for this repo needs "Approved by". Proposed: `f0t0n (maintainer), 2026-11-14`, first miss-log review 2026-11-28. Confirm or correct at this gate.
+None. (Approver confirmed: `f0t0n (maintainer), 2026-11-14`. No history rewrite for the `.obsidian/` files committed in `c7a9b93`.)

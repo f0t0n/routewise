@@ -1,4 +1,4 @@
-# Tasks: release archive (R1), routewise on its own repo (R2), workflow docs
+# Tasks: release archive (R1), routewise on its own repo (R2), commands spelled per project (R3), workflow docs
 
 Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). One Conventional Commit per task; `make check` green before each commit (the pre-commit hook enforces it). Tick a box in the same commit that completes it.
 
@@ -91,8 +91,42 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). One Conventional Commit p
 **Files:** `.gitattributes`, `tests/test_release.py`, `tests/conftest.py` (export the shipped-docs list beside `COPY`), `README.md`, `CHANGELOG.md`
 **Scope:** M. Commit: `build: ship only runtime files in release archives`
 
+## Task 5: The start marker and the agent marker name the project's own re-install command
+
+**Description:** Add `rerun(root)` in `lib/install.py`, `block.start_line(command)` (with `START = start_line("routewise/install")`, and `insert(text, body, start=START)`), and a `command` argument to `roles.render`. Test first, then `make self` rewrites this repo's agents and block once.
+
+**Acceptance criteria:**
+- [ ] A vendored install writes exactly the same start marker and agent marker as before (`re-run routewise/install`); a self-install writes `re-run ./install --project .` in both.
+- [ ] An agent file and a block in the old self-install format are still recognised: the next run rewrites them and nothing else (no "exists and was not written by routewise").
+- [ ] `make self` updates `.claude/agents/*.md` and the block in `AGENTS.md`; `make selfcheck` then prints `routewise: nothing to change`.
+
+**Verification:**
+- [ ] New tests fail first, then pass: `uv run pytest tests/test_install.py tests/test_block.py -k "marker or rerun"`
+- [ ] `make check` green
+
+**Dependencies:** Task 3
+**Files:** `lib/install.py`, `lib/block.py`, `lib/roles.py`, `tests/test_install.py`, `CHANGELOG.md`; generated: `AGENTS.md` block, `.claude/agents/*.md`
+**Scope:** M. Commit: `fix: name the project's own re-install command in markers`
+
+## Task 6: The binding template spells routewise paths from the project root
+
+**Description:** Replace the hard-coded `routewise/install`, `routewise/roles/`, `routewise/harness.toml` and `routewise/bin/miss-log` in `templates/binding.md` with `{{install}}`, `{{roles}}`, `{{harness}}` and `{{miss_log}}`, filled in `plan_first_run`.
+
+**Acceptance criteria:**
+- [ ] A vendored first run writes a binding byte-identical in those rows to today's (`routewise/…`).
+- [ ] A self-install first run (on a temporary copy) writes `./install --project .`, `roles/`, `harness.toml`, `bin/miss-log`, and no `routewise/` path; no `{{` is left in either.
+- [ ] This repo's own `ROUTING-BINDING.md` is not rewritten (first run only).
+
+**Verification:**
+- [ ] New test fails first, then passes: `uv run pytest tests/test_install.py -k binding`
+- [ ] `make check` green; `git status` shows no change to `ROUTING-BINDING.md`
+
+**Dependencies:** Task 5 (shares `rerun`)
+**Files:** `templates/binding.md`, `lib/install.py`, `tests/test_install.py`, `CHANGELOG.md`
+**Scope:** S. Commit: `fix: spell routewise paths in the binding from the project root`
+
 ## Checkpoint C (end of Build)
-- [ ] `make check` green; SPEC.md success criteria 1, 4, 5, 6 met
+- [ ] `make check` green; SPEC.md success criteria 1, 4, 5, 6, 7 met
 
 ## Verify
 - [ ] `make check` on the final tree
@@ -101,10 +135,10 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). One Conventional Commit p
 
 ## Review
 - [ ] `reviewer` brief (role body, sonnet, medium) on `git diff <Task 0 commit>^..HEAD`
-- [ ] `auditor` brief (role body, opus, high) on `lib/paths.py` (S9), `.gitattributes`, the Makefile targets
+- [ ] `auditor` brief (role body, opus, high) on `lib/paths.py` (S9), `.gitattributes`, the Makefile targets, and the marker changes (R3: detection of generated files)
 - [ ] Every Critical and Required finding fixed in its own commit, or answered
 
 ## Ship
-- [ ] `CHANGELOG.md` covers R1, R2, S9 and the section 13 record
+- [ ] `CHANGELOG.md` covers R1, R2, R3, S9 and the section 13 record
 - [ ] Release archive contents confirmed again after review fixes
 - [ ] Maintainer pushes from the host
