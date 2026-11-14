@@ -42,10 +42,10 @@ Four small changes, built in the order that keeps every commit green: commit the
 - [x] Task 6: The binding template spells routewise paths from the project root
 
 ### Checkpoint C (end of Build)
-- [ ] `make check` green; all SPEC.md success criteria for R1, R2 and R3 met
+- [x] `make check` green; all SPEC.md success criteria for R1, R2 and R3 met
 
 ### Verify, Review, Ship
-- [ ] Verify: `make check`; `git archive HEAD | tar -t` lists exactly the R1 runtime files; a fresh project installed from that archive passes success criterion 2
+- [x] Verify: `make check`; `git archive HEAD | tar -t` lists exactly the R1 runtime files; a fresh project installed from that archive passes success criterion 2
 - [ ] Review: `reviewer` (sonnet, medium) on the whole change; `auditor` (opus, high) on S9 and `.gitattributes`; every Critical and Required finding fixed in its own commit
 - [ ] Ship: `CHANGELOG.md` complete, archive contents confirmed, commits ready; the maintainer pushes from the host
 

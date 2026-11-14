@@ -126,12 +126,14 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). One Conventional Commit p
 **Scope:** S. Commit: `fix: spell routewise paths in the binding from the project root`
 
 ## Checkpoint C (end of Build)
-- [ ] `make check` green; SPEC.md success criteria 1, 4, 5, 6, 7 met
+- [x] `make check` green; SPEC.md success criteria 1, 4, 5, 6, 7 met
 
 ## Verify
-- [ ] `make check` on the final tree
-- [ ] `git archive HEAD | tar -t` lists exactly the R1 runtime files
-- [ ] Extract that archive into a fresh project's `routewise/`, run `routewise/install`: success criterion 2 holds
+- [x] `make check` on the final tree
+- [x] `git archive HEAD | tar -t` lists exactly the R1 runtime files
+- [x] Extract that archive into a fresh project's `routewise/`, run `routewise/install`: success criterion 2 holds
+
+Verified 2026-11-14: `make check` exit 0 (152 tests); the archive at `d96c538` lists exactly the 11 R1 entries; from that archive a fresh project gets exactly the 9 files of criterion 2, and a project with its own `AGENTS.md`, CRLF `CLAUDE.md` and `CLAUDE.local.md` gets them back byte-identical after uninstall (criterion 3); reverting S9 or tying agent detection to the command makes tests fail (criterion 4 for the rules this change touched).
 
 ## Review
 - [ ] `reviewer` brief (role body, sonnet, medium) on `git diff <Task 0 commit>^..HEAD`
