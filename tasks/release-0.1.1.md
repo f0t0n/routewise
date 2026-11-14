@@ -1,0 +1,31 @@
+A bug-fix release: the miss log's privacy filter now refuses two kinds of private text that 0.1.0 let through. Update if your project commits `logs/delegation-misses.jsonl`, since an entry that gets in stays in git history.
+
+## Fixed
+
+- **The miss log refuses an e-mail address without a dot in the domain:** `me@localhost`, `anna@corp`, `deploy@main-db`. Package and git references still pass: `pkg@latest`, `actions/checkout@v4`, `HEAD@{1}`.
+- **The miss log refuses a link without a scheme or `www.`:** `example.com/page`, `jira.corp.net/browse/X-1`, also with a port (`host.corp:8080/x`), in capitals, with a Unicode host, as `//host/x`, or followed by `?…` or `#…`. File paths, versions and ratios still pass: `lib/privacy.py`, `src/a.ts/`, `README.md/`, `docs/v0.1.0/`, `3.5/5`.
+- **`react@18.3.1` and other versions after `@` now pass;** 0.1.0 refused them as an address.
+- **`bin/miss-log` prints its errors as `routewise: <message>`**, like every other routewise command, instead of `miss-log: <message>`. The exit code (2) and the message text are unchanged.
+
+## Newly refused code words
+
+A few code words read exactly like a link or an address, so the miss log now refuses them: a dotted name before a slash whose last part is all letters (`logger.info/debug`, `os.path/join`, `ASP.NET/Core`) and `a@b`. Write them with a space or "and" (`logger.info and logger.debug`). `logger.info`, `@property` and `GPT-4` on their own still pass.
+
+The filter still cannot catch a name, a bare host name without a path, or an internal ID; the agent describes a miss in its own words.
+
+## Also new
+
+- The README's "Install into a project" opens with a copy-paste install of the current release, and "Updating" has the same for a newer one. Both stop on an HTTP error and never run an older copy.
+
+## Update
+
+From the project root (the old folder is replaced only after the download succeeded):
+
+```sh
+v=0.1.1
+mkdir routewise.new && curl -fsSL "https://github.com/f0t0n/routewise/archive/refs/tags/v$v.tar.gz" | tar -xz --strip-components=1 -C routewise.new && rm -rf routewise && mv routewise.new routewise && routewise/install
+```
+
+No generated file changes in this release: on a 0.1.0 install, `routewise/install` prints `routewise: nothing to change`. Your `routewise.toml`, `ROUTING-BINDING.md` and miss log stay as they are. Entries already in the miss log are not re-checked.
+
+Full list: [CHANGELOG](https://github.com/f0t0n/routewise/blob/v0.1.1/CHANGELOG.md).

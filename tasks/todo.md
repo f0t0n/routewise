@@ -69,13 +69,15 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Description:** Write `tasks/release-0.1.1.md` for users, in the shape of `tasks/release-0.1.0.md`: what 0.1.1 fixes (R5, R6, and R4's README install block), what is newly refused and how to reword it, how to update (the README's "Updating" block with `v=0.1.1`), and links to `CHANGELOG.md` and the README.
 
 **Acceptance criteria:**
-- [ ] Every claim matches `CHANGELOG.md` 0.1.1 and the code; nothing in it is missing from the CHANGELOG.
-- [ ] The update commands are copied from the README, not retyped.
+- [x] Every claim matches `CHANGELOG.md` 0.1.1 and the code; nothing in it is missing from the CHANGELOG.
+- [x] The update commands are copied from the README, not retyped.
 
 **Verification:**
-- [ ] Read against `CHANGELOG.md` and `README.md`; checked again by `reviewer` in Task 5; `make check` green
+- [x] Read against `CHANGELOG.md` and `README.md`; checked again by `reviewer` in Task 5; `make check` green
 
 **Dependencies:** Task 3. **Files:** `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): draft the 0.1.1 release notes`
+
+**Result (2026-11-14):** `tasks/release-0.1.1.md` drafted. Each claim was checked against `CHANGELOG.md` 0.1.1 and `privacy.finding()`; the one claim the CHANGELOG lacked (`#` after a host) was added to the CHANGELOG, since code and tests cover it. The update block is byte-identical to the README's "Updating" block (checked by script). "No generated file changes" was checked: a project installed from `git archive v0.1.0`, updated to HEAD, prints `routewise: nothing to change`. `reviewer` still checks the notes in Task 5.
 
 ## Task 5: Review and audit of the final change and the notes
 
