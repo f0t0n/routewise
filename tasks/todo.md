@@ -273,17 +273,24 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Description:** One `fix:` commit for U1, U2, V1, V3, test first. Every round-4 false positive becomes an allowed test; the leak cases that relied on brackets, braces, angle brackets or quotes after the `@` move to a pinned "kept gap" list so the change is visible.
 
 **Acceptance criteria:**
-- [ ] Red on HEAD for each U1 and U2 phrase as an allowed test; green after.
-- [ ] `jira。corp。net/x`, `10。0。0。1`, `redirect=%40example。com/path` and every other leak still refused; the encoded-`@` and invisible-character guards still pass.
-- [ ] The cases `{anna}@`, `[anna]@`, `<anna>@`, `(anna)@`, `anna@"…"`, `anna@'…'`, `anna@{…}`, `anna@[…]`, `anna@<…>` move from the refused lists to a `KEPT_GAPS` list that asserts they pass (R5), so a later change to them is deliberate; none is silently deleted.
-- [ ] `views()` returns no duplicate; `100%40 off foo.bar` is an allowed test.
-- [ ] Mutations re-run with a control equal to the repo; survivors named.
-- [ ] CHANGELOG 0.1.1, README Safety bullet and the notes match R5 (markup list, `。` rule, kept gaps, gaps for 0.1.2).
+- [x] Red on HEAD for each U1 and U2 phrase as an allowed test; green after.
+- [x] `jira。corp。net/x`, `10。0。0。1`, `redirect=%40example。com/path` and every other leak still refused; the encoded-`@` and invisible-character guards still pass.
+- [x] The cases `{anna}@`, `[anna]@`, `<anna>@`, `(anna)@`, `anna@"…"`, `anna@'…'`, `anna@{…}`, `anna@[…]`, `anna@<…>` move from the refused lists to a `KEPT_GAPS` list that asserts they pass (R5), so a later change to them is deliberate; none is silently deleted.
+- [x] `views()` returns no duplicate; `100%40 off foo.bar` is an allowed test.
+- [x] Mutations re-run with a control equal to the repo; survivors named.
+- [x] CHANGELOG 0.1.1, README Safety bullet and the notes match R5 (markup list, `。` rule, kept gaps, gaps for 0.1.2).
 
 **Verification:**
-- [ ] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
+- [x] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
 
 **Dependencies:** Task 11 round 4, R5 amended (`8378252`). **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `README.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: stop the miss-log filter refusing code and CJK text that 0.1.0 allowed`
+
+**Result (2026-11-14):**
+
+- **Red on HEAD (`70fc5c5`):** 45 failed: 9 of the 10 round-4 phrases as allowed tests (`100%40 off foo.bar` already passed, kept as a guard), the 9 `KEPT_GAPS` cases (moved from the refused lists, none deleted), and the same 18 phrases with an invisible character inserted (27 of the guard's cases).
+- **Green:** `ASCII_STOP` reads `。` as a dot only between ASCII letters or digits; `MARKUP_BEFORE_AT` is `\ " ' * ` _ ~`, `MARKUP_AFTER_AT` is `* ` _ ~`; `views()` drops duplicate views. Every other leak and every guard still passes.
+- **Mutations:** control 668 = repo 668. A first run had two mistakes of mine: one mutation did not apply, and "re-add `] }`" produced a broken regex (52 failures, a kill for the wrong reason). Rerun with each mutant checked to import first: 14 of 14 killed, after adding `updated config。然后改a/b` (the "no lookahead" mutant survived without it). Earlier run: `。` everywhere, no lookbehind, never a dot all killed. "No dedupe" survives by design (speed only).
+- **Docs:** CHANGELOG 0.1.1 and the notes give the Markdown-and-quotes markup, the `。` rule, the new kept gaps and the gaps planned for 0.1.2; the README bullet still holds. `make check`: 788 passed.
 
 ## Task 13: Round-5 review, scoped to what 0.1.1 broke
 

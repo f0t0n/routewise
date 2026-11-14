@@ -45,9 +45,13 @@ SOURCE_TYPES = (
 DEEP_HOST = r"[\w-]+(?:\.[\w-]+)+\." + TLD
 SHALLOW_HOST = r"[\w-]+\.(?!(?:" + SOURCE_TYPES + r")(?![\w-]))" + TLD
 # Markdown, quotes or an escape around the @ of a dotted address: "anna"@, anna\@, `anna`@,
-# [anna]@, {anna}@, ***anna***@, anna@**corp.com**, anna@"corp.com". Up to three each side.
-MARKUP_BEFORE_AT = r"""[\\"'*`_~)\]}>]{0,3}"""
-MARKUP_AFTER_AT = r"""[*`_~(\[{<"']{0,3}"""
+# ***anna***@, anna@**corp.com**. Up to three each side. Not brackets, braces or quotes after
+# the @: those are code (a[i]@m.T, f"{user}@{cfg.domain}", obj@"pkg.json").
+MARKUP_BEFORE_AT = r"""[\\"'*`_~]{0,3}"""
+MARKUP_AFTER_AT = r"[*`_~]{0,3}"
+# An ideographic full stop between ASCII letters or digits is a dot (jira。corp。net); after CJK
+# text it ends a sentence.
+ASCII_STOP = re.compile(r"(?<=[A-Za-z0-9])\u3002(?=[A-Za-z0-9])")
 
 PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (
@@ -133,8 +137,8 @@ def views(text: str) -> list[str]:
     for gap in (" ", ""):
         spaced = "".join(gap if invisible(c) else c for c in text)
         for decoded in (spaced, ENCODED_AT.sub("@", spaced)):
-            out.append(unicodedata.normalize("NFKC", decoded).replace("\u3002", "."))
-    return out
+            out.append(ASCII_STOP.sub(".", unicodedata.normalize("NFKC", decoded)))
+    return list(dict.fromkeys(out))  # normal text gives four equal views
 
 
 def first_match(text: str) -> str | None:

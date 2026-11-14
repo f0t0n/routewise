@@ -109,8 +109,6 @@ LEAKS_SINCE_0_1_1 = [
     "ask anna&#064;corp.com",
     "ask anna&commat;corp.com",
     "ask `anna`@corp.com",
-    "ask [anna]@corp.com",
-    "ask <anna>@corp.com",
     "ask anna***@corp.com",
     "ask ***anna***@corp.com",
     "ask anna@**corp.com**",
@@ -126,13 +124,7 @@ LEAKS_SINCE_0_1_1 = [
     "שלום\u200e10。0。0。1",
     # \x40, more markup, and pins for each lossy step and markup character.
     "ask anna\\x40corp.com",
-    "ask {anna}@corp.com",
-    'ask anna@"corp.com"',
-    "ask anna@'corp.com'",
-    "ask anna@{corp.com}",
     "ask anna~@corp.com",  # not ~anna: that is a home folder path and hides the case
-    "ask (anna)@corp.com",
-    "ask anna@[corp.com]",
     "ask anna@~~1password.com~~",  # a digit after ~, so the home folder rule does not fire
     "ask anna％40corp.com",  # a full-width % becomes %40 only after NFKC
     "ask anna&#X40;corp.com",
@@ -187,6 +179,34 @@ CLEAN_SINCE_0_1_1 = [
     "anna****@corp.com and anna@****corp.com: markup is up to three characters (R5)",
     'printf %40s, 100%40 done, a["k"]@b, he said "hi"@ noon',
 ]
+# Kept gaps since round 4 (R5): brackets, braces, angle brackets and quotes after the @ are code
+# (a[i]@m.T, f"{user}@{cfg.domain}"), so these pass. Moving one back to the refused lists is an R5
+# change, not a cleanup.
+KEPT_GAPS = [
+    "ask [anna]@corp.com",
+    "ask <anna>@corp.com",
+    "ask {anna}@corp.com",
+    "ask (anna)@corp.com",
+    'ask anna@"corp.com"',
+    "ask anna@'corp.com'",
+    "ask anna@{corp.com}",
+    "ask anna@[corp.com]",
+    "ask anna@<corp.com>",
+]
+# Text 0.1.0 allowed that rounds 2 to 4 refused for a while (success criterion 10).
+CLEAN_SINCE_ROUND_4 = [
+    "修复路由。然后改a/b",
+    "已修复。lib/x.py",
+    "ルーティングを修正。次にsrc/a.tsを確認",
+    "updated config。然后改a/b",  # 。 after ASCII but before CJK ends a sentence
+    'built the address as f"{user}@{cfg.domain}"',
+    "template {{user}}@{{site.domain}}",
+    "f-string {x}@{y.T} for matmul",
+    'set obj@"pkg.json"',
+    "wrote x@'a.b' in the test",
+    "computed a[i]@m.T and f(x)@w.T",
+    "100%40 off foo.bar",
+]
 # Every character R5 counts as invisible, one per range and every one 0.1.1 listed first.
 INVISIBLE = [
     *"\u200b\u200c\u200d\u200e\u200f\u2060\u2061\u2062\u2063\u2064\ufeff\u00ad\u180e\u034f",
@@ -213,7 +233,7 @@ def test_refuses_clear_leaks(text: str):
     assert finding(text) is not None
 
 
-@pytest.mark.parametrize("text", CLEAN + CLEAN_SINCE_0_1_1)
+@pytest.mark.parametrize("text", CLEAN + CLEAN_SINCE_0_1_1 + CLEAN_SINCE_ROUND_4 + KEPT_GAPS)
 def test_allows_normal_code_words(text: str):
     assert finding(text) is None
 
@@ -262,7 +282,7 @@ def test_refuses_a_leak_right_after_an_invisible_character(text: str, char: str)
 
 
 @pytest.mark.parametrize("char", ["\u200e", "\u2066", "\u200b"], ids=["LRM", "LRI", "ZWSP"])
-@pytest.mark.parametrize("text", CLEAN + CLEAN_SINCE_0_1_1)
+@pytest.mark.parametrize("text", CLEAN + CLEAN_SINCE_0_1_1 + CLEAN_SINCE_ROUND_4)
 def test_allows_normal_text_with_an_invisible_character(text: str, char: str):
     first, _, rest = text.partition(" ")
     assert finding(f"{first}{char} {rest}") is None
