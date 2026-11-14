@@ -30,8 +30,10 @@ Note: the block starts at `v=` with "From the project root:" above it, instead o
 Verified 2026-11-14: the block, extracted from `README.md` by the test's rule and run with `bash -e` in an empty git repo, downloaded the published `v0.1.0` archive from GitHub and installed routewise 0.1.0: 9 files, a second run and `--check` clean, the installed folder holds the 11 runtime entries.
 
 ## Review
-- [ ] `reviewer` brief (role body, sonnet, medium) on the README diff and the test
-- [ ] Findings fixed or answered
+- [x] `reviewer` brief (role body, sonnet, medium) on the README diff and the test
+- [x] Findings fixed or answered
+
+Reviewed 2026-11-14 (`reviewer`, sonnet): three Required and four Optional findings, all fixed in `c04e67d`: the block pasted over an existing install ran the old copy (now one `mkdir … && curl -fsSL … | tar --strip-components=1 -C routewise && routewise/install` chain, and Updating replaces the folder only after a successful download); the test checked only `v=` and could read the wrong block (now: the heading must exist, exactly one curl block, the chain, the `v$v` URL, and every `v=` in the README); `curl -f`; the wording of the lead-in and step 1; the failure message prints the block. Re-verified against GitHub with blocks extracted from the README: first install 9 files; pasted again it stops at `mkdir` and leaves the install untouched; Updating swaps the folder and `--check` is clean; a missing version fails on `curl: (22) 404` (the empty folder it leaves is now mentioned in the README).
 
 ## Ship
 - [ ] Maintainer pushes `main` from the host (no tag: the change ships in the next release)
