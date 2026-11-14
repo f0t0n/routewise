@@ -143,11 +143,59 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 
 **Dependencies:** Task 6. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record the review of R5 and R6`
 
+**Round 2 (2026-11-14):** fresh `reviewer` and `auditor` on `1aa6725`. `reviewer`: approve (Optional only). `auditor`: not ready, two regressions introduced by `1aa6725`. An automated security check on the commit raised the same two classes as the auditor's Required items. Every finding was reproduced against `1aa6725^` and `1aa6725` before triage. The maintainer approved the calls below; R5 amended in `51c13dc`.
+
+| # | From | Finding | Answer |
+|---|---|---|---|
+| R1 | auditor, Required, **regression** | Removing LRM etc. joins a token to the word before it: `x<LRM>AKIA…`, `שלום<LRM>ghp_…`, `כתובת<LRM>10.0.0.1`, `שלום<LRM>https://…`, `id<LRM><uuid>` refused before, pass now | Two views of the text: split view turns invisible characters into spaces (Task 8) |
+| R2 | auditor, Required, **regression** | Decoding `%40` hides a link after it: `redirect=%40host.com/path`, `(%40example.com/x)` | Split view does not decode (Task 8) |
+| R3 | auditor, Required + security check | Bidi controls not removed: `anna<U+2066>@corp.com`, U+202A, U+061C | Remove every Cf character, in both views (Task 8) |
+| R4 | auditor, Optional + security check | Variation selectors, tag characters split an address | Remove U+FE00–FE0F; tags are Cf (Task 8) |
+| R5 | auditor, Optional | NFKC before removal: `jose<ZWSP><U+0301>@corp.com` passes | NFKC again after removal in the joined view (Task 8) |
+| R6 | auditor, Optional + security check | `\u0040`, `&#x40;`, `&#064;`, `&commat;` pass | Decode them in the joined view (Task 8) |
+| R7 | auditor + reviewer, Optional + security check | `` `anna`@ ``, `[anna]@`, `<anna>@`, `anna***@`, `anna@**corp.com**` pass | Up to three markup characters before and after the `@`, dotted only (Task 8) |
+| R8 | auditor, Optional | Defanged `anna[@]corp[.]com` passes | Kept gap, in R5 |
+| R9 | reviewer, Optional | U+2063, U+2064 not tested (range mutation stays green) | A test per invisible class and per old code point (Task 8) |
+| R10 | reviewer, Optional | The markup limit is not pinned (`{0,2}`→`{0,3}` green) | Pin the new limit of three (Task 8) |
+| R11 | reviewer, Optional | The markup class is hard to read inside `r"…"` | Name it (Task 8) |
+| R12 | reviewer, Optional | Notes clause "common in text pasted from a web page" is not in the CHANGELOG | Bring notes and CHANGELOG in line (Task 8) |
+| R13 | reviewer, Optional | `%2540` (double encoding) is not decoded | Kept gap, in R5 |
+| – | reviewer | Its control run reported 59 passed, against 131 cases in the file | Its mutation results are re-run by hand in Task 8, with a control |
+
+## Task 8: Fix the re-review findings
+
+**Description:** One `fix:` commit for R1–R7 and R9–R12, built test first. `lib/privacy.py` `finding()` checks a split view and a joined view (SPEC.md R5, "Normalisation, two views of the text"); invisible characters are every Cf character plus U+034F and U+FE00–FE0F; the joined view decodes the six forms of `@` and runs NFKC again; the markup before and after the `@` of a dotted address is named and allows up to three characters.
+
+**Acceptance criteria:**
+- [ ] Red shown on HEAD for: the 7 regression inputs (R1, R2), the bidi, variation-selector and tag cases (R3, R4), the accent case (R5), the four `@` encodings (R6) and the markup cases (R7); green after.
+- [ ] A guard test: every refused case (secrets, leaks, 0.1.1 leaks) stays refused with `x` + an invisible character put in front of it, for LRM, U+2066 and ZWSP; every allowed case stays allowed with an invisible character inserted after its first word (assumption 2 of the R5 amendment).
+- [ ] A test per invisible class (Cf sample from each range, U+034F, U+FE0F) and for every code point of the old list, U+2063 and U+2064 included; the markup limit of three is pinned (four passes, three is refused).
+- [ ] The markup classes are named constants; no allowed case removed or moved.
+- [ ] Mutations re-run with an unmutated control, including round 2's survivors (`\u2060-\u2063`, `{0,2}`→`{0,3}`); survivors named here.
+- [ ] CHANGELOG 0.1.1, README Safety bullet and `tasks/release-0.1.1.md` say what is refused now; the notes add nothing the CHANGELOG lacks.
+
+**Verification:**
+- [ ] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
+
+**Dependencies:** Task 7 round 2, R5 amended (`51c13dc`). **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `README.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** M. Commit: `fix: check two views of miss-log text so invisible characters cannot hide a leak`
+
+## Task 9: Re-review the second fix
+
+**Description:** Fresh `reviewer` and `auditor` together on the Task 8 commit against R5 as amended in `51c13dc`, briefed with the diff and spec, not earlier findings; the auditor compares against the commit before it on fuzzed input. Fix or answer every finding; a new R5 decision goes to the maintainer first.
+
+**Acceptance criteria:**
+- [ ] Every finding fixed or answered and listed here; no open Critical or Required; no regression against `1aa6725^` or `1aa6725`.
+
+**Verification:**
+- [ ] `make check` green after any fix
+
+**Dependencies:** Task 8. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record round 3 of the 0.1.1 review`
+
 
 ## Checkpoint: reviewed
 - [ ] No open Critical or Required finding; maintainer has seen the findings
 
-## Task 8: Ship checks and the tag commands
+## Task 10: Ship checks and the tag commands
 
 **Description:** Check the release contents on the final commit and give the maintainer the exact tag and push commands.
 
@@ -160,7 +208,7 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Verification:**
 - [ ] `make check` green on the final commit
 
-**Dependencies:** Task 7. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
+**Dependencies:** Task 9. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
 
 ## Ship (maintainer, from the host)
 - [ ] `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>`
