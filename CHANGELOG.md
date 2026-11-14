@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1 (2026-11-14)
 
 - The miss-log filter refuses two leaks that 0.1.0 let through: an e-mail address without a dot in the domain (`me@localhost`, `anna@corp`, `deploy@main-db`) and a link without a scheme or `www.` (`example.com/page`, `JIRA.CORP.NET:8080/browse/X-1`, `//host/x`, `jira.corp.net?id=1`), Unicode hosts included; an ideographic full stop counts as a dot. File paths, versions and ratios still pass: a host with one dot must start a word and not end in a source file type (`src/a.ts/`, `README.md/`, `Next.js/`, `docs/v0.1.0/`, `3.5/5` pass), and `HEAD@{1}`, `pkg@latest`, `actions/checkout@v4` and now `react@18.3.1` pass too. Newly refused code words: a dotted name before a slash whose last part is all letters (`logger.info/debug`, `os.path/join`, `ASP.NET/Core`) and `a@b`; write them with a space or `and` instead.
 - The README's "Install into a project" opens with a copy-paste install of the current release, and "Updating" has the same for a newer one. Both stop on an HTTP error and never run an older copy (a first install stops if `routewise/` exists; an update replaces it only after the download succeeded). A test keeps every version in the README equal to `pyproject.toml` (spec R4).

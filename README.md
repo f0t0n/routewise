@@ -21,7 +21,7 @@ Supported harnesses: Claude Code (`cc`) and Antigravity CLI (`agy`; its agents f
 From the project root, for a first install (it stops if `routewise/` already exists; to update, see [Updating](#updating)):
 
 ```sh
-v=0.1.0
+v=0.1.1
 mkdir routewise && curl -fsSL "https://github.com/f0t0n/routewise/archive/refs/tags/v$v.tar.gz" | tar -xz --strip-components=1 -C routewise && routewise/install
 ```
 
@@ -79,7 +79,7 @@ Review the miss log two weeks after install, then monthly. Change a role's tier 
 Replace the `routewise/` folder with a newer release and run `routewise/install`. From the project root (the old folder is replaced only after the download succeeded):
 
 ```sh
-v=0.1.0
+v=0.1.1
 mkdir routewise.new && curl -fsSL "https://github.com/f0t0n/routewise/archive/refs/tags/v$v.tar.gz" | tar -xz --strip-components=1 -C routewise.new && rm -rf routewise && mv routewise.new routewise && routewise/install
 ```
 
