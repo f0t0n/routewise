@@ -108,6 +108,42 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green be
 
 **Dependencies:** Task 7. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record the review of R7`
 
+**Round (2026-11-14):** fresh `reviewer` and `auditor` on `daa469d..HEAD`. `reviewer`: request changes (one Required); its control matched the repo; 39 mutants, all import, 33 killed. `auditor`: not ready (one Required); 9.4M inputs against 0.1.1; every other difference is a kind R7 names. Both Required findings are regressions against R7's bar from my changes, reproduced. The maintainer approved the calls below; R7 amended (`docs(spec): amend R7 after its review…`).
+
+| # | From | Finding | Answer |
+|---|---|---|---|
+| A | reviewer, Required | G3 refuses Windows scoped-package paths 0.1.1 allowed: `node_modules\@types\node`, `src\@angular\core`, `C:\proj\@scope\pkg` | An escaped `@` counts only when no `\` or `/` follows the name (Task 8b) |
+| B | auditor, Required | Cards 0.1.1 refused pass: `card 4111 1111 1111 1111 2次`, `第1 4111 1111 1111 1111`, `card 5500-0000-0000-0004-1é` (a stray digit group joins the ASCII-edged match and fails Luhn) | Look for cards with both edge styles (Task 8b) |
+| C | reviewer, Optional | `WORD_END`'s ASCII side and an ASCII letter before `eyJ` untested | Next release (stopping rule) |
+| D | reviewer, Nits | "Passes again" for `foo.bar?!` and `?:x` (they passed in 0.1.1); G1 also after a non-ASCII digit | Wording fixed (Task 8b; R7 says "letter or digit") |
+| E | auditor, Nit | `foo.bar?İstanbul` refused (`İ` folds to ASCII; 0.1.1 too) | Next release |
+| 1 | build | `see example。中国/x` passes | Stays with R5's `。` trade-offs |
+| 2 | security check | `wiki.corp.io#Раздел` passes; suggestion to exclude only CJK | R7's kept gap stays (the suggestion refuses `Почему foo.bar?Потому`) |
+| 3 | build | `me\\@localhost` (two backslashes) passes | Next release |
+
+## Task 8b: Fix the review findings A, B and D
+
+**Description:** One `fix:` commit, test first. A: the dotless rule takes `\@` only when the name is not followed by `\` or `/`. B: `has_card` looks for cards with the ASCII edges and with 0.1.1's `\b` edges. D: CHANGELOG and notes wording.
+
+**Acceptance criteria:**
+- [ ] Red on HEAD: the three Windows paths as allowed; the three cards as leaks; green after. `me\@localhost` still refused; `卡号4111 1111 1111 1111了` still refused.
+- [ ] Differential check against `daa469d` on every test input: every difference is an R7 item (as amended).
+- [ ] Mutations on the new lookahead and each card edge style, with a control equal to the repo, each mutant checked to import; survivors named.
+- [ ] CHANGELOG 0.1.2 and the notes: the path exception, the card line, "still pass" for `foo.bar?!` and `?:x`, "letter or digit".
+
+**Verification:** `uv run pytest tests/test_privacy.py` red, then green; `make check` green.
+
+**Dependencies:** Task 8 round, R7 amended. **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `tasks/release-0.1.2.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: let Windows paths with \@ pass and keep every 0.1.1 card catch (R7)`
+
+## Task 8c: One more round, scoped to the Task 8b fix
+
+**Description:** Stopping rule: a fix for a Required finding gets one round scoped to it. Fresh `reviewer` and `auditor` on the Task 8b commit only: A and B do what R7 says, open nothing, and break nothing 0.1.1 allowed or refused (differential against `daa469d` on the touched rules); the doc wording matches. Findings outside that scope go to the next release.
+
+**Acceptance criteria:**
+- [ ] No open Critical or Required finding in scope; findings listed here.
+
+**Dependencies:** Task 8b. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS. Commit: `docs(tasks): record the review of R7`
+
 ## Checkpoint: reviewed
 - [ ] No open Critical or Required finding; maintainer has seen the findings.
 
