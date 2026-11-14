@@ -1,0 +1,183 @@
+# Spec: routewise (the tool)
+
+Status: approved 2026-11-14. Describes routewise 0.1.0 as built, plus two approved additions: a clean release archive (R1) and routewise running on its own repo (R2).
+
+This file specifies the **tool**: the installer, the miss log, the role files and templates, the safety rules they keep, and how this repo is developed. The **rules** the tool installs (tiers, roles, delegation, escalation, measurement) are a separate, project-agnostic document, [spec/SPEC-model-routing.md](spec/SPEC-model-routing.md), shipped unchanged into every project. When the two disagree on a rule, the rules spec wins; when they disagree on how a file is written, this spec wins.
+
+## Objective
+
+routewise turns the rules spec into files an agent harness actually loads, so model routing and delegation are set by rules instead of the agent's mood.
+
+Users:
+
+- **Project maintainer:** copies `routewise/` into a project, runs `routewise/install`, reviews `routewise.toml`, fills in `ROUTING-BINDING.md`, commits.
+- **An agent adopting it for a person:** follows [ADOPT.md](ADOPT.md) step by step.
+- **The agent working in the project afterwards:** reads the delegation block in `AGENTS.md`, starts the generated subagents, records misses with `routewise/bin/miss-log`.
+- **routewise maintainer** (and the agents helping): develops this repo by the workflow below; projects replace `routewise/` wholesale on update.
+
+What it must do:
+
+1. **Agents.** Render each neutral role in `roles/*.md` into the agent format of each chosen harness (`cc`: `.claude/agents/`, `agy`: `.agents/agents/`), with the tier mapped to a model and the effort set where the harness supports it (`harness.toml`, overrides in `routewise.toml` `[tiers]`).
+2. **Delegation block.** Write the fragment (`templates/fragment-dev.md` or `fragment-assistant.md`) between `routewise:start` and `routewise:end` markers in each instruction file (default `AGENTS.md`).
+3. **Claude Code bridge.** Per `claude_md` (`auto`, `import`, `none`), keep a routewise block holding an `@AGENTS.md` import in `CLAUDE.md`, or `@../AGENTS.md` in `.claude/CLAUDE.md`, so Claude Code reads `AGENTS.md`; note a lone `CLAUDE.local.md` and warn about CLAUDE files above the project. Verified live on Claude Code 2.1.325 (rules spec section 13).
+4. **First run.** Write `routewise.toml` (settings), `ROUTING-BINDING.md` (approvals, rules spec section 9) and an empty miss log, never overwriting them later.
+5. **Drift and removal.** `--check` reports what a run would change and writes nothing; `--uninstall` removes generated agents and every routewise block, keeping settings, binding and miss log.
+6. **Miss log.** `bin/miss-log add` appends one validated JSON line per wrong or redone delegated result, stamping time, tier and effort itself; `report` summarises by role, tier and effort.
+7. **R1: Clean release archive.** A release archive (GitHub's "Source code" download for a tag, or `git archive`) holds only the runtime files: `install`, `bin/`, `lib/`, `roles/`, `harness.toml`, `templates/`, `spec/`, `README.md`, `ADOPT.md`, `LICENSE`, `CHANGELOG.md`. Every development file is marked `export-ignore` in `.gitattributes`. The README recommends installing from a release archive; a submodule or subtree still works but carries the development files, and `AGENTS.md` keeps a guard for agents in a host project.
+8. **R2: routewise on its own repo.** The installer also accepts the routewise folder itself as the project root, so this repo runs `./install --project .` (`make self`) on itself: its own `routewise.toml`, `ROUTING-BINDING.md`, `.claude/agents/`, miss log and a delegation block in this repo's `AGENTS.md`, with paths spelled from the repo root (`bin/miss-log`). `make check` runs `./install --project . --check`, so a change to roles, templates or `harness.toml` that is not re-installed fails the pre-commit hook.
+
+## Development workflow (every request)
+
+Every request to change this repo, from a typo to a new harness, goes through the [agent-skills](https://github.com/addyosmani/agent-skills) lifecycle by Addy Osmani. Each phase is scaled to the change (a one-line fix has a one-line spec and a one-task plan) but none is skipped, and each ends at a human gate: the maintainer approves before the next phase starts.
+
+```
+  DEFINE          PLAN           BUILD          VERIFY         REVIEW          SHIP
+ ┌──────┐      ┌──────┐      ┌──────┐      ┌──────┐      ┌──────┐      ┌──────┐
+ │ Idea │ ───▶ │ Spec │ ───▶ │ Code │ ───▶ │ Test │ ───▶ │  QA  │ ───▶ │  Go  │
+ │Refine│      │  PRD │      │ Impl │      │Debug │      │ Gate │      │ Live │
+ └──────┘      └──────┘      └──────┘      └──────┘      └──────┘      └──────┘
+  /spec          /plan          /build        /test         /review       /ship
+```
+
+| Phase | Skills | In this repo | Gate |
+|---|---|---|---|
+| **Define** (`/spec`) | `spec-driven-development`; `interview-me` or `idea-refine` when the ask is vague | Update this file first (objective, requirement, safety rule or success criterion), list assumptions and open questions. | Maintainer approves the spec change. |
+| **Plan** (`/plan`) | `planning-and-task-breakdown` | `tasks/plan.md` and `tasks/todo.md`: small tasks in dependency order, each with acceptance criteria, a verify step and the files it touches. | Maintainer approves the plan. |
+| **Build** (`/build`) | `incremental-implementation`, `test-driven-development`; `source-driven-development` when a harness behaviour is involved | One task at a time: failing test, code, `make check` green, one Conventional Commit per task. Docs and `CHANGELOG.md` move with the behaviour. | Each task green before the next. |
+| **Verify** (`/test`) | `test-driven-development`, `debugging-and-error-recovery` | `make check` on the whole change; for a harness fact, a live run recorded in rules spec section 13. A failure is debugged to its root cause, never skipped. | All checks green, evidence shown. |
+| **Review** (`/review`) | `code-review-and-quality` (five axes), `security-and-hardening` for paths, files and the miss log | Delegated per this repo's own delegation block: the `reviewer` subagent for the change, `auditor` for anything touching safety rules S1–S9. Findings fixed or answered. | No open Critical or Required finding. |
+| **Ship** (`/ship`) | `shipping-and-launch`, `git-workflow-and-versioning` | No deployment: version and `CHANGELOG.md` updated, release archive contents checked (R1), commits ready. The maintainer pushes and tags from the host; agents never push from the sandbox. | Maintainer's go. |
+
+## Tech Stack
+
+- Python 3.11+ standard library only at run time (`tomllib`, `argparse`, `dataclasses`, `pathlib`). No third-party runtime dependency, no YAML library: role frontmatter is parsed by a strict line parser.
+- `bash` entry points (`install`, `bin/miss-log`) that check the Python version and run `python3 -B lib/<module>.py`.
+- Development only: `uv`, `pytest` (pinned in `uv.lock`), `ruff`, `pyright`, `shellcheck`, `gitleaks`; the agent-skills plugin for the workflow.
+
+## Commands
+
+```sh
+uv sync                       # dev environment (.venv, from uv.lock)
+make check                    # lint, typecheck, secrets, tests, self-install drift (R2); the pre-commit hook
+make lint                     # ruff check, ruff format --check, shellcheck
+make typecheck                # pyright in the project environment
+make secrets                  # gitleaks: history, then staged changes
+make test                     # uv run pytest
+uv run pytest tests/test_install.py -k claude_md   # one area
+make fmt                      # ruff format + ruff check --fix
+make hooks                    # once per clone: use .githooks/pre-commit
+make self                     # ./install --project . : re-install routewise on this repo (R2)
+                              # never a bare ./install here: its default project is the folder above
+git archive --format=tar HEAD | tar -t   # what a release archive ships (R1)
+```
+
+Tool commands, run from a project that holds `routewise/`:
+
+```sh
+routewise/install                 # set up or update
+routewise/install --check         # exit 1 on drift, write nothing
+routewise/install --uninstall
+routewise/install --project PATH  # PATH must hold this routewise/ folder, or be it
+routewise/bin/miss-log add --mode dev --role reviewer --task review --what "missed a None check"
+routewise/bin/miss-log report
+```
+
+Exit codes for both tools: `0` done (or no drift), `1` drift (`--check` only), `2` a clear error on stderr with nothing written.
+
+## Project Structure
+
+```
+Runtime (shipped in the release archive):
+install, bin/miss-log  → bash entry points (version check, then python3 -B)
+lib/install.py         → plan and apply an install, check or uninstall
+lib/block.py           → the marker-delimited block inside an instruction file
+lib/roles.py           → parse neutral roles, render per-harness agent files
+lib/settings.py        → parse and validate routewise.toml
+lib/paths.py           → every path stays inside the project
+lib/files.py           → preflight, atomic replace, safe remove and append
+lib/miss_log.py        → miss-log add and report
+lib/privacy.py         → what a miss-log entry must not contain
+roles/*.md             → the five neutral roles (explore, log-reader, web-reader, reviewer, auditor)
+harness.toml           → per-harness folder, tier → model, efforts, tool names
+templates/             → routewise.toml, ROUTING-BINDING.md, the two delegation fragments
+spec/                  → the rules spec, shipped to projects unchanged
+README.md, ADOPT.md, LICENSE, CHANGELOG.md
+
+Development only (export-ignore):
+SPEC.md, AGENTS.md     → this spec; agent instructions (with routewise's own delegation block)
+tasks/                 → plan.md and todo.md of the current change
+tests/                 → pytest; conftest.py builds a throwaway project per test
+Makefile, pyproject.toml, uv.lock, pyrightconfig.json, .githooks/, .gitignore, .gitattributes
+routewise.toml, ROUTING-BINDING.md, .claude/agents/, logs/   → routewise installed on itself (R2)
+```
+
+## Code Style
+
+Short modules, one job each, plain functions over classes, a docstring that says what and why in one or two sentences. Errors are one exception type per module, caught once in `main` and printed as `routewise: <message>` with exit code 2. Paths go through `paths.inside` before any write.
+
+```python
+def plan_block(plan: Plan, path: Path, body: str | None, linked: bool) -> None:
+    """Put `body` in the file's routewise block, or remove the block when `body` is None."""
+    old = read_exact(path)
+    try:
+        new = block.insert(old, body) if body is not None else block.remove(old)
+    except block.BlockError as err:
+        raise Fail(f"{label(path, plan.root)}: {err}") from err
+    if new == old:
+        return
+    ...
+```
+
+- Ruff, line length 100, rules `E F I UP B` plus complexity limits (McCabe 10, 12 branches, 50 statements, 6 arguments). Pyright `standard`, zero warnings.
+- Messages and docs: plain British English, short sentences, name the file and the fix (`AGENTS.md: needs exactly one routewise:start line ...; fix the markers by hand`).
+- Imports: `lib/` modules import each other by bare name (`import block`); `pyproject.toml` lists them as first-party.
+
+## Testing Strategy
+
+- `pytest` under `tests/`, one file per module (`test_block.py`, `test_roles.py`, `test_settings.py`, `test_privacy.py`, `test_miss_log.py`) plus `test_install.py` for end-to-end runs.
+- End-to-end tests use the `project` fixture: a temporary project with a copy of `routewise/` inside, driven through the real `install` and `bin/miss-log` scripts as subprocesses. Assert on files, stdout, stderr and exit codes.
+- Test-first for every behaviour change and bug fix. Each safety rule below has at least one test that fails if it is broken; each `claude_md` case is covered for install, `--check` and `--uninstall`.
+- One list of runtime files: a test checks that the files a release archive ships (tracked files without `export-ignore`) equal the runtime set that `conftest.py` copies into test projects (R1).
+- Self-install (R2) is tested on a temporary copy, never by writing into this repo from a test.
+- Harness behaviour (model aliases, the `Explore` override, the `@AGENTS.md` import) is not unit-testable: it is checked by live runs and recorded in rules spec section 13.
+- No coverage percentage target; the bar is "every requirement in this spec has a test". Tests must not depend on files outside the temporary folder (no CLAUDE files above `/tmp`).
+
+## Safety rules (each one tested)
+
+- **S1 Inside the project.** Every write, delete and append stays inside the project root; paths in settings are relative with no `..`; a symlink that leads out is refused; paths are checked again right before each write.
+- **S2 All or nothing.** The whole run is planned and every target checked for write access first; files are written to a temporary file and renamed. A failed run writes nothing.
+- **S3 Only its own files.** Generated agents carry a `# generated by routewise from ...` marker; only such files are rewritten or deleted, and anything else in the way stops the run.
+- **S4 Markers.** Markers count only as whole lines outside fenced code; anything but zero or one well-formed pair stops the run. Text outside the block keeps its bytes and line ends.
+- **S5 No symlinks created.** Existing symlinked instruction files are edited through their target and never deleted.
+- **S6 Read-only roles.** Role files may hold only `name`, `description`, `tools`, `tier`, `effort`; tools come from an allowlist of read-only harness tools; a setting cannot inject frontmatter.
+- **S7 Private miss log.** `miss-log` refuses clear leaks (addresses, URLs, IPs, UUIDs, home paths, tokens, card numbers) and never follows a symlinked log.
+- **S8 Personal files.** `CLAUDE.local.md` and files above the project are never written.
+- **S9 The project holds routewise.** The project root must hold the routewise folder or be it (R2); any other root, such as `--project ~`, is refused, so generated files never hold absolute paths.
+
+## Boundaries
+
+- **Always:** follow the development workflow above, phase by phase, with its gates; keep runtime code standard-library only; run `make check` before a commit; add a test with each change; add a `CHANGELOG.md` line for each user-visible change; keep `ADOPT.md`, `README.md` and the templates in step with behaviour; re-run `make self` after changing roles, templates or `harness.toml`; mark new development files `export-ignore`.
+- **Ask first:** changing a rule or the version line in `spec/SPEC-model-routing.md`; adding a harness, a role or a setting; changing a default; adding any dependency (runtime or dev); changing the exit codes, the marker text or the generated-file marker (projects already depend on them); raising this repo's own parallel cap or tiers.
+- **Never:** skip a workflow phase or its gate; let a role gain a write, edit, send or commit tool; write outside the project or through a symlink that leads out; delete a file routewise did not create; edit generated files (`.claude/agents/`, the delegation block) by hand; run a bare `./install` in this repo (it would write into the folder above); commit secrets; push from the sandbox.
+
+## Success Criteria
+
+1. `make check` passes on a clean clone after `uv sync`, including `./install --project . --check` on this repo.
+2. On an empty project, `routewise/install` writes exactly `routewise.toml`, `ROUTING-BINDING.md`, the miss log, five files in `.claude/agents/` and `AGENTS.md`; a second run prints `routewise: nothing to change` and `--check` exits 0.
+3. `--uninstall` after install leaves only the files the user owns plus `routewise.toml`, `ROUTING-BINDING.md` and the miss log; files the user had before are byte-identical to before.
+4. Every safety rule S1–S9 has a named test that fails when the rule is removed.
+5. `git archive HEAD` lists exactly the runtime files of R1, and a test fails if a tracked file is neither runtime nor `export-ignore`.
+6. This repo's `AGENTS.md` holds routewise's own delegation block with `bin/miss-log` paths, and changing a role without re-running `make self` makes `make check` fail.
+7. Live runs on the current Claude Code show the generated `Explore` on the `fast` model and `AGENTS.md` reached through each `claude_md` import, recorded in rules spec section 13.
+
+## Decisions (from the open questions of draft 1)
+
+1. **Development files in host projects:** release archive with `export-ignore` (R1), one tested list of runtime files, README recommends the archive, `AGENTS.md` keeps its guard for submodule users. A separate release branch (`git subtree split`) is not needed now.
+2. **Dogfooding:** yes (R2), kept current by `./install --project . --check` in `make check`. Found while planning: a bare `./install` here would target the folder above the repo, so self-install always passes `--project .` (`make self`).
+3. **Live check of the `@AGENTS.md` bridge:** done 2026-11-14 on Claude Code 2.1.325, five probes, each with a different parallel cap that the session had to quote: no CLAUDE files → `4` (native read); plain `CLAUDE.md` → `NONE` (it hides `AGENTS.md`); `CLAUDE.md` with the routewise import block → `7`; `.claude/CLAUDE.md` with `@../AGENTS.md` → `8`; `.claude/CLAUDE.md` with a plain `@AGENTS.md` → `NONE` (imports resolve from the importing file's folder). To be recorded in rules spec section 13 during Build.
+
+4. **`tasks/` in git:** `tasks/plan.md` and `tasks/todo.md` are committed with each change, as a record of how it was planned, and marked `export-ignore` so they never ship.
+
+## Open Questions
+
+None.
