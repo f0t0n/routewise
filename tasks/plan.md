@@ -47,7 +47,7 @@ Four small changes, built in the order that keeps every commit green: commit the
 ### Verify, Review, Ship
 - [x] Verify: `make check`; `git archive HEAD | tar -t` lists exactly the R1 runtime files; a fresh project installed from that archive passes success criterion 2
 - [x] Review: `reviewer` (sonnet, medium) on the whole change; `auditor` (opus, high) on S9 and `.gitattributes`; every Critical and Required finding fixed in its own commit
-- [ ] Ship: `CHANGELOG.md` complete, archive contents confirmed, commits ready; the maintainer pushes from the host
+- [x] Ship: `CHANGELOG.md` complete, archive contents confirmed, commits ready; the maintainer pushes from the host
 
 ## Risks and Mitigations
 

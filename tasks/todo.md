@@ -143,6 +143,8 @@ Verified 2026-11-14: `make check` exit 0 (152 tests); the archive at `d96c538` l
 Reviewed 2026-11-14. `reviewer`: one Required, fixed in `b2bf6c2` (`routewise.toml` named `routewise/install`); the release-test docstring nit fixed in `4f90a35`; two nits declined (make `render`'s `command` required; skip the start line on uninstall). `auditor`: one Required, older than this change, fixed in `9f41c7e` (`--project ~` wrote global agents and `~/.claude/CLAUDE.md`); two Optionals new with R2 and R3, fixed in `b122789` (self-install through a symlinked routewise) and `456b8f1` (a folder name that breaks markers); three skipped by decision (symlinked working directory refused, which fails safe; release test is top-level only, documented; hook checks the working tree, documented).
 
 ## Ship
-- [ ] `CHANGELOG.md` covers R1, R2, R3, S9 and the section 13 record
-- [ ] Release archive contents confirmed again after review fixes
+- [x] `CHANGELOG.md` covers R1, R2, R3, S9 and the section 13 record
+- [x] Release archive contents confirmed again after review fixes
 - [ ] Maintainer pushes from the host
+
+Shipped 2026-11-14: `make check` exit 0 (157 tests, gitleaks clean, no self-install drift); archive at HEAD holds exactly the 11 R1 entries; no TODO or debug output in runtime code; runtime has no dependencies, and `pip-audit` finds no known vulnerabilities in the dev dependencies of `uv.lock`. Rollback: nobody uses routewise yet and 0.1.0 is unreleased, so any commit can be reverted with `git revert <sha>`; the review fixes (`9f41c7e`, `b122789`, `456b8f1`) are independent of each other.
