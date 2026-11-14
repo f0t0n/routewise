@@ -51,6 +51,26 @@ def holds(root: Path, home: Path) -> None:
         raise PathError(
             f"{root} must hold {home} directly, or be it; copy routewise/ into the project first"
         )
+    if is_home_or_above(root):
+        raise PathError(
+            f"{root} is your home folder or above it, where agents and CLAUDE.md are global; "
+            "copy routewise/ into a project folder instead"
+        )
+
+
+def is_home_or_above(root: Path) -> bool:
+    """`root` is the user's home folder or a folder above it (compared as typed and resolved)."""
+    try:
+        user = Path(os.path.abspath(Path.home()))
+    except RuntimeError:  # no home folder can be determined: nothing to protect
+        return False
+    for mine, theirs in (
+        (root, user),
+        (Path(os.path.realpath(root)), Path(os.path.realpath(user))),
+    ):
+        if mine == theirs or mine in theirs.parents:
+            return True
+    return False
 
 
 def label(path: Path, root: Path) -> str:

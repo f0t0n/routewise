@@ -1,5 +1,6 @@
 """A throwaway project with a copy of routewise/ inside, for each test."""
 
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -26,11 +27,14 @@ def project(tmp_path: Path) -> Path:
     return root
 
 
-def run(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
+def run(root: Path, *args: str, home: Path | None = None) -> subprocess.CompletedProcess[str]:
+    """Run a routewise script; `home` stands in for the user's home folder ($HOME)."""
+    env = {**os.environ, "HOME": str(home)} if home else None
     return subprocess.run(
         [str(root / "routewise" / args[0]), *args[1:]],
         capture_output=True,
         text=True,
         check=False,
         cwd=root,
+        env=env,
     )

@@ -680,3 +680,23 @@ def test_settings_name_the_projects_own_install_command(project: Path):
     own = (home / "routewise.toml").read_text()
     assert f"re-run `{OWN}`" in own
     assert "routewise/" not in own
+
+
+# --- review findings (2026-11-14) -----------------------------------------------------------
+
+
+def test_the_home_folder_is_never_a_project(project: Path):
+    (project / ".claude").mkdir()
+    personal = project / ".claude" / "CLAUDE.md"
+    personal.write_text("# my personal rules\n")
+    before = sorted(str(p) for p in project.rglob("*") if "routewise" not in p.parts)
+
+    # routewise unpacked straight into the home folder: ~/routewise/install
+    result = run(project, "install", home=project)
+    log = run(project, "bin/miss-log", "report", home=project)
+    above = run(project, "install", "--project", str(project), home=project / "routewise")
+
+    assert (result.returncode, log.returncode, above.returncode) == (2, 2, 2)
+    assert "is your home folder" in result.stderr
+    assert personal.read_text() == "# my personal rules\n"
+    assert sorted(str(p) for p in project.rglob("*") if "routewise" not in p.parts) == before

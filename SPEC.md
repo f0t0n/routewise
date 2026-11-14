@@ -153,7 +153,7 @@ def plan_block(plan: Plan, path: Path, body: str | None, linked: bool) -> None:
 - **S6 Read-only roles.** Role files may hold only `name`, `description`, `tools`, `tier`, `effort`; tools come from an allowlist of read-only harness tools; a setting cannot inject frontmatter.
 - **S7 Private miss log.** `miss-log` refuses clear leaks (addresses, URLs, IPs, UUIDs, home paths, tokens, card numbers) and never follows a symlinked log.
 - **S8 Personal files.** `CLAUDE.local.md` and files above the project are never written.
-- **S9 The project holds routewise.** The project root must hold the routewise folder or be it (R2); any other root, such as `--project ~`, is refused, so generated files never hold absolute paths.
+- **S9 The project holds routewise.** The project root must hold the routewise folder directly or be it (R2); any other root is refused, so generated files never hold absolute paths. The home folder and every folder above it are never a project, even with routewise at `~/routewise`: agents and `CLAUDE.md` there are global (found in review).
 
 ## Boundaries
 
