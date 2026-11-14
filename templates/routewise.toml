@@ -6,9 +6,19 @@
 # (Antigravity CLI, .agents/agents/).
 harnesses = {{harnesses}}
 
-# Instruction files that get the delegation block. A symlink to another listed file is
-# written once.
-instructions = {{instructions}}
+# Instruction files that get the delegation block. AGENTS.md is read by Claude Code
+# (v2.1.277 or newer), Antigravity CLI and most other agent tools.
+instructions = ["AGENTS.md"]
+
+# How Claude Code finds AGENTS.md. It reads AGENTS.md only when there is no CLAUDE.md,
+# .claude/CLAUDE.md or CLAUDE.local.md in the project or above it; a CLAUDE.md holding
+# an `@AGENTS.md` import line fixes that.
+#   "auto":   add a routewise block with the import to CLAUDE.md or .claude/CLAUDE.md
+#             when one exists (never creates it; leaves CLAUDE.local.md alone).
+#   "import": always keep that block, creating CLAUDE.md if needed (for Claude Code
+#             before v2.1.277, or sessions that read CLAUDE.md only).
+#   "none":   never touch CLAUDE.md.
+claude_md = "auto"
 
 # "dev" for an agent that builds the project; "assistant" for a user-facing assistant
 # (it may delegate only web-page reading).

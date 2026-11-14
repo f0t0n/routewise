@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import pytest
 from conftest import run
 
 ROLES = ["auditor.md", "explore.md", "log-reader.md", "reviewer.md", "web-reader.md"]
@@ -25,9 +26,12 @@ def test_first_run_sets_up_claude_code(project: Path):
     assert (project / "logs" / "delegation-misses.jsonl").read_text() == ""
     assert sorted(p.name for p in (project / ".claude" / "agents").iterdir()) == ROLES
     assert not (project / ".agents").exists()
-    claude = (project / "CLAUDE.md").read_text()
-    assert "at most 5" in claude
-    assert "`routewise/bin/miss-log add --mode dev" in claude
+    agents_md = (project / "AGENTS.md").read_text()
+    assert "at most 5" in agents_md
+    assert "`routewise/bin/miss-log add --mode dev" in agents_md
+    assert "does the work itself" in agents_md
+    assert not (project / "CLAUDE.md").exists()
+    assert "note:" not in result.stdout and "warning:" not in result.stdout
 
 
 def test_roles_get_model_effort_and_tool_names(project: Path):
@@ -62,23 +66,23 @@ def test_check_reports_drift_and_install_fixes_it(project: Path):
 
     check = run(project, "install", "--check")
     assert check.returncode == 1
-    assert "drift CLAUDE.md" in check.stdout
-    assert "at most 5" in (project / "CLAUDE.md").read_text()
+    assert "drift AGENTS.md" in check.stdout
+    assert "at most 5" in (project / "AGENTS.md").read_text()
 
     run(project, "install")
-    assert "at most 3" in (project / "CLAUDE.md").read_text()
+    assert "at most 3" in (project / "AGENTS.md").read_text()
 
 
 def test_keeps_existing_instructions_and_uninstall_restores_them(project: Path):
-    (project / "CLAUDE.md").write_text("# My project\n\nKeep this.\n")
+    (project / "AGENTS.md").write_text("# My project\n\nKeep this.\n")
 
     run(project, "install")
-    text = (project / "CLAUDE.md").read_text()
+    text = (project / "AGENTS.md").read_text()
     assert text.startswith("# My project\n\nKeep this.\n\n<!-- routewise:start")
 
     result = run(project, "install", "--uninstall")
     assert result.returncode == 0, result.stderr
-    assert (project / "CLAUDE.md").read_text() == "# My project\n\nKeep this.\n"
+    assert (project / "AGENTS.md").read_text() == "# My project\n\nKeep this.\n"
     assert list((project / ".claude" / "agents").iterdir()) == []
     assert (project / "ROUTING-BINDING.md").exists()
 
@@ -136,8 +140,9 @@ def test_assistant_fragment(project: Path):
 
     run(project, "install")
 
-    text = (project / "CLAUDE.md").read_text()
+    text = (project / "AGENTS.md").read_text()
     assert "## Delegation (assistant mode)" in text
+    assert "does the work itself" in text
     assert "--mode assistant --role web-reader" in text
     assert "`Explore`" not in text
 
@@ -155,17 +160,20 @@ def test_rejects_an_unknown_harness(project: Path):
 # --- review and audit findings (2026-11-14) -------------------------------------------------
 
 
-def test_a_lone_start_marker_is_refused_and_the_text_kept(project: Path):
+@pytest.mark.parametrize("name", ["AGENTS.md", "CLAUDE.md", ".claude/CLAUDE.md"])
+def test_a_lone_start_marker_is_refused_and_the_text_kept(project: Path, name: str):
     start = "<!-- routewise:start (generated: edit routewise.toml and re-run routewise/install) -->"
     text = f"# Mine\n\n{start}\nIMPORTANT USER TEXT\n"
-    (project / "CLAUDE.md").write_text(text)
+    (project / name).parent.mkdir(exist_ok=True)
+    (project / name).write_text(text)
 
     first = run(project, "install")
     second = run(project, "install", "--uninstall")
 
     assert (first.returncode, second.returncode) == (2, 2)
     assert "fix the markers by hand" in first.stderr
-    assert (project / "CLAUDE.md").read_text() == text
+    assert (project / name).read_text() == text
+    assert not (project / "routewise.toml").exists()
 
 
 def test_a_failed_run_writes_nothing(project: Path):
@@ -176,7 +184,7 @@ def test_a_failed_run_writes_nothing(project: Path):
     run(project, "install")
 
     assert not (project / "routewise.toml").exists()
-    assert not (project / "CLAUDE.md").exists()
+    assert not (project / "AGENTS.md").exists()
 
 
 def test_check_without_settings_reports_drift(project: Path):
@@ -187,12 +195,12 @@ def test_check_without_settings_reports_drift(project: Path):
     assert not (project / "routewise.toml").exists()
 
 
-def test_uninstall_removes_a_claude_md_it_created_and_check_sees_drift(project: Path):
+def test_uninstall_removes_an_agents_md_it_created_and_check_sees_drift(project: Path):
     run(project, "install")
 
     run(project, "install", "--uninstall")
 
-    assert not (project / "CLAUDE.md").exists()
+    assert not (project / "AGENTS.md").exists()
     assert run(project, "install", "--check").returncode == 1
 
 
@@ -218,9 +226,10 @@ def test_dropping_a_harness_removes_its_agents(project: Path):
     assert list((project / ".agents" / "agents").iterdir()) == []
 
 
-def test_a_symlink_out_of_the_project_is_refused(project: Path, tmp_path: Path):
+@pytest.mark.parametrize("name", ["AGENTS.md", "CLAUDE.md"])
+def test_a_symlink_out_of_the_project_is_refused(project: Path, tmp_path: Path, name: str):
     outside = tmp_path / "outside.md"
-    (project / "CLAUDE.md").symlink_to(outside)  # dangling
+    (project / name).symlink_to(outside)  # dangling
 
     result = run(project, "install")
 
@@ -248,19 +257,23 @@ def test_a_symlinked_routewise_installs_into_the_project(tmp_path: Path, project
     result = run(other, "install")
 
     assert result.returncode == 0, result.stderr
-    assert (other / "CLAUDE.md").exists()
-    assert not (project / "CLAUDE.md").exists()
+    assert (other / "AGENTS.md").exists()
+    assert not (project / "AGENTS.md").exists()
 
 
 def test_crlf_instructions_keep_their_line_ends(project: Path):
-    (project / "CLAUDE.md").write_bytes(b"# Mine\r\n\r\nKeep.\r\n")
+    for name in ("AGENTS.md", "CLAUDE.md"):
+        (project / name).write_bytes(b"# Mine\r\n\r\nKeep.\r\n")
 
     run(project, "install")
-    data = (project / "CLAUDE.md").read_bytes()
-    assert b"\n" not in data.replace(b"\r\n", b"")
+    for name in ("AGENTS.md", "CLAUDE.md"):
+        data = (project / name).read_bytes()
+        assert b"routewise:start" in data
+        assert b"\n" not in data.replace(b"\r\n", b"")
 
     run(project, "install", "--uninstall")
-    assert (project / "CLAUDE.md").read_bytes() == b"# Mine\r\n\r\nKeep.\r\n"
+    for name in ("AGENTS.md", "CLAUDE.md"):
+        assert (project / name).read_bytes() == b"# Mine\r\n\r\nKeep.\r\n"
 
 
 def test_a_tier_value_cannot_add_frontmatter(project: Path):
@@ -281,7 +294,7 @@ def test_uninstall_keeps_a_symlinked_claude_md_and_cleans_its_target(project: Pa
     (project / "CLAUDE.md").symlink_to("AGENTS.md")
     set_up = run(project, "install")
     assert set_up.returncode == 0, set_up.stderr
-    set_config(project, 'instructions = ["CLAUDE.md"]', 'instructions = ["CLAUDE.md", "AGENTS.md"]')
+    assert (project / "AGENTS.md").read_text().count("routewise:start") == 1
 
     result = run(project, "install", "--uninstall")
 
@@ -293,7 +306,7 @@ def test_uninstall_keeps_a_symlinked_claude_md_and_cleans_its_target(project: Pa
 
 
 def test_a_read_only_instruction_file_stops_the_run_before_any_write(project: Path):
-    claude = project / "CLAUDE.md"
+    claude = project / "AGENTS.md"
     claude.write_text("# Mine\n")
     claude.chmod(0o444)
     try:
@@ -341,3 +354,205 @@ def test_a_role_with_no_tools_is_refused(project: Path):
 
     assert result.returncode == 2
     assert "tools is empty" in result.stderr
+
+
+# --- AGENTS.md as the home of the block, CLAUDE.md as an import (claude_md) -----------------
+
+START = "<!-- routewise:start (generated: edit routewise.toml and re-run routewise/install) -->"
+END = "<!-- routewise:end -->"
+
+
+def import_block(line: str = "@AGENTS.md") -> str:
+    return f"{START}\n{line}\n{END}\n"
+
+
+def settings_file(root: Path, text: str) -> None:
+    (root / "routewise.toml").write_text(text)
+
+
+def test_claude_md_present_gets_an_import_block(project: Path):
+    (project / "CLAUDE.md").write_text("# Mine\n")
+
+    result = run(project, "install")
+
+    assert result.returncode == 0, result.stderr
+    assert (project / "CLAUDE.md").read_text() == "# Mine\n\n" + import_block()
+    assert "## Delegation" in (project / "AGENTS.md").read_text()
+    assert "note:" not in result.stdout
+    assert run(project, "install", "--check").returncode == 0
+
+    (project / "CLAUDE.md").write_text("# Mine\n")
+    check = run(project, "install", "--check")
+    assert check.returncode == 1
+    assert "drift CLAUDE.md" in check.stdout
+
+    run(project, "install")
+    run(project, "install", "--uninstall")
+    assert (project / "CLAUDE.md").read_text() == "# Mine\n"
+    assert not (project / "AGENTS.md").exists()
+
+
+@pytest.mark.parametrize("line", ["@AGENTS.md", "@./AGENTS.md"])
+def test_claude_md_that_already_imports_agents_md_is_left_alone(project: Path, line: str):
+    text = f"# Mine\n\n{line}\n"
+    (project / "CLAUDE.md").write_text(text)
+
+    result = run(project, "install")
+
+    assert result.returncode == 0, result.stderr
+    assert (project / "CLAUDE.md").read_text() == text
+    assert run(project, "install", "--check").returncode == 0
+    run(project, "install", "--uninstall")
+    assert (project / "CLAUDE.md").read_text() == text
+
+
+def test_an_import_in_code_does_not_count(project: Path):
+    text = "# Mine\n\n```\n@AGENTS.md\n```\n"
+    (project / "CLAUDE.md").write_text(text)
+
+    run(project, "install")
+
+    assert (project / "CLAUDE.md").read_text() == text + "\n" + import_block()
+
+
+def test_an_import_added_by_hand_replaces_the_block(project: Path):
+    (project / "CLAUDE.md").write_text("# Mine\n")
+    run(project, "install")
+    claude = project / "CLAUDE.md"
+    claude.write_text("@AGENTS.md\n\n" + claude.read_text())
+
+    assert run(project, "install", "--check").returncode == 1
+    run(project, "install")
+
+    assert claude.read_text() == "@AGENTS.md\n\n# Mine\n"
+
+
+def test_dot_claude_claude_md_imports_from_its_own_folder(project: Path):
+    (project / ".claude").mkdir()
+    nested = project / ".claude" / "CLAUDE.md"
+    nested.write_text("# Mine\n")
+
+    result = run(project, "install")
+
+    assert result.returncode == 0, result.stderr
+    assert nested.read_text() == "# Mine\n\n" + import_block("@../AGENTS.md")
+    assert not (project / "CLAUDE.md").exists()
+    assert run(project, "install", "--check").returncode == 0
+    run(project, "install", "--uninstall")
+    assert nested.read_text() == "# Mine\n"
+
+
+def test_only_the_first_claude_md_gets_the_import(project: Path):
+    (project / ".claude").mkdir()
+    (project / ".claude" / "CLAUDE.md").write_text("# Nested\n")
+    (project / "CLAUDE.md").write_text("# Root\n")
+
+    run(project, "install")
+
+    assert "@AGENTS.md" in (project / "CLAUDE.md").read_text()
+    assert (project / ".claude" / "CLAUDE.md").read_text() == "# Nested\n"
+
+
+def test_claude_local_md_alone_is_not_touched_and_a_note_is_printed(project: Path):
+    local = project / "CLAUDE.local.md"
+    local.write_text("# Personal\n")
+
+    result = run(project, "install")
+    check = run(project, "install", "--check")
+
+    assert result.returncode == 0, result.stderr
+    assert local.read_text() == "# Personal\n"
+    assert not (project / "CLAUDE.md").exists()
+    for out in (result.stdout, check.stdout):
+        assert "note: CLAUDE.local.md stops Claude Code from reading AGENTS.md" in out
+        assert "claude-md-and-agents-md" in out
+    assert check.returncode == 0
+    run(project, "install", "--uninstall")
+    assert local.read_text() == "# Personal\n"
+
+
+def test_claude_md_import_creates_claude_md_and_uninstall_removes_it(project: Path):
+    settings_file(project, 'claude_md = "import"\n')
+
+    result = run(project, "install")
+
+    assert result.returncode == 0, result.stderr
+    assert (project / "CLAUDE.md").read_text() == import_block()
+    assert run(project, "install", "--check").returncode == 0
+    run(project, "install", "--uninstall")
+    assert not (project / "CLAUDE.md").exists()
+    assert not (project / "AGENTS.md").exists()
+
+
+def test_claude_md_import_uses_an_existing_dot_claude_claude_md(project: Path):
+    settings_file(project, 'claude_md = "import"\n')
+    (project / ".claude").mkdir()
+    (project / ".claude" / "CLAUDE.md").write_text("# Mine\n")
+
+    run(project, "install")
+
+    assert "@../AGENTS.md" in (project / ".claude" / "CLAUDE.md").read_text()
+    assert not (project / "CLAUDE.md").exists()
+
+
+def test_claude_md_none_leaves_claude_md_alone(project: Path):
+    settings_file(project, 'claude_md = "none"\n')
+    (project / "CLAUDE.md").write_text("# Mine\n")
+
+    result = run(project, "install")
+    check = run(project, "install", "--check")
+
+    assert result.returncode == 0, result.stderr
+    assert (project / "CLAUDE.md").read_text() == "# Mine\n"
+    assert "## Delegation" in (project / "AGENTS.md").read_text()
+    assert check.returncode == 0
+    assert "note: CLAUDE.md stops Claude Code from reading AGENTS.md" in check.stdout
+    run(project, "install", "--uninstall")
+    assert (project / "CLAUDE.md").read_text() == "# Mine\n"
+
+
+def test_switching_to_none_keeps_the_import_and_uninstall_still_removes_it(project: Path):
+    (project / "CLAUDE.md").write_text("# Mine\n")
+    run(project, "install")
+    set_config(project, 'claude_md = "auto"', 'claude_md = "none"')
+
+    assert run(project, "install", "--check").returncode == 0
+    run(project, "install", "--uninstall")
+
+    assert (project / "CLAUDE.md").read_text() == "# Mine\n"
+
+
+def test_claude_md_listed_in_instructions_gets_the_full_block(project: Path):
+    settings_file(project, 'instructions = ["AGENTS.md", "CLAUDE.md"]\n')
+    (project / "CLAUDE.md").write_text("# Mine\n")
+
+    run(project, "install")
+
+    claude = (project / "CLAUDE.md").read_text()
+    assert claude.count("routewise:start") == 1
+    assert "## Delegation" in claude
+    assert "@AGENTS.md" not in claude
+
+
+@pytest.mark.parametrize("name", ["CLAUDE.md", ".claude/CLAUDE.md", "CLAUDE.local.md"])
+def test_a_claude_file_above_the_project_is_warned_about(project: Path, tmp_path: Path, name: str):
+    above = tmp_path / name
+    above.parent.mkdir(exist_ok=True)
+    above.write_text("# Parent\n")
+
+    result = run(project, "install")
+    check = run(project, "install", "--check")
+
+    assert result.returncode == 0, result.stderr
+    for out in (result.stdout, check.stdout):
+        assert f"warning: {above} " in out
+        assert 'claude_md = "import"' in out
+    assert above.read_text() == "# Parent\n"
+    assert check.returncode == 0
+
+    set_config(project, 'claude_md = "auto"', 'claude_md = "import"')
+    imported = run(project, "install")
+    assert "warning:" not in imported.stdout
+    assert above.read_text() == "# Parent\n"
+    run(project, "install", "--uninstall")
+    assert not (project / "CLAUDE.md").exists()

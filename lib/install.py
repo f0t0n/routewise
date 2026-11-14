@@ -1,7 +1,9 @@
 """routewise/install: set up model routing and delegation in the project that holds this folder.
 
-Writes the role agents for each harness, the delegation block in the instruction files, and,
-on the first run only, routewise.toml, ROUTING-BINDING.md and an empty miss log. The whole run
+Writes the role agents for each harness, the delegation block in the instruction files
+(AGENTS.md by default), an `@AGENTS.md` import block in CLAUDE.md when Claude Code needs one
+(`claude_md`), and, on the first run only, routewise.toml, ROUTING-BINDING.md and an empty
+miss log. It never creates a symlink and never writes outside the project. The whole run
 is planned and checked first, including write access to every target; then each file is
 written through a temporary file and a rename. Every path stays inside the project, and only
 files routewise generated are rewritten or deleted.
@@ -27,6 +29,10 @@ from settings import Settings, SettingsError
 
 HOME = where(__file__)
 BINDING = "ROUTING-BINDING.md"
+AGENTS_MD = "AGENTS.md"
+# Each of these stops Claude Code from reading AGENTS.md (in the project or any folder above).
+CLAUDE_FILES = ("CLAUDE.md", ".claude/CLAUDE.md")
+CLAUDE_LOCAL = "CLAUDE.local.md"
 
 EXAMPLE = """\
 examples:
@@ -51,6 +57,7 @@ class Plan:
     root: Path
     writes: dict[Path, str] = field(default_factory=dict)
     removes: list[Path] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
 
     def write(self, path: Path, text: str) -> None:
         self.writes[inside(self.root, path)] = text
@@ -66,12 +73,8 @@ def default_settings_text(root: Path) -> str:
     harnesses = ["cc"]
     if (root / ".agents").is_dir() or (root / "GEMINI.md").exists():
         harnesses.append("agy")
-    instructions = ["CLAUDE.md"]
-    if (root / "AGENTS.md").exists():
-        instructions.append("AGENTS.md")
     text = (HOME / "templates" / settings.NAME).read_text(encoding="utf-8")
-    text = text.replace("{{harnesses}}", toml_list(harnesses))
-    return text.replace("{{instructions}}", toml_list(instructions))
+    return text.replace("{{harnesses}}", toml_list(harnesses))
 
 
 def toml_list(items: list[str]) -> str:
@@ -129,13 +132,22 @@ class Instruction:
     linked: bool  # some listed name is a symlink to it: never delete it
 
 
-def instruction_files(root: Path, chosen: Settings) -> list[Instruction]:
+def present(path: Path) -> bool:
+    return path.exists() or path.is_symlink()
+
+
+def resolve(root: Path, names: list[str]) -> list[Instruction]:
     found: dict[Path, bool] = {}
-    for name in chosen.instructions:
+    for name in names:
         path = inside(root, root / name)
         target = Path(os.path.realpath(path))
         found[target] = found.get(target, False) or path.is_symlink()
     return [Instruction(target, linked) for target, linked in found.items()]
+
+
+def in_project(root: Path, real: Path) -> Path:
+    """A real path inside the project, spelled from the project root as the user reached it."""
+    return root / real.relative_to(Path(os.path.realpath(root)))
 
 
 def read_exact(path: Path) -> str:
@@ -146,22 +158,134 @@ def read_exact(path: Path) -> str:
         return handle.read()
 
 
-def plan_instructions(plan: Plan, chosen: Settings, install: bool) -> None:
+def plan_block(plan: Plan, path: Path, body: str | None, linked: bool) -> None:
+    """Put `body` in the file's routewise block, or remove the block when `body` is None.
+
+    A file left empty by a removal is deleted (routewise created it), unless a symlink
+    leads to it.
+    """
+    old = read_exact(path)
+    try:
+        new = block.insert(old, body) if body is not None else block.remove(old)
+    except block.BlockError as err:
+        raise Fail(f"{label(path, plan.root)}: {err}") from err
+    if new == old:
+        return
+    if new == "" and body is None and not linked:
+        plan.remove(path)
+    else:
+        plan.write(path, new)
+
+
+def plan_instructions(plan: Plan, chosen: Settings) -> set[Path]:
+    """The delegation block in each instruction file; returns their real paths."""
     text = fragment_text(plan.root, chosen)
-    real_root = Path(os.path.realpath(plan.root))
-    for item in instruction_files(plan.root, chosen):
-        path = plan.root / item.target.relative_to(real_root)
-        old = read_exact(path)
-        try:
-            new = block.insert(old, text) if install else block.remove(old)
-        except block.BlockError as err:
-            raise Fail(f"{label(path, plan.root)}: {err}") from err
-        if new == old:
+    items = resolve(plan.root, chosen.instructions)
+    for item in items:
+        plan_block(plan, in_project(plan.root, item.target), text, item.linked)
+    return {item.target for item in items}
+
+
+# --- CLAUDE.md and AGENTS.md ------------------------------------------------------------------
+
+
+def import_line(root: Path, path: Path) -> str:
+    """`@AGENTS.md` as written in `path`: Claude Code resolves imports from the file's folder."""
+    return "@" + Path(os.path.relpath(root / AGENTS_MD, path.parent)).as_posix()
+
+
+def imports(text: str, line: str) -> bool:
+    """`text` has the import as a line of its own, outside fenced code."""
+    wanted = {line, "@./" + line[1:]}
+    fenced = False
+    for raw in text.splitlines():
+        bare = raw.strip()
+        if bare.startswith(block.FENCES):
+            fenced = not fenced
+        elif not fenced and bare in wanted:
+            return True
+    return False
+
+
+def plan_import(plan: Plan, chosen: Settings, covered: set[Path]) -> None:
+    """A routewise block holding `@AGENTS.md` in the first CLAUDE.md, per `claude_md`.
+
+    Skipped when that file already imports AGENTS.md outside the block, or is itself an
+    instruction file. Stale import blocks in the other CLAUDE.md files are removed.
+    """
+    if chosen.claude_md == "none" or AGENTS_MD not in chosen.instructions:
+        return
+    paths = [plan.root / name for name in CLAUDE_FILES]
+    existing = [path for path in paths if present(path)]
+    target = existing[0] if existing else None
+    if target is None and chosen.claude_md == "import":
+        target = paths[0]
+    seen = set(covered)
+    for path in paths:
+        if path != target and not present(path):
             continue
-        if new == "" and not install and not item.linked:
-            plan.remove(path)
-        else:
-            plan.write(path, new)
+        real = Path(os.path.realpath(inside(plan.root, path)))
+        if real in seen:
+            continue
+        seen.add(real)
+        file = in_project(plan.root, real)
+        line = import_line(plan.root, path)
+        old = read_exact(file)
+        try:
+            by_hand = imports(block.remove(old), line)
+        except block.BlockError as err:
+            raise Fail(f"{label(file, plan.root)}: {err}") from err
+        body = line if path == target and not by_hand else None
+        plan_block(plan, file, body, path.is_symlink())
+
+
+def planned_text(plan: Plan, path: Path) -> str | None:
+    """The file's text after the run, or None when it is missing or leads out of the project."""
+    try:
+        file = in_project(plan.root, Path(os.path.realpath(inside(plan.root, path))))
+    except PathError:
+        return None
+    if file in plan.writes:
+        return plan.writes[file]
+    if file in plan.removes or not present(path):
+        return None
+    return read_exact(file)
+
+
+def claude_notes(plan: Plan, chosen: Settings, covered: set[Path]) -> list[str]:
+    """Notes on CLAUDE files that would stop Claude Code from reading AGENTS.md."""
+    if AGENTS_MD not in chosen.instructions:
+        return []
+    root = plan.root
+    for name in CLAUDE_FILES:
+        path = root / name
+        text = planned_text(plan, path)
+        linked = present(path) and Path(os.path.realpath(path)) in covered
+        if linked or (text is not None and imports(text, import_line(root, path))):
+            return []  # Claude Code reaches AGENTS.md through this file
+    notes = []
+    found = [name for name in (*CLAUDE_FILES, CLAUDE_LOCAL) if present(root / name)]
+    if found == [CLAUDE_LOCAL]:
+        notes.append(
+            f"note: {CLAUDE_LOCAL} stops Claude Code from reading {AGENTS_MD}; add an "
+            f"`@{AGENTS_MD}` line to it, or set Project instructions to "
+            "claude-md-and-agents-md in /config"
+        )
+    elif found:
+        notes.append(
+            f"note: {found[0]} stops Claude Code from reading {AGENTS_MD}; set "
+            f'claude_md = "auto" in {settings.NAME}, or add an `@{AGENTS_MD}` line to it'
+        )
+    personal = Path.home() / ".claude" / "CLAUDE.md"  # does not stop AGENTS.md
+    for folder in root.parents:
+        for name in (*CLAUDE_FILES, CLAUDE_LOCAL):
+            path = folder / name
+            if path != personal and present(path):
+                notes.append(
+                    f"warning: {path} is above the project, so Claude Code reads it instead "
+                    f'of {AGENTS_MD}; set claude_md = "import" in {settings.NAME}'
+                )
+    return notes
 
 
 def plan_first_run(plan: Plan, chosen: Settings, harnesses: list[Harness]) -> None:
@@ -188,21 +312,37 @@ def plan_install(plan: Plan, chosen: Settings) -> None:
             for stale in generated_files(plan.root / harness.dir):
                 plan.remove(stale)
     plan_first_run(plan, chosen, active)
-    plan_instructions(plan, chosen, install=True)
+    covered = plan_instructions(plan, chosen)
+    plan_import(plan, chosen, covered)
+    plan.notes = claude_notes(plan, chosen, covered)
+
+
+def leads_inside(root: Path, name: str) -> bool:
+    try:
+        inside(root, root / name)
+    except PathError:
+        return False
+    return True
 
 
 def plan_uninstall(plan: Plan, chosen: Settings) -> None:
+    """Remove generated agents and every routewise block, whatever `claude_md` says now.
+
+    A CLAUDE.md that leads out of the project cannot hold a block (install refuses it).
+    """
     for harness in all_harnesses({}).values():
         for path in generated_files(plan.root / harness.dir):
             plan.remove(path)
-    plan_instructions(plan, chosen, install=False)
+    claude = [n for n in CLAUDE_FILES if present(plan.root / n) and leads_inside(plan.root, n)]
+    for item in resolve(plan.root, [*chosen.instructions, *claude]):
+        plan_block(plan, in_project(plan.root, item.target), None, item.linked)
 
 
 def build_plan(root: Path, uninstall: bool) -> Plan:
     plan = Plan(root)
     chosen = settings.read(root)
     if uninstall:
-        plan_uninstall(plan, chosen or Settings(instructions=["CLAUDE.md", "AGENTS.md"]))
+        plan_uninstall(plan, chosen or Settings())
         return plan
     if chosen is None:
         text = default_settings_text(root)
@@ -228,12 +368,12 @@ def apply(plan: Plan, writes: list[Path], removes: list[Path]) -> None:
         files.remove(plan.root, path)
 
 
-def report(root: Path, writes: list[Path], removes: list[Path], verb: str) -> str:
-    lines = [f"{verb} {label(p, root)}" for p in writes]
-    lines += [f"remove {label(p, root)}" for p in removes]
+def report(plan: Plan, writes: list[Path], removes: list[Path], verb: str) -> str:
+    lines = [f"{verb} {label(p, plan.root)}" for p in writes]
+    lines += [f"remove {label(p, plan.root)}" for p in removes]
     if any(p.name == settings.NAME for p in writes) and verb == "write":
         lines.append(f"first run: review {settings.NAME}, then fill in {BINDING}")
-    return "\n".join(lines) or "routewise: nothing to change"
+    return "\n".join((lines or ["routewise: nothing to change"]) + plan.notes)
 
 
 def parser() -> argparse.ArgumentParser:
@@ -263,9 +403,9 @@ def run(args: argparse.Namespace) -> tuple[int, str]:
     plan = build_plan(root, args.uninstall)
     writes, removes = changed(plan)
     if args.check:
-        return (1 if writes or removes else 0), report(root, writes, removes, "drift")
+        return (1 if writes or removes else 0), report(plan, writes, removes, "drift")
     apply(plan, writes, removes)
-    return 0, report(root, writes, removes, "write")
+    return 0, report(plan, writes, removes, "write")
 
 
 def main(argv: list[str] | None = None) -> int:

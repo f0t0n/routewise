@@ -10,6 +10,12 @@ def test_defaults():
     chosen = parse("")
 
     assert (chosen.harnesses, chosen.cap, chosen.fragment) == (["cc"], 5, "dev")
+    assert (chosen.instructions, chosen.claude_md) == (["AGENTS.md"], "auto")
+
+
+@pytest.mark.parametrize("value", ["auto", "import", "none"])
+def test_claude_md_values(value: str):
+    assert parse(f'claude_md = "{value}"').claude_md == value
 
 
 @pytest.mark.parametrize(
@@ -21,6 +27,8 @@ def test_defaults():
         ('harnesses = "cc"', "harnesses must be a list"),
         ('harnesses = ["vim"]', "harness 'vim' is not one of cc, agy"),
         ('fragment = "chat"', "fragment 'chat' is not one of"),
+        ('claude_md = "always"', "claude_md 'always' is not one of auto, import, none"),
+        ("claude_md = true", "claude_md must be a string"),
         ('[tiers]\nfats = "haiku"', "'fats' is not one of"),
         ('[tiers]\nfast = "haiku\\ntools: Write"', "must be a model name"),
         ("cap = [", "routewise.toml"),

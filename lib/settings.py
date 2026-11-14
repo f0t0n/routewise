@@ -11,6 +11,7 @@ from roles import MODEL, TIERS
 NAME = "routewise.toml"
 HARNESSES = ("cc", "agy")
 FRAGMENTS = ("dev", "assistant")
+CLAUDE_MD = ("auto", "import", "none")
 DEFAULT_LOG = "logs/delegation-misses.jsonl"
 
 
@@ -21,7 +22,8 @@ class SettingsError(Exception):
 @dataclass(frozen=True)
 class Settings:
     harnesses: list[str] = field(default_factory=lambda: ["cc"])
-    instructions: list[str] = field(default_factory=lambda: ["CLAUDE.md"])
+    instructions: list[str] = field(default_factory=lambda: ["AGENTS.md"])
+    claude_md: str = "auto"
     fragment: str = "dev"
     cap: int = 5
     miss_log: str = DEFAULT_LOG
@@ -74,7 +76,8 @@ def parse(source: str) -> Settings:
         raise SettingsError(f"{NAME}: {err}") from err
     settings = Settings(
         harnesses=strings(data, "harnesses", ["cc"]),
-        instructions=strings(data, "instructions", ["CLAUDE.md"]),
+        instructions=strings(data, "instructions", ["AGENTS.md"]),
+        claude_md=text(data, "claude_md", "auto"),
         fragment=text(data, "fragment", "dev"),
         cap=cap(data),
         miss_log=text(data, "miss_log", DEFAULT_LOG),
@@ -82,6 +85,7 @@ def parse(source: str) -> Settings:
     )
     choose("harness", settings.harnesses, HARNESSES)
     choose("fragment", [settings.fragment], FRAGMENTS)
+    choose("claude_md", [settings.claude_md], CLAUDE_MD)
     for name in [*settings.instructions, settings.miss_log]:
         relative(name, "path")
     return settings

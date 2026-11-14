@@ -12,7 +12,7 @@ Installed {{date}}. Approved by: _who, when_.
 | Built-in explorer to override (R-A3) | Claude Code `Explore`: the spec's `explorer` role ships as `roles/explore.md` with `name: Explore`, so it replaces the built-in agent. |
 | Parallel cap (PA1) | `cap` in `routewise.toml` (default 5, the spec default). Raising it needs approval. |
 | Miss log and command (M1) | `miss_log` in `routewise.toml`, written only by `routewise/bin/miss-log add`; `routewise/bin/miss-log report` prints the summary. |
-| Where the instructions include the fragment | `instructions` in `routewise.toml`, between the `routewise:start` and `routewise:end` markers. |
+| Where the instructions include the fragment | `instructions` in `routewise.toml` (default `AGENTS.md`), between the `routewise:start` and `routewise:end` markers. Claude Code reaches it through an `@AGENTS.md` import block in CLAUDE.md when needed (`claude_md`). |
 | Assistant-mode reader delegation (A2) | None. |
 | Assistant model and effort pins (A3) | _Fill in, or "not an assistant project"._ |
 | `auditor` | `deep` at `high` (R-A4). |
