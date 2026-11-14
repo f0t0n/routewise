@@ -39,7 +39,7 @@ Four small changes, built in the order that keeps every commit green: commit the
 
 ### Phase 4: Commands spelled per project (R3)
 - [x] Task 5: The start marker and the agent marker name the project's own re-install command
-- [ ] Task 6: The binding template spells routewise paths from the project root
+- [x] Task 6: The binding template spells routewise paths from the project root
 
 ### Checkpoint C (end of Build)
 - [ ] `make check` green; all SPEC.md success criteria for R1, R2 and R3 met

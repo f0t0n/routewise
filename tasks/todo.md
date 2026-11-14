@@ -113,13 +113,13 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). One Conventional Commit p
 **Description:** Replace the hard-coded `routewise/install`, `routewise/roles/`, `routewise/harness.toml` and `routewise/bin/miss-log` in `templates/binding.md` with `{{install}}`, `{{roles}}`, `{{harness}}` and `{{miss_log}}`, filled in `plan_first_run`.
 
 **Acceptance criteria:**
-- [ ] A vendored first run writes a binding byte-identical in those rows to today's (`routewise/…`).
-- [ ] A self-install first run (on a temporary copy) writes `./install --project .`, `roles/`, `harness.toml`, `bin/miss-log`, and no `routewise/` path; no `{{` is left in either.
-- [ ] This repo's own `ROUTING-BINDING.md` is not rewritten (first run only).
+- [x] A vendored first run writes a binding byte-identical in those rows to today's (`routewise/…`).
+- [x] A self-install first run (on a temporary copy) writes `./install --project .`, `roles/`, `harness.toml`, `bin/miss-log`, and no `routewise/` path; no `{{` is left in either.
+- [x] This repo's own `ROUTING-BINDING.md` is not rewritten (first run only).
 
 **Verification:**
-- [ ] New test fails first, then passes: `uv run pytest tests/test_install.py -k binding`
-- [ ] `make check` green; `git status` shows no change to `ROUTING-BINDING.md`
+- [x] New test fails first, then passes: `uv run pytest tests/test_install.py -k binding`
+- [x] `make check` green; `git status` shows no change to `ROUTING-BINDING.md`
 
 **Dependencies:** Task 5 (shares `rerun`)
 **Files:** `templates/binding.md`, `lib/install.py`, `tests/test_install.py`, `CHANGELOG.md`

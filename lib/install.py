@@ -301,8 +301,17 @@ def plan_first_run(plan: Plan, chosen: Settings, harnesses: list[Harness]) -> No
     if not binding.exists():
         text = (HOME / "templates" / "binding.md").read_text(encoding="utf-8")
         dirs = ", ".join(f"`{h.dir}/` ({h.key})" for h in harnesses)
-        text = text.replace("{{spec}}", label(HOME / "spec" / "SPEC-model-routing.md", plan.root))
-        text = text.replace("{{date}}", date.today().isoformat()).replace("{{agent_dirs}}", dirs)
+        paths = {
+            "{{spec}}": label(HOME / "spec" / "SPEC-model-routing.md", plan.root),
+            "{{install}}": rerun(plan.root),
+            "{{roles}}": label(HOME / "roles", plan.root) + "/",
+            "{{harness}}": label(HOME / "harness.toml", plan.root),
+            "{{miss_log}}": label(HOME / "bin" / "miss-log", plan.root),
+            "{{date}}": date.today().isoformat(),
+            "{{agent_dirs}}": dirs,
+        }
+        for key, value in paths.items():
+            text = text.replace(key, value)
         plan.write(binding, text)
     log = plan.root / chosen.miss_log
     if not log.exists():
