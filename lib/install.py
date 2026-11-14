@@ -74,6 +74,7 @@ def default_settings_text(root: Path) -> str:
     if (root / ".agents").is_dir() or (root / "GEMINI.md").exists():
         harnesses.append("agy")
     text = (HOME / "templates" / settings.NAME).read_text(encoding="utf-8")
+    text = text.replace("{{install}}", rerun(root))
     return text.replace("{{harnesses}}", toml_list(harnesses))
 
 

@@ -669,3 +669,14 @@ def test_binding_paths_are_spelled_from_the_project_root(project: Path):
     assert "`harness.toml`, with overrides" in own
     assert "written only by `bin/miss-log add`; `bin/miss-log report`" in own
     assert "routewise/" not in own
+
+
+def test_settings_name_the_projects_own_install_command(project: Path):
+    home = project / "routewise"
+    run(project, "install")
+    run(project, "install", "--project", str(home))
+
+    assert "re-run `routewise/install`" in (project / "routewise.toml").read_text()
+    own = (home / "routewise.toml").read_text()
+    assert f"re-run `{OWN}`" in own
+    assert "routewise/" not in own
