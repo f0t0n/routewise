@@ -25,7 +25,7 @@ Four small changes, built in the order that keeps every commit green: commit the
 - [x] `make check` green; two commits on `main`
 
 ### Phase 2: routewise on its own repo
-- [ ] Task 2: S9, accept the routewise folder itself as the project (install and miss-log)
+- [x] Task 2: S9, accept the routewise folder itself as the project (install and miss-log)
 - [ ] Task 3: Install routewise on this repo (`make self`, drift check in `make check`)
 
 ### Checkpoint B

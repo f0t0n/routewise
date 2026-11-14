@@ -41,13 +41,16 @@ def inside(root: Path, path: Path) -> Path:
 
 
 def holds(root: Path, home: Path) -> None:
-    """Refuse a project root that does not hold this routewise folder.
+    """Refuse a project root that is neither this routewise folder nor the folder holding it.
 
     Generated files name routewise paths relative to the project; from outside, they would
-    hold absolute paths (often a home folder), and `--project ~` would write global config.
+    hold absolute paths, and a folder further up (`--project ~`) would write global config.
+    The routewise folder itself is a project too: routewise runs on its own repo (spec S9).
     """
-    if root not in home.parents:
-        raise PathError(f"{root} does not hold {home}; copy routewise/ into the project first")
+    if root not in (home, home.parent):
+        raise PathError(
+            f"{root} must hold {home} directly, or be it; copy routewise/ into the project first"
+        )
 
 
 def label(path: Path, root: Path) -> str:

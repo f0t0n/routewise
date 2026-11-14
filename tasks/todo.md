@@ -41,13 +41,13 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). One Conventional Commit p
 **Description:** `paths.holds` accepts `root == home` as well as a root that holds routewise, for both `install` and `bin/miss-log`. Test first on a temporary copy, never on this repo.
 
 **Acceptance criteria:**
-- [ ] `install --project <copy>/routewise` succeeds on a fresh copy: `AGENTS.md` there holds the block with `` `bin/miss-log add`` paths, five agents in `<copy>/routewise/.claude/agents/` carry `roles/<name>.md` markers, `ROUTING-BINDING.md` links `spec/SPEC-model-routing.md`; a second run prints `routewise: nothing to change`; `--check` exits 0; `--uninstall` removes agents and block.
-- [ ] `bin/miss-log --project <copy>/routewise add … ` and `report` work there.
-- [ ] An unrelated folder and the folder above stay refused for both tools (existing test kept; the parent case added).
+- [x] `install --project <copy>/routewise` succeeds on a fresh copy: `AGENTS.md` there holds the block with `` `bin/miss-log add`` paths, five agents in `<copy>/routewise/.claude/agents/` carry `roles/<name>.md` markers, `ROUTING-BINDING.md` links `spec/SPEC-model-routing.md`; a second run prints `routewise: nothing to change`; `--check` exits 0; `--uninstall` removes agents and block.
+- [x] `bin/miss-log --project <copy>/routewise add … ` and `report` work there.
+- [x] An unrelated folder and the folder above the project are refused for both tools (existing test kept; the folder above was accepted before and is now refused, per S9).
 
 **Verification:**
-- [ ] New tests fail before the change, pass after: `uv run pytest tests/test_install.py -k self`
-- [ ] `make check` green
+- [x] New tests fail before the change, pass after: `uv run pytest tests/test_install.py -k self`
+- [x] `make check` green
 
 **Dependencies:** Task 0
 **Files:** `lib/paths.py`, `tests/test_install.py`, `README.md` (Safety: `--project`), `CHANGELOG.md`
