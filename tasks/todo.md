@@ -447,15 +447,24 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Description:** Check the release contents on the final commit and give the maintainer the exact tag and push commands.
 
 **Acceptance criteria:**
-- [ ] `pyproject.toml`, `uv.lock` and every README `v=` say `0.1.1`; `CHANGELOG.md` has `## 0.1.1 (2026-11-14)` with the R5 and R6 lines and no `Unreleased` section.
-- [ ] `git archive --prefix=routewise-0.1.1/ HEAD | tar -t` holds exactly the 11 R1 entries, and its `lib/privacy.py` and `lib/miss_log.py` equal the working tree's.
-- [ ] `tasks/release-0.1.1.md` still matches `CHANGELOG.md` 0.1.1 after any review fix.
-- [ ] The maintainer gets: `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>`, `git push origin main v0.1.1` and `gh release create v0.1.1 --title "routewise 0.1.1" --notes-file tasks/release-0.1.1.md`.
+- [x] `pyproject.toml`, `uv.lock` and every README `v=` say `0.1.1`; `CHANGELOG.md` has `## 0.1.1 (2026-11-14)` with the R5 and R6 lines and no `Unreleased` section.
+- [x] `git archive --prefix=routewise-0.1.1/ HEAD | tar -t` holds exactly the 11 R1 entries, and its `lib/privacy.py` and `lib/miss_log.py` equal the working tree's.
+- [x] `tasks/release-0.1.1.md` still matches `CHANGELOG.md` 0.1.1 after any review fix.
+- [x] The maintainer gets: `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>`, `git push origin main v0.1.1` and `gh release create v0.1.1 --title "routewise 0.1.1" --notes-file tasks/release-0.1.1.md`.
 
 **Verification:**
-- [ ] `make check` green on the final commit
+- [x] `make check` green on the final commit
 
 **Dependencies:** Task 18. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
+
+**Result (2026-11-14):** on `138f46d` (this commit only adds this record, under `tasks/`, which is `export-ignore`):
+
+- Versions: `pyproject.toml`, `uv.lock` and both README `v=` lines say `0.1.1`; `CHANGELOG.md` opens with `## 0.1.1 (2026-11-14)`; no `Unreleased` section.
+- Archive: `git archive --prefix=routewise-0.1.1/ HEAD` holds exactly the 11 R1 entries (`ADOPT.md CHANGELOG.md LICENSE README.md bin harness.toml install lib roles spec templates`); its `lib/privacy.py` and `lib/miss_log.py` are byte-identical to the working tree. `lib/` unchanged since `662eb71`.
+- Notes: the update block is identical to README "Updating"; the claims were checked against the CHANGELOG in Task 18 and nothing changed since.
+- End to end on the archive: a project installed from `v0.1.0`, updated to HEAD, prints `routewise: nothing to change`; `miss-log add` refuses `mailed me@localhost`, `see jira.corp.net/browse/X-1` and `redirect=%40example。com/path` with `routewise: …` and exit 2, accepts `修复路由。然后改a/b`; the log holds one line. Rolling back to `v0.1.0` the same way prints `nothing to change` (rollback path: the README "Updating" block with `v=0.1.0`).
+- `make check`: 939 passed, lint and types clean, gitleaks no leaks, self-install current.
+- Not applicable to this tool (no deployment): feature flags, monitoring, staged rollout.
 
 ## Ship (maintainer, from the host)
 - [ ] `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>`

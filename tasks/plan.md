@@ -39,7 +39,7 @@ Extended after Task 2: R6 (bin/miss-log printed `miss-log: ` instead of `routewi
 - [x] Task 17: Round-7 review of the round-6 fix
 - [x] Task 18: Last doc and test edits after round 7
 - [x] Checkpoint: reviewed
-- [ ] Task 19: Ship checks and the tag commands
+- [x] Task 19: Ship checks and the tag commands
 - [ ] Follow-up: R7 for 0.1.2 (gaps 0.1.0 also had)
 
 Extended after round 1 of the review (2026-11-14): Task 6 fixes the findings the maintainer approved (R5 amended in `6665dff`), Task 7 re-reviews that fix, since it changes the filter again.
