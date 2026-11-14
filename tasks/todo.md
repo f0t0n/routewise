@@ -1,4 +1,4 @@
-# Tasks: miss-log privacy fix, release 0.1.1 (R5)
+# Tasks: miss-log privacy fix and error prefix, release 0.1.1 (R5, R6)
 
 Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before each commit (the pre-commit hook enforces it). Tick a box in the commit that records the task.
 
@@ -47,38 +47,67 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 ## Checkpoint: verified
 - [x] `make check` green; Tasks 1–2 recorded
 
-## Task 3: Review and audit of the final change
+## Task 3: R6, one error prefix in `bin/miss-log`
 
-**Description:** Start `reviewer` and `auditor` together on `v0.1.0..HEAD` (`lib/privacy.py`, `tests/test_privacy.py`, `README.md`, `CHANGELOG.md`, `SPEC.md` R5 and S7). Fix or answer every finding.
+**Description:** Test first: `tests/test_miss_log.py` asserts that a refused entry's stderr starts with `routewise: `; it fails while `lib/miss_log.py` prints `miss-log: `. Then change both prints in `main` and add a `CHANGELOG.md` line under 0.1.1.
+
+**Acceptance criteria:**
+- [ ] The new assertion fails on HEAD before the fix (red shown), passes after.
+- [ ] Both error branches of `lib/miss_log.py` `main` print `routewise: `; the file-error branch is tested if a log path that is a folder reaches it, otherwise checked by reading and named here.
+- [ ] Exit code 2 and the message text after the prefix are unchanged (existing tests still pass); argparse usage errors unchanged.
+- [ ] `CHANGELOG.md` 0.1.1 has one line for R6.
+
+**Verification:**
+- [ ] `uv run pytest tests/test_miss_log.py` red, then green; `make check` green
+
+**Dependencies:** None. **Files:** `lib/miss_log.py`, `tests/test_miss_log.py`, `CHANGELOG.md`, `tasks/todo.md`. **Scope:** XS. Commit: `fix: print miss-log errors with the routewise: prefix`
+
+## Task 4: Draft the 0.1.1 release notes
+
+**Description:** Write `tasks/release-0.1.1.md` for users, in the shape of `tasks/release-0.1.0.md`: what 0.1.1 fixes (R5, R6, and R4's README install block), what is newly refused and how to reword it, how to update (the README's "Updating" block with `v=0.1.1`), and links to `CHANGELOG.md` and the README.
+
+**Acceptance criteria:**
+- [ ] Every claim matches `CHANGELOG.md` 0.1.1 and the code; nothing in it is missing from the CHANGELOG.
+- [ ] The update commands are copied from the README, not retyped.
+
+**Verification:**
+- [ ] Read against `CHANGELOG.md` and `README.md`; checked again by `reviewer` in Task 5; `make check` green
+
+**Dependencies:** Task 3. **Files:** `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): draft the 0.1.1 release notes`
+
+## Task 5: Review and audit of the final change and the notes
+
+**Description:** Start `reviewer` and `auditor` together on `v0.1.0..HEAD` (`lib/privacy.py`, `lib/miss_log.py`, `tests/test_privacy.py`, `tests/test_miss_log.py`, `README.md`, `CHANGELOG.md`, `SPEC.md` R5, R6 and S7); `reviewer` also checks `tasks/release-0.1.1.md` against the code. Fix or answer every finding.
 
 **Acceptance criteria:**
 - [ ] Every finding is fixed (new `fix:` commit, failing test first, CHANGELOG line updated) or answered with a reason, and listed here.
-- [ ] A fix that changes an R5 decision is taken to the maintainer before it is built.
+- [ ] A fix that changes an R5 or R6 decision is taken to the maintainer before it is built.
 - [ ] No open Critical or Required finding.
 
 **Verification:**
 - [ ] `make check` green after each fix
 
-**Dependencies:** Tasks 1–2. **Files:** `tasks/todo.md`; for fixes `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `SPEC.md`. **Scope:** S. Commit: `docs(tasks): record the review of R5`
+**Dependencies:** Tasks 1–4. **Files:** `tasks/todo.md`; for fixes `lib/privacy.py`, `lib/miss_log.py`, their tests, `CHANGELOG.md`, `SPEC.md`, `tasks/release-0.1.1.md`. **Scope:** S. Commit: `docs(tasks): record the review of R5 and R6`
 
 ## Checkpoint: reviewed
 - [ ] No open Critical or Required finding; maintainer has seen the findings
 
-## Task 4: Ship checks and the tag commands
+## Task 6: Ship checks and the tag commands
 
 **Description:** Check the release contents on the final commit and give the maintainer the exact tag and push commands.
 
 **Acceptance criteria:**
-- [ ] `pyproject.toml`, `uv.lock` and every README `v=` say `0.1.1`; `CHANGELOG.md` has `## 0.1.1 (2026-11-14)` with the R5 line and no `Unreleased` section.
-- [ ] `git archive --prefix=routewise-0.1.1/ HEAD | tar -t` holds exactly the 11 R1 entries, and its `lib/privacy.py` equals the working tree's.
-- [ ] Release notes drafted in `tasks/release-0.1.1.md` if the maintainer asks (open question 1).
-- [ ] The maintainer gets: `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>` and `git push origin main v0.1.1`.
+- [ ] `pyproject.toml`, `uv.lock` and every README `v=` say `0.1.1`; `CHANGELOG.md` has `## 0.1.1 (2026-11-14)` with the R5 and R6 lines and no `Unreleased` section.
+- [ ] `git archive --prefix=routewise-0.1.1/ HEAD | tar -t` holds exactly the 11 R1 entries, and its `lib/privacy.py` and `lib/miss_log.py` equal the working tree's.
+- [ ] `tasks/release-0.1.1.md` still matches `CHANGELOG.md` 0.1.1 after any review fix.
+- [ ] The maintainer gets: `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>`, `git push origin main v0.1.1` and `gh release create v0.1.1 --title "routewise 0.1.1" --notes-file tasks/release-0.1.1.md`.
 
 **Verification:**
 - [ ] `make check` green on the final commit
 
-**Dependencies:** Task 3. **Files:** `tasks/todo.md`, maybe `tasks/release-0.1.1.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of R5`
+**Dependencies:** Task 5. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
 
 ## Ship (maintainer, from the host)
 - [ ] `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>`
 - [ ] `git push origin main v0.1.1`
+- [ ] `gh release create v0.1.1 --title "routewise 0.1.1" --notes-file tasks/release-0.1.1.md`
