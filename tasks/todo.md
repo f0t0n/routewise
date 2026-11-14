@@ -136,9 +136,11 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). One Conventional Commit p
 Verified 2026-11-14: `make check` exit 0 (152 tests); the archive at `d96c538` lists exactly the 11 R1 entries; from that archive a fresh project gets exactly the 9 files of criterion 2, and a project with its own `AGENTS.md`, CRLF `CLAUDE.md` and `CLAUDE.local.md` gets them back byte-identical after uninstall (criterion 3); reverting S9 or tying agent detection to the command makes tests fail (criterion 4 for the rules this change touched).
 
 ## Review
-- [ ] `reviewer` brief (role body, sonnet, medium) on `git diff <Task 0 commit>^..HEAD`
-- [ ] `auditor` brief (role body, opus, high) on `lib/paths.py` (S9), `.gitattributes`, the Makefile targets, and the marker changes (R3: detection of generated files)
-- [ ] Every Critical and Required finding fixed in its own commit, or answered
+- [x] `reviewer` brief (role body, sonnet, medium) on `git diff <Task 0 commit>^..HEAD`
+- [x] `auditor` brief (role body, opus, high) on `lib/paths.py` (S9), `.gitattributes`, the Makefile targets, and the marker changes (R3: detection of generated files)
+- [x] Every Critical and Required finding fixed in its own commit, or answered
+
+Reviewed 2026-11-14. `reviewer`: one Required, fixed in `b2bf6c2` (`routewise.toml` named `routewise/install`); the release-test docstring nit fixed in `4f90a35`; two nits declined (make `render`'s `command` required; skip the start line on uninstall). `auditor`: one Required, older than this change, fixed in `9f41c7e` (`--project ~` wrote global agents and `~/.claude/CLAUDE.md`); two Optionals new with R2 and R3, fixed in `b122789` (self-install through a symlinked routewise) and `456b8f1` (a folder name that breaks markers); three skipped by decision (symlinked working directory refused, which fails safe; release test is top-level only, documented; hook checks the working tree, documented).
 
 ## Ship
 - [ ] `CHANGELOG.md` covers R1, R2, R3, S9 and the section 13 record
