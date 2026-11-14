@@ -13,7 +13,7 @@ Extended after Task 2: R6 (bin/miss-log printed `miss-log: ` instead of `routewi
 - **Red is proven against the old code, not by reverting the repo.** Task 1 runs today's `tests/test_privacy.py` against `lib/privacy.py` from `v0.1.0` and from `50f9de1` (the first fix, before review; squashed into `44376cb`, still reachable), each copied into a scratch folder, so the working tree is never changed.
 - **Review covers the whole change** `v0.1.0..HEAD` restricted to `lib/`, `tests/`, `README.md`, `CHANGELOG.md` and `SPEC.md`, with a fresh `reviewer` and a fresh `auditor` (S7 is a safety rule), started together. Neither is told the earlier findings, so they are not anchored on them.
 - **R6 is two strings in `lib/miss_log.py` `main`**, pinned by a test that asserts the prefix (the existing tests only check the text after it). The file-error branch (`OSError`) is covered by a test that makes the log path a folder, if that reaches the branch without a symlink or permission trick; otherwise it is checked by reading the code and named in the record.
-- **Release notes are reviewed with the change:** `reviewer` in Task 5 also reads `tasks/release-0.1.1.md` against `CHANGELOG.md` and the code, so they are drafted before the review (Task 18 re-checks them after any fix).
+- **Release notes are reviewed with the change:** `reviewer` in Task 5 also reads `tasks/release-0.1.1.md` against `CHANGELOG.md` and the code, so they are drafted before the review (Task 19 re-checks them after any fix).
 - **The tag goes on the last commit of this plan** (decision 6 of the spec gate). `SPEC.md` and `tasks/` are `export-ignore`, so commits after `bcc480f` do not change what the archive ships unless a fix lands.
 - **The maintainer tags and pushes** from the host; this plan only states the exact commands.
 
@@ -37,8 +37,9 @@ Extended after Task 2: R6 (bin/miss-log printed `miss-log: ` instead of `routewi
 - [ ] Task 15: Round-6 review, same scope as round 5
 - [x] Task 16: Fix the round-6 findings
 - [ ] Task 17: Round-7 review of the round-6 fix
+- [ ] Task 18: Last doc and test edits after round 7
 - [ ] Checkpoint: reviewed
-- [ ] Task 18: Ship checks and the tag commands
+- [ ] Task 19: Ship checks and the tag commands
 - [ ] Follow-up: R7 for 0.1.2 (gaps 0.1.0 also had)
 
 Extended after round 1 of the review (2026-11-14): Task 6 fixes the findings the maintainer approved (R5 amended in `6665dff`), Task 7 re-reviews that fix, since it changes the filter again.
@@ -53,17 +54,19 @@ Extended after round 5 (2026-11-14): the round-4 `。` rule was narrower than ne
 
 Extended after round 6 (2026-11-14): round 6 approved the change but found my wrong NFKC claim (Task 14 removed a range NFKC does not fully map), a case-folding regression, and two wording gaps. Task 16 fixes them and checks Unicode claims exhaustively; Task 17 reviews that commit with the round-5 checks.
 
+Stopped after round 7 (2026-11-14): both reviewers approved with no Critical or Required; the maintainer approved a stopping rule (SPEC.md, Review row) and moving round 7's findings to 0.1.2. Task 18 makes doc and test edits only, checked by `reviewer` on that diff; then Ship.
+
 ## Risks and Mitigations
 
 | Risk | Impact | Mitigation |
 |---|---|---|
 | A post-review test already passes on `50f9de1` (no red) | Low | Recorded as a regression guard, not a test-first proof; it must still fail on `v0.1.0` or be named in the record |
 | Review or audit finds a new leak or false positive | Med | Fix in a new `fix:` commit, test first with red shown; a change to an R5 or R6 decision goes back to the spec gate first |
-| A fix after `bcc480f` changes shipped files | Low | Task 18 re-checks the archive and `make check` on the final commit; the CHANGELOG 0.1.1 line is updated in the same fix commit |
+| A fix after `bcc480f` changes shipped files | Low | Task 19 re-checks the archive and `make check` on the final commit; the CHANGELOG 0.1.1 line is updated in the same fix commit |
 | `50f9de1` is garbage-collected | Low | Task 1 runs first; the commit is in the reflog |
 | A review fix loosens the filter or breaks an allowed phrase | Med | No allowed case is removed or moved; red shown for each new leak; Tasks 7 and 9 re-audit |
 | A normalisation step hides what another step would find (happened in `1aa6725` and `d84fadf`) | High | One rule: a step that can hide text gets a view without it; guard tests for invisible characters and for encoded `@` before a link; Task 11 fuzzes against every earlier version |
-| The review loop keeps widening 0.1.1 | High | Round 5 is scoped to criterion 10 and regressions; older gap kinds are recorded for 0.1.2, not fixed here |
+| The review loop keeps widening 0.1.1 (it did, through round 7) | High | Stopping rule in SPEC.md; filter code frozen at `662eb71`; Task 18 is docs and one test |
 | A Unicode claim is checked on one sample character (happened in Task 14) | Med | Check every code point of a range before relying on a claim about it; record the count |
 | The Default_Ignorable ranges in R5 are wrong (written from memory) | Med | `web-reader` checks them against Unicode's file, and I open the lines myself, before they are used (Task 10) |
 | The notes promise something the code does not do | Med | `reviewer` checks every claim against the code; the update steps are the README's, which R4's test keeps on the current version |

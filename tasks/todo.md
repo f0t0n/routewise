@@ -405,15 +405,43 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 
 **Dependencies:** Task 16. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record round 7 of the 0.1.1 review`
 
+**Round 7 (2026-11-14):** fresh `reviewer` and `auditor` on `662eb71`. Both approve; no Critical or Required. `auditor`: 1.21M fuzzed inputs over eight versions, every loosening a kind R5 names except item 1. `reviewer`: reported 95 tests in both its control and the repo (the repo gives 815 by my run; equal counts, so its comparison holds); its `{7,41}` survivor reproduced by reading. An automated security check raised item 1. The maintainer asked whether we were going in circles; I agreed (seven rounds, several spent on my own regressions, no stopping rule) and proposed stopping. Approved: ship `662eb71`'s filter, move round 7 to 0.1.2, add a stopping rule (SPEC.md Review row, AGENTS.md step 5).
+
+| # | From | Finding | Answer |
+|---|---|---|---|
+| 1 | auditor + security check | `#:~:`, `?$`, `#!` after a host with no path pass (refused `1aa6725^`–`b6ce5c9`) | 0.1.2, listed in R5 |
+| 2 | reviewer | `为什么用foo.bar？因为快`, `foo.bar?为什么` refused (0.1.0 allowed) | Named trade-off for 0.1.1, fix in 0.1.2 |
+| 3 | reviewer | The 41-hex test has no digit, so it tests the digit rule, not the cap (my test regression in `662eb71`) | Test with a digit (Task 18) |
+| 4 | reviewer, Nit | CHANGELOG says "Cyrillic or Greek"; R5 says any non-CJK script | Fix wording (Task 18) |
+| 5 | reviewer, Nit | Notes' "nothing to change" not in the CHANGELOG | No change: an update step, notes-only by Task 4's rule |
+| 6 | auditor | JWT with a second `。` not followed by a letter or digit | 0.1.2, R5 item widened |
+| – | reviewer | `(?=[0-9a-f]*\d)` vs `(?=[a-f]*\d)` survivor | Equivalent |
+| – | auditor | Cost at most about 9 ms | No change |
+
+## Task 18: Last doc and test edits after round 7
+
+**Description:** No filter code changes (stopping rule). One commit: the 41-hex SHA test gets a digit so the length cap is tested again; CHANGELOG 0.1.1 says "words of a non-CJK script", names the full-width `？` trade-off and the round-7 gaps for 0.1.2; the notes match. Then `reviewer` checks the diff of this commit only (docs and one test), no fuzzing.
+
+**Acceptance criteria:**
+- [ ] `ssh anna@a1` + 39 `a` (41 hex with a digit) is a leak test; it passes on HEAD; the `{7,41}` mutant fails it (checked in a scratch copy with a control).
+- [ ] CHANGELOG 0.1.1 and `tasks/release-0.1.1.md` name the `？` trade-off and the round-7 gaps; every behaviour claim in the notes is in the CHANGELOG.
+- [ ] `lib/` unchanged since `662eb71` (`git diff 662eb71 -- lib/` empty).
+- [ ] `reviewer` on this commit's diff: no Critical or Required.
+
+**Verification:**
+- [ ] `make check` green
+
+**Dependencies:** Task 17 round 7, R5 and stopping rule (`docs(spec): add a stopping rule…`). **Files:** `tests/test_privacy.py`, `CHANGELOG.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** XS. Commit: `docs: name the round-7 gaps of 0.1.1 and test the SHA length cap again`
+
 ## Follow-up (not in 0.1.1)
 
-- [ ] R7 for 0.1.2: G1–G3, H, the JWT item of round 6 (and whatever round 7 records), with its own Define, Plan and false-positive check.
+- [ ] R7 for 0.1.2: G1–G3, H, the JWT item (widened in round 7), `#:~:` `?$` `#!`, the full-width `？` trade-off, with its own Define, Plan and false-positive check.
 
 
 ## Checkpoint: reviewed
 - [ ] No open Critical or Required finding; maintainer has seen the findings
 
-## Task 18: Ship checks and the tag commands
+## Task 19: Ship checks and the tag commands
 
 **Description:** Check the release contents on the final commit and give the maintainer the exact tag and push commands.
 
@@ -426,7 +454,7 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Verification:**
 - [ ] `make check` green on the final commit
 
-**Dependencies:** Task 17. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
+**Dependencies:** Task 18. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
 
 ## Ship (maintainer, from the host)
 - [ ] `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>`
