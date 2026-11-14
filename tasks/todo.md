@@ -58,20 +58,20 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). One Conventional Commit p
 **Description:** Add this repo's `routewise.toml` (plan's settings), a `self` and a `selfcheck` target in the Makefile (`selfcheck` in `check`), run `make self`, fill in `ROUTING-BINDING.md`, and tell agents how to keep it current.
 
 **Acceptance criteria:**
-- [ ] `make self` writes `routewise.toml`-driven files only inside the repo: `.claude/agents/*.md` (5), `ROUTING-BINDING.md`, `logs/delegation-misses.jsonl`, and the delegation block appended to `AGENTS.md` (`bin/miss-log` paths); the folder above the repo is untouched.
-- [ ] `make check` runs `./install --project . --check`; editing a role without `make self` makes it fail (checked by hand, then reverted).
-- [ ] `ROUTING-BINDING.md` filled in (approver and review date confirmed at the plan gate); `AGENTS.md` "How to work here" says to run `make self` after changing roles, templates or `harness.toml`.
+- [x] `make self` writes `routewise.toml`-driven files only inside the repo: `.claude/agents/*.md` (5), `ROUTING-BINDING.md`, `logs/delegation-misses.jsonl`, and the delegation block appended to `AGENTS.md` (`bin/miss-log` paths); the folder above the repo is untouched.
+- [x] `make check` runs `./install --project . --check`; editing a role without `make self` makes it fail (checked by hand, then reverted).
+- [x] `ROUTING-BINDING.md` filled in (approver and review date confirmed at the plan gate); `AGENTS.md` "How to work here" says to run `make self` after changing roles, templates or `harness.toml`.
 
 **Verification:**
-- [ ] `make check` green; `git status` shows only the files above
-- [ ] Manual: role edit → `make check` fails at `selfcheck` → revert → green
+- [x] `make check` green; `git status` shows only the files above
+- [x] Manual: role edit → `make check` fails at `selfcheck` → revert → green
 
 **Dependencies:** Task 2
 **Files:** `Makefile`, `routewise.toml`, `ROUTING-BINDING.md`, `AGENTS.md`, `logs/delegation-misses.jsonl`, `.claude/agents/*.md` (generated)
 **Scope:** M (six hand-touched files; the agents are generated). Commit: `build: run routewise on its own repo`
 
 ## Checkpoint B
-- [ ] `make check` green including `selfcheck`; Tasks 2–3 committed
+- [x] `make check` green including `selfcheck`; Tasks 2–3 committed
 
 ## Task 4: Release archive: `export-ignore` and one list of runtime files
 

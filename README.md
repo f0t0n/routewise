@@ -91,9 +91,12 @@ Replace the `routewise/` folder with a newer release and run `routewise/install`
 
 ```sh
 uv sync
-make check   # lint, format check, typecheck, secret scan (gitleaks), tests
+make check   # lint, format check, typecheck, secret scan (gitleaks), tests, self-install drift
 make hooks   # once per clone: run `make check` before every commit
+make self    # routewise runs on its own repo: re-install after changing roles/, templates/ or harness.toml
 ```
+
+In this repo never run a bare `./install`: its default project is the folder above. `make self` runs `./install --project .`. The rules for working here are in [AGENTS.md](AGENTS.md) and [SPEC.md](SPEC.md).
 
 `make check` needs `uv`, `shellcheck` and `gitleaks` on the `PATH`.
 

@@ -1,6 +1,6 @@
-.PHONY: check test lint typecheck secrets fmt hooks
+.PHONY: check test lint typecheck secrets fmt hooks self selfcheck
 
-check: lint typecheck secrets test
+check: lint typecheck secrets test selfcheck
 
 test:
 	uv run pytest
@@ -26,3 +26,11 @@ fmt:
 # Uses the tracked hooks in .githooks/ (pre-commit runs `make check`).
 hooks:
 	git config core.hooksPath .githooks
+
+# routewise on its own repo (spec R2). Always --project .: the default project is the
+# folder that holds this one, which here is the folder above the repo.
+self:
+	./install --project .
+
+selfcheck:
+	./install --project . --check

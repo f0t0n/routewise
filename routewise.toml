@@ -1,0 +1,35 @@
+# routewise settings for this project: the machine-readable half of the binding
+# (spec section 9). Edit, then re-run `routewise/install`. The human half, with the
+# approvals and reasons, is ROUTING-BINDING.md.
+
+# Harnesses to render agents for: "cc" (Claude Code, .claude/agents/) and "agy"
+# (Antigravity CLI, .agents/agents/).
+harnesses = ["cc"]
+
+# Instruction files that get the delegation block. AGENTS.md is read by Claude Code
+# (v2.1.277 or newer), Antigravity CLI and most other agent tools.
+instructions = ["AGENTS.md"]
+
+# How Claude Code finds AGENTS.md. It reads AGENTS.md only when there is no CLAUDE.md,
+# .claude/CLAUDE.md or CLAUDE.local.md in the project or above it; a CLAUDE.md holding
+# an `@AGENTS.md` import line fixes that.
+#   "auto":   add a routewise block with the import to CLAUDE.md or .claude/CLAUDE.md
+#             when one exists (never creates it; leaves CLAUDE.local.md alone).
+#   "import": always keep that block, creating CLAUDE.md if needed (for Claude Code
+#             before v2.1.277, or sessions that read CLAUDE.md only).
+#   "none":   never touch CLAUDE.md.
+claude_md = "auto"
+
+# "dev" for an agent that builds the project; "assistant" for a user-facing assistant
+# (it may delegate only web-page reading).
+fragment = "dev"
+
+# Parallel cap (PA1): read-only subagents started together. Raising it needs approval.
+cap = 5
+
+# Miss log (M1), relative to the project root.
+miss_log = "logs/delegation-misses.jsonl"
+
+# Optional: override a tier's model for Claude Code, e.g. to pin a version.
+[tiers]
+# fast = "claude-haiku-5-5"

@@ -26,10 +26,10 @@ Four small changes, built in the order that keeps every commit green: commit the
 
 ### Phase 2: routewise on its own repo
 - [x] Task 2: S9, accept the routewise folder itself as the project (install and miss-log)
-- [ ] Task 3: Install routewise on this repo (`make self`, drift check in `make check`)
+- [x] Task 3: Install routewise on this repo (`make self`, drift check in `make check`)
 
 ### Checkpoint B
-- [ ] `make check` green including the self drift check; a deliberately unre-installed role change fails it (then reverted)
+- [x] `make check` green including the self drift check; a deliberately unre-installed role change fails it (then reverted)
 
 ### Phase 3: Release archive
 - [ ] Task 4: `export-ignore` every development file, one-list test, README install from the archive
