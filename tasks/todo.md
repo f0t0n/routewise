@@ -1,472 +1,105 @@
-# Tasks: miss-log privacy fix and error prefix, release 0.1.1 (R5, R6)
+# Tasks: miss-log gaps, release 0.1.2 (R7)
 
-Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before each commit (the pre-commit hook enforces it). Tick a box in the commit that records the task.
+Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green before each commit (the pre-commit hook enforces it). For each fix task: red shown against HEAD before the change, the whole `tests/test_privacy.py` green after, a CHANGELOG line under `## Unreleased`.
 
-## Task 1: Prove the new tests fail first
+## Task 1: G1, ASCII word boundaries
 
-**Description:** Run today's `tests/test_privacy.py` against `lib/privacy.py` from `v0.1.0` and from `50f9de1`, each in a scratch copy, and record which tests fail.
-
-**Acceptance criteria:**
-- [x] On `v0.1.0`: every case in `LEAKS_SINCE_0_1_1` and `REFUSED_CODE_WORDS` fails, plus `react@18.3.1` in the allowed list; every other case passes (success criterion 10: nothing 0.1.0 allowed is refused now except the named trade-offs).
-- [x] On `50f9de1`: each case added after review fails, or is named in the record as a regression guard.
-- [x] The result (counts and any exceptions) is recorded in this file.
-
-**Verification:**
-- [x] `uv run pytest <scratch>/test_privacy.py` with `PYTHONPATH` pointing at each scratch `lib/`; working tree unchanged (`git status` clean)
-
-**Result (2026-11-14):** today's `tests/test_privacy.py` (88 cases), run in a scratch copy with `lib/privacy.py` from each commit; `git status` clean before and after.
-
-- `v0.1.0`: 28 failed, 60 passed. Failed: 23 of the 24 `LEAKS_SINCE_0_1_1` cases, all 4 `REFUSED_CODE_WORDS`, and `react@18.3.1` in the allowed list. The one that passes, `ask jane@пример.рф`, is a regression guard: 0.1.0 refused it and `50f9de1` broke it. Every case 0.1.0 allowed or refused before still passes (no regression in the old tests).
-- `50f9de1`: 18 failed, 70 passed. Failed: all 17 leak cases added after review, and `ASP.NET/Core` (allowed there, refused on purpose since). Regression guards, which cannot fail first by nature: `os.path/join and json.loads/dumps` (already refused at `50f9de1`, pinned when the rule changed) and the allowed cases added after review (`did it call os.path? ...`, `node_modules/lodash.merge/...`, `Next.js/React and Vue.js/Svelte`).
-
-**Dependencies:** None. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the red check of R5`
-
-## Task 2: End-to-end check of `bin/miss-log`
-
-**Description:** In a temporary project with a copy of routewise installed, `bin/miss-log add` refuses one dotless address and one scheme-less link and allows one code word that R5 keeps passing.
+**Description:** Test first: the G1 leaks (`服务器在10.0.0.12上`, `key AKIA…が漏れた`, `见www.example.com`, `见https://example.com`, `ב10.0.0.12`, `令牌eyJ…`, `id <uuid>を使った`, `主机2001:db8::1`, and a chat ID and a card number touched by a CJK letter) fail on HEAD. Then `WORD_START` and `WORD_END` replace `\b` in the token, key, scheme, `www.`, IPv4, IPv6, UUID, chat-ID and card patterns.
 
 **Acceptance criteria:**
-- [x] `--what "mailed me@localhost"` and `--what "see jira.corp.net/browse/X-1"` exit 2 with a message naming the kind of leak, and the log is unchanged.
-- [x] `--what "edited lib/privacy.py and src/a.ts/"` exits 0 and appends one line.
-- [x] If `tests/test_miss_log.py` has no end-to-end refusal test for the new kinds, one is added test first (red shown on `v0.1.0`'s `lib/privacy.py`).
+- [ ] Each G1 leak red on HEAD, green after; `xAKIA…` and `v10.0.0.12` keep their 0.1.1 result.
+- [ ] Every other case in `tests/test_privacy.py` keeps its result; any text 0.1.1 allowed and now refused (accented Latin before a number, for example) is listed here and named in the CHANGELOG.
+- [ ] Mutations: each boundary in each changed pattern, with a control equal to the repo and each mutant checked to import; survivors named.
 
-**Verification:**
-- [x] Commands and outputs recorded here; `make check` green
+**Verification:** `uv run pytest tests/test_privacy.py` red, then green; `make check` green.
 
-**Dependencies:** None. **Files:** `tasks/todo.md`, maybe `tests/test_miss_log.py`. **Scope:** XS–S. Commit: `docs(tasks): record the miss-log check of R5` (or `test:` if a test is added)
+**Dependencies:** None. **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: catch a leak touched by a letter of another script (R7 G1)`
 
-**Result (2026-11-14):**
+## Task 2: G2, URL-encoded scheme
 
-- `tests/test_miss_log.py` had no end-to-end case for the new kinds, so `test_refuses_a_dotless_address_and_a_link_without_a_scheme` was added. With `v0.1.0`'s `lib/privacy.py` copied in, it fails (`assert (0, 0) == (2, 2)`: both were written to the log); `lib/privacy.py` was restored with `git checkout`, and the test passes on HEAD.
-- By hand, on a fresh project unpacked from `git archive HEAD` and installed with `routewise/install`:
-  - `mailed me@localhost` → `miss-log: what holds an e-mail address; describe the miss without it`, exit 2
-  - `see jira.corp.net/browse/X-1` → `miss-log: what holds a URL; describe the miss without it`, exit 2
-  - `edited lib/privacy.py and src/a.ts/` → exit 0; the log holds exactly that one line
-- Noticed, not touched: the message starts with `miss-log:`, not `routewise:` as AGENTS.md's style asks. That predates R5, so the criterion above dropped the prefix; a separate change if wanted.
+**Description:** Test first: `next=https%3A%2F%2Fjira.corp.net%2F…` and the lower-case form fail on HEAD. Then the scheme rule also takes `%3A%2F%2F` (any case).
+
+**Acceptance criteria:**
+- [ ] Both red on HEAD, green after; `100%3A` or `a%3Ab` alone stays allowed (an allowed test).
+- [ ] Mutations on the new alternative and its case flag; survivors named.
+
+**Verification:** as Task 1. **Dependencies:** Task 1. **Files:** as Task 1. **Scope:** XS. Commit: `fix: catch a URL-encoded link (R7 G2)`
+
+## Task 3: G3, a backslash before a dotless `@`
+
+**Description:** Test first: `me\@localhost` fails on HEAD. Then the dotless rule allows one backslash before the `@`.
+
+**Acceptance criteria:**
+- [ ] Red on HEAD, green after; `"x"@property`, `used @property` and `jane \@ example.com` (spaces stay a kept gap, pinned in `KEPT_GAPS`) keep their 0.1.1 result.
+- [ ] Mutations; survivors named.
+
+**Verification:** as Task 1. **Dependencies:** Task 2. **Files:** as Task 1. **Scope:** XS. Commit: `fix: catch an escaped @ without a dot in the domain (R7 G3)`
+
+## Task 4: a JWT written with `。`
+
+**Description:** Test first: `eyJ…。eyJ…。_Qx9` and `eyJ…。eyJ…。` (no signature) fail on HEAD. Then the JWT rule reads `[.。]` as its dots.
+
+**Acceptance criteria:**
+- [ ] Both red on HEAD, green after; the existing JWT cases keep their result.
+- [ ] Mutations; survivors named.
+
+**Verification:** as Task 1. **Dependencies:** Task 3. **Files:** as Task 1. **Scope:** XS. Commit: `fix: catch a JWT written with 。 (R7)`
+
+## Task 5: link ends `$`, `!/`, `:~:`, ASCII after `?` and `#`
+
+**Description:** Test first: `api.corp.net?$top=5`, `app.corp.io#!/users/1`, `docs.corp.io#:~:text=x` fail on HEAD as leaks; `为什么用foo.bar？因为快`, `foo.bar?为什么`, `한국어 foo.bar?그래서` fail on HEAD as allowed (moved from `REFUSED_CODE_WORDS`). Then `LINK_END` takes `?` or `#` before an ASCII URL character, `$`, `!/` or `:~:`.
+
+**Acceptance criteria:**
+- [ ] All six red on HEAD, green after; `foo.bar?:x` allowed; `wiki.corp.io#Раздел` pinned in `KEPT_GAPS`; each character of the class still has its own case (from 0.1.1).
+- [ ] Mutations on each new alternative and on the ASCII class; survivors named.
+
+**Verification:** as Task 1. **Dependencies:** Task 4. **Files:** as Task 1. **Scope:** XS. Commit: `fix: read more link ends and stop reading CJK after ? as a query (R7)`
 
 ## Checkpoint: verified
-- [x] `make check` green; Tasks 1–2 recorded
+- [ ] `make check` green.
+- [ ] Differential check: `daa469d` (the commit tagged `v0.1.1`)'s `lib/privacy.py` and HEAD's on every input of `tests/test_privacy.py`; every difference is an R7 item; listed here.
+- [ ] Worst-case time at the CLI limits measured.
 
-## Task 3: R6, one error prefix in `bin/miss-log`
+## Task 6: Docs and release notes for 0.1.2
 
-**Description:** Test first: `tests/test_miss_log.py` asserts that a refused entry's stderr starts with `routewise: `; it fails while `lib/miss_log.py` prints `miss-log: `. Then change both prints in `main` and add a `CHANGELOG.md` line under 0.1.1.
-
-**Acceptance criteria:**
-- [x] The new assertion fails on HEAD before the fix (red shown), passes after.
-- [x] Both error branches of `lib/miss_log.py` `main` print `routewise: `; the file-error branch is tested if a log path that is a folder reaches it, otherwise checked by reading and named here.
-- [x] Exit code 2 and the message text after the prefix are unchanged (existing tests still pass); argparse usage errors unchanged.
-- [x] `CHANGELOG.md` 0.1.1 has one line for R6.
-
-**Verification:**
-- [x] `uv run pytest tests/test_miss_log.py` red, then green; `make check` green
-
-**Dependencies:** None. **Files:** `lib/miss_log.py`, `tests/test_miss_log.py`, `CHANGELOG.md`, `tasks/todo.md`. **Scope:** XS. Commit: `fix: print miss-log errors with the routewise: prefix`
-
-**Result (2026-11-14):** `test_errors_start_with_the_routewise_prefix` failed on HEAD before the fix (`'miss-log: what holds an e-mail address; ...'.startswith('routewise: what holds an e-mail address')` is False) and passes after. The file-error branch is tested: `report` on a log path that is a folder raises `IsADirectoryError`, which reaches the `OSError` branch, no symlink or permission trick needed. `grep '"miss-log:' lib bin` finds nothing left; argparse usage errors still read `miss-log add: error: ...`. All 9 tests in `tests/test_miss_log.py` pass.
-
-## Task 4: Draft the 0.1.1 release notes
-
-**Description:** Write `tasks/release-0.1.1.md` for users, in the shape of `tasks/release-0.1.0.md`: what 0.1.1 fixes (R5, R6, and R4's README install block), what is newly refused and how to reword it, how to update (the README's "Updating" block with `v=0.1.1`), and links to `CHANGELOG.md` and the README.
+**Description:** CHANGELOG `## Unreleased` holds one line per R7 item (from Tasks 1–5) and names any new refusal of Task 1; README Safety bullet still true; `tasks/release-0.1.2.md` drafted for users, with the update block from the README.
 
 **Acceptance criteria:**
-- [x] Every claim matches `CHANGELOG.md` 0.1.1 and the code; nothing in it is missing from the CHANGELOG.
-- [x] The update commands are copied from the README, not retyped.
+- [ ] Every example in the CHANGELOG and the notes probed against `finding()`; every behaviour claim in the notes is in the CHANGELOG; R5's "for 0.1.2" list in SPEC.md marked as done by R7 where it is.
 
-**Verification:**
-- [x] Read against `CHANGELOG.md` and `README.md`; checked again by `reviewer` in Task 5; `make check` green
+**Verification:** `make check` green. **Dependencies:** checkpoint. **Files:** `CHANGELOG.md`, `README.md`, `SPEC.md` (the R5 list only), `tasks/release-0.1.2.md`, `tasks/todo.md`. **Scope:** XS. Commit: `docs: describe 0.1.2 and draft its release notes`
 
-**Dependencies:** Task 3. **Files:** `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): draft the 0.1.1 release notes`
+## Task 7: Release bump to 0.1.2
 
-**Result (2026-11-14):** `tasks/release-0.1.1.md` drafted. Each claim was checked against `CHANGELOG.md` 0.1.1 and `privacy.finding()`; the one claim the CHANGELOG lacked (`#` after a host) was added to the CHANGELOG, since code and tests cover it. The update block is byte-identical to the README's "Updating" block (checked by script). "No generated file changes" was checked: a project installed from `git archive v0.1.0`, updated to HEAD, prints `routewise: nothing to change`. `reviewer` still checks the notes in Task 5.
-
-## Task 5: Review and audit of the final change and the notes
-
-**Description:** Start `reviewer` and `auditor` together on `v0.1.0..HEAD` (`lib/privacy.py`, `lib/miss_log.py`, `tests/test_privacy.py`, `tests/test_miss_log.py`, `README.md`, `CHANGELOG.md`, `SPEC.md` R5, R6 and S7); `reviewer` also checks `tasks/release-0.1.1.md` against the code. Fix or answer every finding.
+**Description:** `pyproject.toml`, `uv.lock`, both README `v=` lines to `0.1.2`; CHANGELOG `## Unreleased` becomes `## 0.1.2 (<date>)`.
 
 **Acceptance criteria:**
-- [ ] Every finding is fixed (new `fix:` commit, failing test first, CHANGELOG line updated) or answered with a reason, and listed here.
-- [ ] A fix that changes an R5 or R6 decision is taken to the maintainer before it is built.
-- [ ] No open Critical or Required finding.
+- [ ] The R4 version test passes; `make check` green.
 
-**Verification:**
-- [ ] `make check` green after each fix
+**Dependencies:** Task 6. **Files:** `pyproject.toml`, `uv.lock`, `README.md`, `CHANGELOG.md`. **Scope:** XS. Commit: `build: release 0.1.2`
 
-**Dependencies:** Tasks 1–4. **Files:** `tasks/todo.md`; for fixes `lib/privacy.py`, `lib/miss_log.py`, their tests, `CHANGELOG.md`, `SPEC.md`, `tasks/release-0.1.1.md`. **Scope:** S. Commit: `docs(tasks): record the review of R5 and R6`
+## Task 8: Review, one round under the stopping rule
 
-**Round 1 (2026-11-14):** `reviewer` and `auditor` started together, briefed with the spec and the diff, not with earlier findings. Every finding was reproduced by hand before triage. No Critical. `auditor`: OK to ship; `reviewer`: request changes (one Required). The maintainer saw all findings and approved the calls below; R5 was amended for A–E (`6665dff`).
-
-| # | From | Finding | Answer |
-|---|---|---|---|
-| 1 | reviewer, Required | CHANGELOG and notes: "`react@18.3.1` and other versions after `@` now pass"; `checkout@v4.1.0`, `pkg@v1.2.3`, `tsc@5.4.x` are still refused (as in 0.1.0) | Fix the wording (Task 6); honouring the tag list in the dotted rule would let `anna@main.corp.com` through |
-| 2 | reviewer, Optional | `v\d+(?:\.\d+)*` in `TAG` is dead (mutation to `v\d+` stays green) | Simplify to `v\d+` (Task 6) |
-| 3 | reviewer, Optional | Green mutations: tag words `rc`/`lts`/`stable`/`master`, a 5-digit port, the 2-letter TLD minimum, most `SOURCE_TYPES` | Pin with tests (Task 6) |
-| 4 | reviewer, Optional/Nit | String-built host patterns lack an example; `normal()` lacks a why | Comments and one docstring line (Task 6) |
-| A | auditor, Optional | LRM/RLM, U+2061–2064, U+180E, U+034F not stripped: `anna\u200f@corp.com`, a token split by LRM pass | Strip them (Task 6, R5 amended) |
-| B | auditor, Optional | `anna%40corp.com`, `anna&#64;corp.com` pass | Read `%40` and `&#64;` as `@` (Task 6, R5 amended) |
-| C | auditor, Optional | `anna\@corp.com`, `"anna"@corp.com`, `**anna**@corp.com` pass | Up to two of `\ " ' *` before the `@` of a dotted address (Task 6, R5 amended) |
-| D | auditor + reviewer, Optional | `localhost:3000/admin`, `jenkins-prod:8080/job/x`, `//jenkins/job/x`, `proxy/jira.com/x` pass (also in 0.1.0) | Kept gap, listed in R5; follow-up needs its own false-positive check |
-| E | auditor, Nit | Combining marks / vowel signs: `सीता@corp.com`, `कंपनी.भारत/x` pass | Kept gap, listed in R5 (`re` has no `\p{M}`) |
-| F | auditor, Nit | NFKC can grow 200 characters to 3600; worst case 44 ms (34 ms in 0.1.0) | No change |
-| – | auditor | Only regression: a domain without a letter (`user@10.0.1`) passes | Documented in R5 "Also changed" |
-| – | auditor | R6 changes only the two stderr prefixes; write path, fields, exit codes unchanged | Nothing to do |
-
-## Task 6: Fix the review findings
-
-**Description:** One `fix:` commit for findings 1–4 and A–C. Test first: add the A–C leaks and the finding-3 pins to `tests/test_privacy.py`, show which fail on HEAD, then change `lib/privacy.py`; update the CHANGELOG 0.1.1 line and `tasks/release-0.1.1.md` (finding 1 and the new refusals).
+**Description:** Fresh `reviewer` and `auditor` together on `daa469d..HEAD` (`v0.1.1` is tagged on the host only), briefed with R7 and its bar: nothing 0.1.1 refuses passes, nothing it allows is refused except what R7 names; code, tests and docs match R7. The reviewer reports its control count next to the repo's. Findings are fixed (one more round scoped to the fix, if Critical or Required) or recorded for the next release.
 
 **Acceptance criteria:**
-- [x] The A–C cases fail on HEAD before the fix (red shown) and pass after; the finding-3 pins are recorded as guards (they pass on HEAD by nature) and each one fails under the mutation the reviewer named.
-- [x] `TAG` is `v\d+` plus the words; every case allowed before still passes (no test removed or moved).
-- [x] CHANGELOG 0.1.1 and the notes say "a version made only of digits and dots"; both name the new refusals (markup before `@`, `%40`, invisible characters); the notes still add nothing the CHANGELOG lacks.
+- [ ] Every finding fixed, answered or recorded, and listed here; no open Critical or Required in scope.
 
-**Verification:**
-- [x] `uv run pytest tests/test_privacy.py` red, then green; mutations re-run in a scratch copy; `make check` green
-
-**Dependencies:** Task 5 round 1. **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: close the gaps found in the review of the 0.1.1 filter`
-
-**Result (2026-11-14):**
-
-- **Red:** 11 new A–C cases in `tests/test_privacy.py` failed on HEAD (`451aaf5`): `anna\@`, `"anna"@`, `**anna**@`, `'anna'@`, `%40`, `&#64;`, RLM before `@`, LRM inside `ghp_`, U+2062, U+180E, U+034F before `@`. A first draft put U+2062/180E/034F inside the local part, where `na@corp.com` is refused anyway; moved before the `@` so they test the split. Green after the fix (131 privacy tests).
-- **Pins (finding 3):** tag words `rc` … `canary`, `root@master`/`me@main`, `host.corp:65535/x`, `a.b/c`, a 64-letter TLD, `anna@v`, and every R5 source type (listed in the test, not imported, so dropping one from the code is caught). Mutations run on a scratch copy with an unmutated control (130 passed, survived): all 10 killed, `v\d+`→`v\d*` after adding `anna@v`. A first run reported every mutation killed because `uv run` could not find the project from the scratch folder; the control exposed it.
-- **Code:** `ZERO_WIDTH` → `INVISIBLE` (adds U+200E/F, U+2061–2064, U+180E, U+034F), `ENCODED_AT` read as `@` in `normal()` (with a docstring), up to two of `\ " ' *` before the `@` of a dotted address, `TAG` uses `v\d+`, host patterns have examples. No allowed case removed or moved.
-- **Docs:** CHANGELOG 0.1.1 and the notes say "a version made only of digits and dots", name the new refusals and the kept gaps. Found while writing them: both claimed `//host/x` is refused, but a dotless host is a kept gap; changed to `//host.com/x` (checked: `//host/x` passes, `//host.com/x` is refused). README Safety bullet names encoded addresses.
-
-## Task 7: Re-review the fix
-
-**Description:** Fresh `reviewer` and `auditor` together on the Task 6 commit (with R5 as amended), briefed with the diff and spec, not the round-1 findings. Fix or answer every finding as in Task 5; a new R5 decision goes to the maintainer first.
-
-**Acceptance criteria:**
-- [ ] Every finding fixed or answered and listed here; no open Critical or Required.
-
-**Verification:**
-- [ ] `make check` green after any fix
-
-**Dependencies:** Task 6. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record the review of R5 and R6`
-
-**Round 2 (2026-11-14):** fresh `reviewer` and `auditor` on `1aa6725`. `reviewer`: approve (Optional only). `auditor`: not ready, two regressions introduced by `1aa6725`. An automated security check on the commit raised the same two classes as the auditor's Required items. Every finding was reproduced against `1aa6725^` and `1aa6725` before triage. The maintainer approved the calls below; R5 amended in `51c13dc`.
-
-| # | From | Finding | Answer |
-|---|---|---|---|
-| R1 | auditor, Required, **regression** | Removing LRM etc. joins a token to the word before it: `x<LRM>AKIA…`, `שלום<LRM>ghp_…`, `כתובת<LRM>10.0.0.1`, `שלום<LRM>https://…`, `id<LRM><uuid>` refused before, pass now | Two views of the text: split view turns invisible characters into spaces (Task 8) |
-| R2 | auditor, Required, **regression** | Decoding `%40` hides a link after it: `redirect=%40host.com/path`, `(%40example.com/x)` | Split view does not decode (Task 8) |
-| R3 | auditor, Required + security check | Bidi controls not removed: `anna<U+2066>@corp.com`, U+202A, U+061C | Remove every Cf character, in both views (Task 8) |
-| R4 | auditor, Optional + security check | Variation selectors, tag characters split an address | Remove U+FE00–FE0F; tags are Cf (Task 8) |
-| R5 | auditor, Optional | NFKC before removal: `jose<ZWSP><U+0301>@corp.com` passes | NFKC again after removal in the joined view (Task 8) |
-| R6 | auditor, Optional + security check | `\u0040`, `&#x40;`, `&#064;`, `&commat;` pass | Decode them in the joined view (Task 8) |
-| R7 | auditor + reviewer, Optional + security check | `` `anna`@ ``, `[anna]@`, `<anna>@`, `anna***@`, `anna@**corp.com**` pass | Up to three markup characters before and after the `@`, dotted only (Task 8) |
-| R8 | auditor, Optional | Defanged `anna[@]corp[.]com` passes | Kept gap, in R5 |
-| R9 | reviewer, Optional | U+2063, U+2064 not tested (range mutation stays green) | A test per invisible class and per old code point (Task 8) |
-| R10 | reviewer, Optional | The markup limit is not pinned (`{0,2}`→`{0,3}` green) | Pin the new limit of three (Task 8) |
-| R11 | reviewer, Optional | The markup class is hard to read inside `r"…"` | Name it (Task 8) |
-| R12 | reviewer, Optional | Notes clause "common in text pasted from a web page" is not in the CHANGELOG | Bring notes and CHANGELOG in line (Task 8) |
-| R13 | reviewer, Optional | `%2540` (double encoding) is not decoded | Kept gap, in R5 |
-| – | reviewer | Its control run reported 59 passed, against 131 cases in the file | Its mutation results are re-run by hand in Task 8, with a control |
-
-## Task 8: Fix the re-review findings
-
-**Description:** One `fix:` commit for R1–R7 and R9–R12, built test first. `lib/privacy.py` `finding()` checks a split view and a joined view (SPEC.md R5, "Normalisation, two views of the text"); invisible characters are every Cf character plus U+034F and U+FE00–FE0F; the joined view decodes the six forms of `@` and runs NFKC again; the markup before and after the `@` of a dotted address is named and allows up to three characters.
-
-**Acceptance criteria:**
-- [x] Red shown on HEAD for: the 7 regression inputs (R1, R2), the bidi, variation-selector and tag cases (R3, R4), the accent case (R5), the four `@` encodings (R6) and the markup cases (R7); green after.
-- [x] A guard test: every refused case (secrets, leaks, 0.1.1 leaks) stays refused with `x` + an invisible character put in front of it, for LRM, U+2066 and ZWSP; every allowed case stays allowed with an invisible character inserted after its first word (assumption 2 of the R5 amendment).
-- [x] A test per invisible class (Cf sample from each range, U+034F, U+FE0F) and for every code point of the old list, U+2063 and U+2064 included; the markup limit of three is pinned (four passes, three is refused).
-- [x] The markup classes are named constants; no allowed case removed or moved.
-- [x] Mutations re-run with an unmutated control, including round 2's survivors (`\u2060-\u2063`, `{0,2}`→`{0,3}`); survivors named here.
-- [x] CHANGELOG 0.1.1, README Safety bullet and `tasks/release-0.1.1.md` say what is refused now; the notes add nothing the CHANGELOG lacks.
-
-**Verification:**
-- [x] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
-
-**Dependencies:** Task 7 round 2, R5 amended (`51c13dc`). **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `README.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** M. Commit: `fix: check two views of miss-log text so invisible characters cannot hide a leak`
-
-**Result (2026-11-14):**
-
-- **Red on HEAD (`4e797a4`):** all 26 new leak cases (7 regression inputs of `1aa6725`, bidi, variation-selector, tag, accent, 4 encodings, 8 markup); 16 of 30 invisible characters (every one outside the old list; the old 14, U+2063 and U+2064 included, pass as guards); 94 guard cases (a leak right after LRM, LRI or ZWSP). The allowed-with-invisible guard passed on HEAD and after (no false positive from an inserted invisible character).
-- **Green:** `views()` gives the split view (invisible → space, nothing decoded) and the joined view (invisible removed, six `@` encodings decoded, `。` → `.`, NFKC again); `finding()` refuses if either matches. Invisible is category Cf plus U+034F and U+FE00–FE0F. `MARKUP_BEFORE_AT` and `MARKUP_AFTER_AT` are named, three each. No allowed case removed or moved.
-- **Found during the build:** the guard failed for `ghp<LRM>_…` (a round-1 case) with an invisible character in front: disguised twice, neither view sees it. The maintainer chose to keep it as a gap; R5 amended (`docs(spec): keep a leak disguised twice…`). The guard skips inputs that already hold an invisible character; its docstring says why. CHANGELOG and notes list the gap.
-- **Mutations:** 18 run on a scratch copy with an unmutated control (522 passed, survived); all 18 killed, among them each view alone, removing instead of spacing in the split view, no second NFKC, each encoding, both markup limits ({0,3}→{0,4} and →{0,2}), and round 2's survivors (Cf ranges, the markup limit).
-- **Docs:** CHANGELOG 0.1.1, README Safety bullet and the notes name markup, encodings, invisible characters, the two views and the kept gaps; the clause the CHANGELOG lacked (R12) is gone. `make check`: 642 passed.
-
-## Task 9: Re-review the second fix
-
-**Description:** Fresh `reviewer` and `auditor` together on the Task 8 commit against R5 as amended in `51c13dc`, briefed with the diff and spec, not earlier findings; the auditor compares against the commit before it on fuzzed input. Fix or answer every finding; a new R5 decision goes to the maintainer first.
-
-**Acceptance criteria:**
-- [ ] Every finding fixed or answered and listed here; no open Critical or Required; no regression against `1aa6725^` or `1aa6725`.
-
-**Verification:**
-- [ ] `make check` green after any fix
-
-**Dependencies:** Task 8. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record round 3 of the 0.1.1 review`
-
-**Round 3 (2026-11-14):** fresh `reviewer` and `auditor` on `d84fadf`. `reviewer`: request changes (one Required); its control matched the repo (522 = 522), so its mutation results stand. `auditor`: not ready, one regression of `d84fadf`. Every finding reproduced against `1aa6725^`, `1aa6725` and `d84fadf`. The maintainer approved the calls below; R5 amended in `818d7da`.
-
-| # | From | Finding | Answer |
-|---|---|---|---|
-| T1 | auditor, Required, **regression** | Decoding `@` and reading `。` only in the joined view hid a link: `redirect=&#x40;example。com/x`, `(&commat;corp。com/x)` (refused by `1aa6725^` and `1aa6725`); `redirect=%40example。com/path`, `redirect=%40example.co<ZWSP>m/path`, `redirect=%40example.com#<LRM>X-1`, `שלום<LRM>10。0。0。1` (refused by `1aa6725^`) | Four views; steps that only add evidence apply to all (Task 10) |
-| T2 | reviewer, Required + auditor | Not invisible yet: U+E0100–E01EF, U+180B–180D (Mn), U+2800, U+17B4, U+2065, U+FFF0, Hangul fillers inside a token, IP or path | Cf ∪ Default_Ignorable_Code_Point ∪ U+2800 (Task 10) |
-| T3 | auditor, Optional | `anna\x40corp.com` passes | Decode `\x40`; not `=40` (Task 10) |
-| T4 | auditor, Optional | `{anna}@corp.com`, `anna@"corp.com"`, `anna@'corp.com'` pass | `}` before, `{ " '` after (Task 10); `**anna **@`, HTML around `@` kept gaps |
-| T5 | reviewer, Optional | Green mutations: split view keeping raw characters, first NFKC removed, `IGNORECASE` on encodings, single markup characters `~` `)` `[` | Pin each (Task 10) |
-| T6 | reviewer, Nit | `invisible()`, `first_match()` lack a docstring | Add (Task 10) |
-| T7 | reviewer, Nit | `` `icon`@2x.png `` refused | No change: `icon@2x.png` refused since 0.1.0, a dotted domain with a letter |
-| T8 | auditor, Nit | Worst case 80 ms (two views) at the CLI limits | No change |
-| T9 | auditor, Optional | `&#64` without `;`, `%u0040`, `\u{40}`, `=40` | Kept gaps, in R5 |
-
-## Task 10: Fix the round-3 findings
-
-**Description:** One `fix:` commit for T1–T6, built test first. First, `web-reader` checks the Default_Ignorable_Code_Point ranges written in R5 against Unicode's published `DerivedCoreProperties.txt`; I open the file's lines myself before any range is used, and a wrong range goes back to the maintainer as an R5 correction. Then `views()` returns the four combinations of {invisible as space, removed} × {`@` decoded, not}, with NFKC and `。` in all; the invisible set is the R5 one; `\x40` is decoded; the markup classes gain `}` and `{ " '`.
-
-**Acceptance criteria:**
-- [x] The R5 ranges match the Unicode file (or a correction was approved first).
-- [x] Red shown on HEAD for the T1 regression inputs, one character per T2 range (Hangul fillers inside a token, an IP and a path too), `\x40`, the T4 markup and the T5 pins that are not already green; green after.
-- [x] A guard test: for every encoding of `@`, a link after it (with `.` and with `。`) is refused, and with an invisible character inside the host or the anchor.
-- [x] The guard tests of Task 8 still pass; every allowed case stays allowed, also with invisible characters inserted; no allowed case removed or moved.
-- [x] Mutations re-run with an unmutated control whose count equals the repo's; every view, each lossy step, each new range and each markup character killed, or the survivor named here.
-- [x] Worst-case time at the CLI limits measured and recorded.
-- [x] CHANGELOG 0.1.1, README Safety bullet and the notes in line with R5; the notes add nothing the CHANGELOG lacks.
-
-**Verification:**
-- [x] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
-
-**Dependencies:** Task 9 round 3, R5 amended (`818d7da`). **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `README.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** M. Commit: `fix: check four views of miss-log text so decoding cannot hide a link`
-
-**Result (2026-11-14):**
-
-- **Ranges:** unicode.org returned 403 to `curl` and to `web-reader` (four URLs). Unicode's own copy in the ICU repository (`raw.githubusercontent.com/unicode-org/icu/main/icu4c/source/data/unidata/DerivedCoreProperties.txt`, header `DerivedCoreProperties-18.0.0.txt`, dated 2026-08-07) was read directly: its 27 Default_Ignorable_Code_Point lines, merged where adjacent, are exactly the 17 ranges in R5, and add up to its `Total code points: 4174`. No correction needed.
-- **Red on HEAD (`c455cbe`):** 72 failed: the 6 T1 regression inputs, `\x40`, `{anna}@`, `anna@"…"`, `anna@'…'`, `anna@{…}` (11 leak cases, 24 more behind an invisible character), 13 new invisible characters, 12 Hangul-filler cases (token, IP, path) and 12 encoded-`@` link guards. The first draft of the link guard used two-dot hosts and never failed: `corp.io/x` inside `wiki.corp.io/x` is a link by itself; it uses one-dot hosts now.
-- **Green:** four views ({invisible as space, removed} × {`@` decoded, not}); NFKC first (so `％40` decodes and `ＡＫＩＡ` joins) and again in each view, with `。` read as a dot; invisible is Cf plus the R5 ranges plus U+2800; `\x40` decoded; `}` before and `{ " '` after the `@`; docstrings on `invisible()` and `first_match()`. No allowed case removed or moved; the allowed-with-invisible guard still passes.
-- **Mutations:** control 643 = repo 643. 32 run: 25 killed at once; three more killed after test fixes (no first NFKC: added `anna％40corp.com`; `~` before and after the `@`: the tests used `~anna` and `@~corp`, which the home-folder rule refuses anyway; now `anna~@corp.com` and `anna@~~1password.com~~`); one equivalent dropped (`。` before the views, every view reads it). Four equivalent survivors kept as R5 lists them: U+3164 and U+FFA0 (NFKC maps both to U+1160, in the set), U+1BCA0–1BCA3 and U+1D173–1D17A (already Cf).
-- **Time** (best of 5, 200 characters): 200 × U+3316 159 ms (NFKC grows it to 1200 word characters), 200 × U+FDFA 7 ms, 200 × `a` 4 ms, normal text 0.1 ms.
-- **Docs:** CHANGELOG 0.1.1, README Safety bullet and the notes name the four views, the invisible set, `\x40`, the new markup and the new kept gaps. `make check`: 767 passed.
-
-## Task 11: Round-4 review of the third fix
-
-**Description:** Fresh `reviewer` and `auditor` together on the Task 10 commit against R5 as amended in `818d7da`, briefed with the diff and spec, not earlier findings. The reviewer reports its control count next to the repo's. The auditor compares against `1aa6725^`, `1aa6725` and `d84fadf` on fuzzed input. Fix or answer every finding; a new R5 decision goes to the maintainer first.
-
-**Acceptance criteria:**
-- [ ] Every finding fixed or answered and listed here; no open Critical or Required; no regression against any earlier version.
-
-**Verification:**
-- [ ] `make check` green after any fix
-
-**Dependencies:** Task 10. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record round 4 of the 0.1.1 review`
-
-**Round 4 (2026-11-14):** fresh `reviewer` and `auditor` on `ab90528`. `reviewer`: approve; control 647 = repo 647. `auditor`: no regression against any earlier version on 6.6 million fuzzed variants except one Nit; two false positives against 0.1.0. Every finding reproduced against 0.1.0, `50f9de1` and `d84fadf`. Pattern noted: each widening of the filter caused the next round's findings, so the maintainer approved fixing only what 0.1.1 broke (success criterion 10) and moving gaps 0.1.0 also had to 0.1.2. R5 amended in `8378252`.
-
-| # | From | Finding | Answer |
-|---|---|---|---|
-| U1 | reviewer | CJK prose refused since `d84fadf`: `修复路由。然后改a/b`, `已修复。lib/x.py`, `ルーティングを修正。次にsrc/a.tsを確認` (`。` read as a dot makes a clause a host) | `。` is a dot only between ASCII letters or digits (Task 12) |
-| U2 | auditor | Code refused since round 2 or 3: `f"{user}@{cfg.domain}"`, `{{user}}@{{site.domain}}`, `obj@"pkg.json"`, `x@'a.b'`; also `a[i]@m.T`, `f(x)@w.T` | Markup only Markdown and quotes before, Markdown after (Task 12); brackets, braces, angle brackets, quotes after the `@` kept gaps |
-| G1 | auditor, Required | A CJK or Hebrew letter touching a leak hides it (`\b`): `服务器在10.0.0.12上`, `key AKIA…が漏れた`, `见www.example.com`; also in 0.1.0 | 0.1.2 (R7), listed in R5 |
-| G2 | auditor | URL-encoded link `next=https%3A%2F%2Fjira.corp.net%2F…`; also in 0.1.0 | 0.1.2, listed in R5 |
-| G3 | auditor | `me\@localhost`; also in 0.1.0 | 0.1.2, listed in R5 |
-| G4 | auditor, Nit, regression vs `d84fadf` only | `me\<U+3164>@localhost`: caught by `d84fadf` by accident (filler as a letter); 0.1.0 never did | Covered by G3 |
-| V1 | reviewer | Four identical views for normal text | Drop duplicates (Task 12) |
-| V2 | reviewer | `<` and `(` after the `@` untested | Moot: removed by U2 |
-| V3 | reviewer | No test pins `100%40 off` as allowed | Add (Task 12) |
-| – | reviewer | Equivalent survivors: Cf ranges, U+3164/U+FFA0, `_` | No change |
-| – | reviewer, auditor | `# fmt: skip` on the table; worst case 167 ms | No change |
-
-## Task 12: Fix what 0.1.1 broke (round 4)
-
-**Description:** One `fix:` commit for U1, U2, V1, V3, test first. Every round-4 false positive becomes an allowed test; the leak cases that relied on brackets, braces, angle brackets or quotes after the `@` move to a pinned "kept gap" list so the change is visible.
-
-**Acceptance criteria:**
-- [x] Red on HEAD for each U1 and U2 phrase as an allowed test; green after.
-- [x] `jira。corp。net/x`, `10。0。0。1`, `redirect=%40example。com/path` and every other leak still refused; the encoded-`@` and invisible-character guards still pass.
-- [x] The cases `{anna}@`, `[anna]@`, `<anna>@`, `(anna)@`, `anna@"…"`, `anna@'…'`, `anna@{…}`, `anna@[…]`, `anna@<…>` move from the refused lists to a `KEPT_GAPS` list that asserts they pass (R5), so a later change to them is deliberate; none is silently deleted.
-- [x] `views()` returns no duplicate; `100%40 off foo.bar` is an allowed test.
-- [x] Mutations re-run with a control equal to the repo; survivors named.
-- [x] CHANGELOG 0.1.1, README Safety bullet and the notes match R5 (markup list, `。` rule, kept gaps, gaps for 0.1.2).
-
-**Verification:**
-- [x] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
-
-**Dependencies:** Task 11 round 4, R5 amended (`8378252`). **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `README.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: stop the miss-log filter refusing code and CJK text that 0.1.0 allowed`
-
-**Result (2026-11-14):**
-
-- **Red on HEAD (`70fc5c5`):** 45 failed: 9 of the 10 round-4 phrases as allowed tests (`100%40 off foo.bar` already passed, kept as a guard), the 9 `KEPT_GAPS` cases (moved from the refused lists, none deleted), and the same 18 phrases with an invisible character inserted (27 of the guard's cases).
-- **Green:** `ASCII_STOP` reads `。` as a dot only between ASCII letters or digits; `MARKUP_BEFORE_AT` is `\ " ' * ` _ ~`, `MARKUP_AFTER_AT` is `* ` _ ~`; `views()` drops duplicate views. Every other leak and every guard still passes.
-- **Mutations:** control 668 = repo 668. A first run had two mistakes of mine: one mutation did not apply, and "re-add `] }`" produced a broken regex (52 failures, a kill for the wrong reason). Rerun with each mutant checked to import first: 14 of 14 killed, after adding `updated config。然后改a/b` (the "no lookahead" mutant survived without it). Earlier run: `。` everywhere, no lookbehind, never a dot all killed. "No dedupe" survives by design (speed only).
-- **Docs:** CHANGELOG 0.1.1 and the notes give the Markdown-and-quotes markup, the `。` rule, the new kept gaps and the gaps planned for 0.1.2; the README bullet still holds. `make check`: 788 passed.
-
-## Task 13: Round-5 review, scoped to what 0.1.1 broke
-
-**Description:** Fresh `reviewer` and `auditor` together on the Task 12 commit against R5 as amended in `8378252`. Scope, given in the brief: (1) nothing 0.1.0 allowed is refused now (success criterion 10), checked on a corpus of plausible developer text including code, templates, Markdown, CJK and RTL prose; (2) no regression against 0.1.0, `1aa6725^`, `1aa6725`, `d84fadf` or `ab90528` on fuzzed leaks; (3) the code, tests and docs match R5. A gap of a kind 0.1.0 also had is recorded for 0.1.2 (R7), not fixed in 0.1.1. Fix or answer every in-scope finding; a new R5 decision goes to the maintainer first.
-
-**Acceptance criteria:**
-- [ ] Every finding fixed, answered or recorded for 0.1.2, and listed here; no open Critical or Required in scope.
-
-**Verification:**
-- [ ] `make check` green after any fix
-
-**Dependencies:** Task 12. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record round 5 of the 0.1.1 review`
-
-**Round 5 (2026-11-14):** fresh `reviewer` and `auditor` on `582a2fa`, scoped as above. `reviewer`: request changes (two Required, both spec gaps for criterion 10); control 668 = repo 668. `auditor`: no regression against 0.1.0 outside listed kinds on about 95,000 fuzzed inputs over six versions; one Required against the unreleased versions. An automated security check raised the `。` gap and the bracket kept gap. Every finding reproduced; the auditor's `。` fix checked in a scratch copy (668 green). The maintainer approved the calls below; R5 amended (`docs(spec): amend R5 after round 5…`).
-
-| # | From | Finding | Answer |
-|---|---|---|---|
-| A | auditor, Required + security check | `。` beside a non-ASCII letter is not a dot: `see пример。рф/x`, `see café。com/x`, `ip ١٠。٠。٠。١` pass (refused from `1aa6725^` to `ab90528`) | `。` is a dot between letters or digits of any script except CJK and Hangul (Task 14) |
-| B | reviewer, Required | `改了config。lib/x.py`, `路由用了GPT-4。Next.js/React` refused (0.1.0 allowed) | Trade-off, named in R5 |
-| C | reviewer, Required | `Class.method#overload`, `config.key#section`, `repo.name#123`, `abc.def?x=1` refused | Trade-off, named in R5 |
-| D | reviewer | `user/repo@e83a1b2`, `foo@Latest` refused (0.1.0 allowed) | SHA 7–40 hex and any case in `TAG` (Task 14); `pip install foo@git` stays a trade-off |
-| E | reviewer | `anna%40corp。com`, `1<ZWSP>0。0。0。1` untested | Add (Task 14) |
-| F | reviewer | Notes claim what the CHANGELOG lacks: `redirect=%40…`, `anna%40corp.com`, entries not re-checked | Add to CHANGELOG (Task 14); update steps stay notes-only |
-| G | auditor, Nits | Kept-gap wording: brackets before the `@` too; double disguise with the character after | R5 wording fixed |
-| H | both | `foo.@bar`; double disguise after; `see example。中国/x` | 0.1.2, listed in R5 |
-| – | reviewer | Equivalent survivors: `_` in markup, dedupe, `ASCII_STOP` before the second NFKC | No change |
-| – | security check | Brackets after `@` as markup when a full host follows | No change: `f"{user}@{cfg.domain}"` has a full host; kept gap stands |
-
-## Task 14: Fix the round-5 findings
-
-**Description:** One `fix:` commit for A, D, E, F, test first. `ASCII_STOP` (renamed for what it does) reads `。` as a dot between letters or digits that are not CJK or Hangul; `TAG` also accepts a 7–40 hex SHA and ignores case; the two `。` cases become leak tests; B and C phrases become pinned trade-off tests (refused on purpose); the CHANGELOG gains the notes' behaviour claims.
-
-**Acceptance criteria:**
-- [x] Red on HEAD for the A leaks (`пример。рф/x`, `café。com/x`, `ελ。gr/x`, `١٠。٠。٠。١`, `anna@**пример。рф**`) and the D phrases as allowed tests (`user/repo@e83a1b2`, `actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3`, `foo@Latest`); green after.
-- [x] Every allowed case still passes, CJK prose with `。` included, also with invisible characters; the B and C phrases are pinned in `REFUSED_CODE_WORDS`.
-- [x] `anna%40corp。com` and `1<ZWSP>0。0。0。1` are leak tests.
-- [x] Mutations re-run with a control equal to the repo and each mutant checked to import; survivors named.
-- [x] CHANGELOG 0.1.1 names `。` beside non-CJK letters, SHA pins, the wider trade-offs and the notes' behaviour claims; notes and README in line.
-
-**Verification:**
-- [x] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
-
-**Dependencies:** Task 13 round 5, R5 amended. **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `README.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: read 。 as a dot beside any non-CJK letter and let SHA pins pass`
-
-**Result (2026-11-14):**
-
-- **Red on HEAD (`4475df4`):** 24 failed: the five `。` leaks beside non-CJK letters (`пример。рф/x`, `café。com/x`, `ελ。gr/x`, `١٠。٠。٠。١`, `anna@**пример。рф**`), `user/repo@e83a1b2 and foo@Latest` as allowed, and their invisible-character guard copies. Already green on HEAD, kept as guards: `anna%40corp。com`, `1<ZWSP>0。0。0。1`, the B and C trade-off pins, and a 40-hex SHA starting with a digit (the dotless rule never matched it; `e83a1b2` shows the bug).
-- **Green:** `DOT_STOP` (was `ASCII_STOP`) reads `。` as a dot between letters or digits that are not CJK or Hangul; `TAG` accepts a 7–40 hex SHA and ignores case (`(?i:…)`).
-- **Mutations:** control 731 = repo 731, each mutant checked to import. Killed: `。` ASCII only, no CJK exclusion either side, each needed range (after adding Hangul and CJK Extension B prose tests), SHA dropped, `{8,40}`, `{7,39}`, case-sensitive. Survived as equivalent, so removed as dead code: U+F900–FAFF and U+FF66–FF9F (NFKC maps them into the kept ranges first). `{7,41}` survived until a 41-hex name was added as a leak; then killed (control 735).
-- **Docs:** CHANGELOG 0.1.1 names `。` beside non-CJK letters, SHA pins and case, the wider trade-offs, `anna%40corp.com`, `redirect=%40example.com/path` and that old entries are not re-checked; the notes match. `make check`: 855 passed.
-
-## Task 15: Round-6 review, same scope as round 5
-
-**Description:** Fresh `reviewer` and `auditor` together on the Task 14 commit against R5 as amended after round 5, with the round-5 scope: criterion 10 against 0.1.0 on a developer-text corpus (now with Cyrillic, Greek, Arabic and CJK prose using `。`), no regression against 0.1.0, `1aa6725^`, `1aa6725`, `d84fadf`, `ab90528` or `582a2fa`, code, tests and docs match R5. Gaps of a kind 0.1.0 also had go to 0.1.2.
-
-**Acceptance criteria:**
-- [ ] Every finding fixed, answered or recorded for 0.1.2, and listed here; no open Critical or Required in scope.
-
-**Verification:**
-- [ ] `make check` green after any fix
-
-**Dependencies:** Task 14. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record round 6 of the 0.1.1 review`
-
-**Round 6 (2026-11-14):** fresh `reviewer` and `auditor` on `b6ce5c9`, scoped as round 5. `reviewer`: approve (Optional and Nits only); control 735 = repo 735; 38 mutants, all import. `auditor`: no Critical or Required; about 920k fuzzed inputs over seven versions. An automated security check on `b6ce5c9` raised the hex-SHA and case loosening. Every finding reproduced. One finding was my error: Task 14 removed U+F900–FAFF claiming NFKC maps it all into the kept ranges; 52 code points survive NFKC, among them ideographs used in Japanese names, so `山﨑。lib/x.py` was refused. The maintainer approved the calls below; R5 amended (`docs(spec): amend R5 after round 6…`).
-
-| # | From | Finding | Answer |
-|---|---|---|---|
-| 1 | auditor | `山﨑。lib/x.py` refused (wrong NFKC claim in Task 14) | Restore U+F900–FAFF; test with `﨑` (Task 16) |
-| 2 | auditor, regression of `b6ce5c9` | `(?i:` folds `ı`/`İ`: `anna@maın` passes | ASCII-only case, `(?ai:…)` (Task 16) |
-| 3 | security check | `user@deadbeef` passes (any 7–40 hex) | A SHA needs a digit (Task 16) |
-| 4 | reviewer | `(what is foo.bar?)`, `foo.bar?!`, `did foo.bar?, then` refused, against R5's wording | `?`/`#` need a URL character after them (Task 16) |
-| 5 | reviewer | Untested range edges: `가`, `⺀`, U+30000, the `_` exclusion | Tests (Task 16) |
-| 6 | reviewer | `foo.test.ts#L10`, `jquery.min.js?v=1`, `修复了问题1。src/a.ts`, `Привет。Мир/x` refused, not named | Named as trade-offs in R5; CHANGELOG and notes (Task 16) |
-| 7 | reviewer, Nit | `foo@abc123` (6 hex) refused | Trade-off named in R5; no code change |
-| 8 | auditor | JWT with `。` and a signature starting `-`/`_` passes (0.1.0 too) | 0.1.2, listed in R5 |
-| – | auditor | Cost 43 ms worst case; FF66–FF9F claim holds | No change |
-
-## Task 16: Fix the round-6 findings
-
-**Description:** One `fix:` commit for 1–6, test first. `CJK` gets U+F900–FAFF back (with a comment that NFKC leaves some of it alone); `TAG` folds ASCII case only and a SHA needs a digit; `LINK_END` takes `?` or `#` only before a letter, digit or `_ % = & / ~ + -`; tests for the range edges; the trade-off phrases pinned as refused.
-
-**Acceptance criteria:**
-- [x] Red on HEAD for: `山﨑。lib/x.py` and the `?)`, `?!`, `?,` phrases as allowed; `anna@maın`, `anna@maİn`, `user@deadbeef` and `admin@facadeb` (hex with no digit) as leaks; green after. `admin@facade0` (hex with a digit) still passes as a SHA, by R5.
-- [x] Every leak test still refused (no `?`/`#` case lost), every allowed case still allowed, also with invisible characters; `user/repo@e83a1b2` and the 40-hex pin still pass.
-- [x] Range-edge tests `가。lib/x.py`, `⺀。lib/x.py`, `\U00030000。lib/x.py`, `foo_。bar/x` (allowed or refused as R5 says) added; the round-6 trade-off phrases pinned in `REFUSED_CODE_WORDS`.
-- [x] I check the NFKC claim exhaustively this time: every code point of each range left in `CJK` or removed, listed by script, before relying on it.
-- [x] Mutations with a control equal to the repo, each mutant checked to import; survivors named.
-- [x] CHANGELOG 0.1.1 and the notes name the new trade-off examples, the digit rule for SHAs and the 0.1.2 JWT item.
-
-**Verification:**
-- [x] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
-
-**Dependencies:** Task 15 round 6, R5 amended. **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: tighten tags, query ends and the CJK range after round 6`
-
-**Result (2026-11-14):**
-
-- **Red on HEAD (`d10749a`):** 24 failed: `anna@maın`, `anna@maİn`, `user@deadbeef`, `admin@facadeb` as leaks; `山﨑。lib/x.py` and the `?)` `?!` `?,` phrase as allowed; their invisible-character copies. Already green, kept as guards: the round-6 trade-off pins, `admin@facade0`, the Hangul and Extension B edges, `foo_。bar/x`.
-- **Unicode claim, checked in full this time:** all 58 code points of U+FF66–FF9F become, after NFKC, either CJK or not a letter or digit, so that range stays out of `CJK`; U+F900–FAFF is back (52 of its code points survive NFKC).
-- **Green:** `TAG` is `(?ai:…)` with `(?=[a-f]*\d)` before the SHA; `CJK` includes U+F900–FAFF; `LINK_END` takes `?` or `#` only before `[\w%=&/~+-]`. No leak test started passing (the URL-character assumption of the R5 amendment holds).
-- **Mutations:** control equal to the repo every run, each mutant checked to import. Killed: `(?i:`, no digit rule, U+F900–FAFF dropped, Hangul start, Extension end, `LINK_END` back to `\S`, `\w` narrowed, `_` allowed beside `。`, and each of `% = & / ~ + -` after splitting the anchor cases one per character. My mistakes on the way: `⺀` (U+2E80) is a symbol, so it never tested the range (now `人々`, U+3005 is a letter); `#%…` and `#-section` in one phrase hid each other's mutant; `#~x` is a home folder path anyway (now `#~1`); a "drop =" mutant replaced the `=` of the assignment and broke the import (caught by the import check, rerun).
-- **Docs:** CHANGELOG 0.1.1 and the notes name the SHA digit rule, the new trade-off examples, that a question ending in `?)` passes, and the JWT item for 0.1.2.
-
-## Task 17: Round-7 review of the round-6 fix
-
-**Description:** Fresh `reviewer` and `auditor` together on the Task 16 commit, scoped to its changes plus the round-5 checks: criterion 10 against 0.1.0 on the developer-text corpus, no regression against 0.1.0 or any earlier 0.1.1 commit (`1aa6725^` to `b6ce5c9`), code, tests and docs match R5. Gaps of a kind 0.1.0 also had go to 0.1.2.
-
-**Acceptance criteria:**
-- [ ] Every finding fixed, answered or recorded for 0.1.2, and listed here; no open Critical or Required in scope.
-
-**Verification:**
-- [ ] `make check` green after any fix
-
-**Dependencies:** Task 16. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record round 7 of the 0.1.1 review`
-
-**Round 7 (2026-11-14):** fresh `reviewer` and `auditor` on `662eb71`. Both approve; no Critical or Required. `auditor`: 1.21M fuzzed inputs over eight versions, every loosening a kind R5 names except item 1. `reviewer`: reported 95 tests in both its control and the repo (the repo gives 815 by my run; equal counts, so its comparison holds); its `{7,41}` survivor reproduced by reading. An automated security check raised item 1. The maintainer asked whether we were going in circles; I agreed (seven rounds, several spent on my own regressions, no stopping rule) and proposed stopping. Approved: ship `662eb71`'s filter, move round 7 to 0.1.2, add a stopping rule (SPEC.md Review row, AGENTS.md step 5).
-
-| # | From | Finding | Answer |
-|---|---|---|---|
-| 1 | auditor + security check | `#:~:`, `?$`, `#!` after a host with no path pass (refused `1aa6725^`–`b6ce5c9`) | 0.1.2, listed in R5 |
-| 2 | reviewer | `为什么用foo.bar？因为快`, `foo.bar?为什么` refused (0.1.0 allowed) | Named trade-off for 0.1.1, fix in 0.1.2 |
-| 3 | reviewer | The 41-hex test has no digit, so it tests the digit rule, not the cap (my test regression in `662eb71`) | Test with a digit (Task 18) |
-| 4 | reviewer, Nit | CHANGELOG says "Cyrillic or Greek"; R5 says any non-CJK script | Fix wording (Task 18) |
-| 5 | reviewer, Nit | Notes' "nothing to change" not in the CHANGELOG | No change: an update step, notes-only by Task 4's rule |
-| 6 | auditor | JWT with a second `。` not followed by a letter or digit | 0.1.2, R5 item widened |
-| – | reviewer | `(?=[0-9a-f]*\d)` vs `(?=[a-f]*\d)` survivor | Equivalent |
-| – | auditor | Cost at most about 9 ms | No change |
-
-## Task 18: Last doc and test edits after round 7
-
-**Description:** No filter code changes (stopping rule). One commit: the 41-hex SHA test gets a digit so the length cap is tested again; CHANGELOG 0.1.1 says "words of a non-CJK script", names the full-width `？` trade-off and the round-7 gaps for 0.1.2; the notes match. Then `reviewer` checks the diff of this commit only (docs and one test), no fuzzing.
-
-**Acceptance criteria:**
-- [x] `ssh anna@a1` + 39 `a` (41 hex with a digit) is a leak test; it passes on HEAD; the `{7,41}` mutant fails it (checked in a scratch copy with a control).
-- [x] CHANGELOG 0.1.1 and `tasks/release-0.1.1.md` name the `？` trade-off and the round-7 gaps; every behaviour claim in the notes is in the CHANGELOG.
-- [x] `lib/` unchanged since `662eb71` (`git diff 662eb71 -- lib/` empty).
-- [x] `reviewer` on this commit's diff: no Critical or Required.
-
-**Verification:**
-- [x] `make check` green
-
-**Dependencies:** Task 17 round 7, R5 and stopping rule (`docs(spec): add a stopping rule…`). **Files:** `tests/test_privacy.py`, `CHANGELOG.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** XS. Commit: `docs: name the round-7 gaps of 0.1.1 and test the SHA length cap again`
-
-## Follow-up (not in 0.1.1)
-
-- [x] R7 for 0.1.2: G1–G3, H, the JWT item (widened in round 7), `#:~:` `?$` `#!`, the full-width `？` trade-off, with its own Define, Plan and false-positive check.
-
-**Result (2026-11-14):** `04eb8e5`: the 41-hex SHA test with a digit (`ssh anna@a1` + 39 `a`) passes on HEAD and fails the `{7,41}` mutant (control 819); CHANGELOG and notes name the `？` trade-off, the round-7 gaps and "some JWTs written with `。`" (only a second `。` not followed by a letter or digit passes). `git diff 662eb71 -- lib/` is empty. `reviewer` on that diff: one Required (the notes lacked "`。` between words of a non-CJK script", which the CHANGELOG lists), one Optional (a pass rule, notes-only, left), one Nit (Chinese and Japanese vs Chinese, Japanese and Korean). Fixed in `7440e60`; `reviewer` on that one-line diff, the one round the stopping rule allows: no findings, approve.
+**Dependencies:** Task 7. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record the review of R7`
 
 ## Checkpoint: reviewed
-- [x] No open Critical or Required finding; maintainer has seen the findings (rounds 1–7 and the Task 18 checks; everything else fixed, answered or moved to 0.1.2 by the stopping rule)
+- [ ] No open Critical or Required finding; maintainer has seen the findings.
 
-## Task 19: Ship checks and the tag commands
+## Task 9: Ship checks and the tag commands
 
-**Description:** Check the release contents on the final commit and give the maintainer the exact tag and push commands.
+**Description:** On the final commit: versions, CHANGELOG, archive (11 R1 entries; `lib/privacy.py` equal to the working tree), notes match the CHANGELOG, update and rollback on a project installed from `daa469d` (`v0.1.1`); then the maintainer gets the tag, push and `gh release create` commands.
 
 **Acceptance criteria:**
-- [x] `pyproject.toml`, `uv.lock` and every README `v=` say `0.1.1`; `CHANGELOG.md` has `## 0.1.1 (2026-11-14)` with the R5 and R6 lines and no `Unreleased` section.
-- [x] `git archive --prefix=routewise-0.1.1/ HEAD | tar -t` holds exactly the 11 R1 entries, and its `lib/privacy.py` and `lib/miss_log.py` equal the working tree's.
-- [x] `tasks/release-0.1.1.md` still matches `CHANGELOG.md` 0.1.1 after any review fix.
-- [x] The maintainer gets: `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>`, `git push origin main v0.1.1` and `gh release create v0.1.1 --title "routewise 0.1.1" --notes-file tasks/release-0.1.1.md`.
+- [ ] All of the above checked and recorded here.
 
-**Verification:**
-- [x] `make check` green on the final commit
-
-**Dependencies:** Task 18. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
-
-**Result (2026-11-14):** on `138f46d` (this commit only adds this record, under `tasks/`, which is `export-ignore`):
-
-- Versions: `pyproject.toml`, `uv.lock` and both README `v=` lines say `0.1.1`; `CHANGELOG.md` opens with `## 0.1.1 (2026-11-14)`; no `Unreleased` section.
-- Archive: `git archive --prefix=routewise-0.1.1/ HEAD` holds exactly the 11 R1 entries (`ADOPT.md CHANGELOG.md LICENSE README.md bin harness.toml install lib roles spec templates`); its `lib/privacy.py` and `lib/miss_log.py` are byte-identical to the working tree. `lib/` unchanged since `662eb71`.
-- Notes: the update block is identical to README "Updating"; the claims were checked against the CHANGELOG in Task 18 and nothing changed since.
-- End to end on the archive: a project installed from `v0.1.0`, updated to HEAD, prints `routewise: nothing to change`; `miss-log add` refuses `mailed me@localhost`, `see jira.corp.net/browse/X-1` and `redirect=%40example。com/path` with `routewise: …` and exit 2, accepts `修复路由。然后改a/b`; the log holds one line. Rolling back to `v0.1.0` the same way prints `nothing to change` (rollback path: the README "Updating" block with `v=0.1.0`).
-- `make check`: 939 passed, lint and types clean, gitleaks no leaks, self-install current.
-- Not applicable to this tool (no deployment): feature flags, monitoring, staged rollout.
+**Dependencies:** Task 8. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.2`
 
 ## Ship (maintainer, from the host)
-- [ ] `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>`
-- [ ] `git push origin main v0.1.1`
-- [ ] `gh release create v0.1.1 --title "routewise 0.1.1" --notes-file tasks/release-0.1.1.md`
+- [ ] `git tag -a v0.1.2 -m "routewise 0.1.2" <final commit>`
+- [ ] `git push origin main v0.1.2`
+- [ ] `gh release create v0.1.2 --title "routewise 0.1.2" --notes-file tasks/release-0.1.2.md`
