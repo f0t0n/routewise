@@ -162,9 +162,17 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green be
 **Description:** On the final commit: versions, CHANGELOG, archive (11 R1 entries; `lib/privacy.py` equal to the working tree), notes match the CHANGELOG, update and rollback on a project installed from `daa469d` (`v0.1.1`); then the maintainer gets the tag, push and `gh release create` commands.
 
 **Acceptance criteria:**
-- [ ] All of the above checked and recorded here.
+- [x] All of the above checked and recorded here.
 
 **Dependencies:** Task 8. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.2`
+
+**Result (2026-11-14):** on `8616c0c` (this commit adds only this record, under `tasks/`, which is `export-ignore`):
+
+- Versions: `pyproject.toml`, `uv.lock` and both README `v=` lines say `0.1.2`; CHANGELOG opens with `## 0.1.2 (2026-11-14)`; no `Unreleased`.
+- Archive: `git archive --prefix=routewise-0.1.2/ HEAD` holds exactly the 11 R1 entries; its `lib/privacy.py` and `lib/miss_log.py` are byte-identical to the working tree. `roles/`, `templates/`, `harness.toml`, `spec/`, `install`, `bin/` unchanged since `daa469d`.
+- Notes: the update block equals README "Updating"; the doc lines were checked in Task 8c.
+- End to end on the archive: a project installed from `daa469d` (0.1.1), updated to HEAD, prints `routewise: nothing to change`; `miss-log add` refuses `服务器在10.0.0.12上`, `next=https%3A%2F%2Fjira.corp.net%2Fx`, `mailed me\@localhost` and `card 4111 1111 1111 1111 2次` with `routewise: …` and exit 2, and accepts `cannot find node_modules\@types\node` (stored with single backslashes) and `为什么用foo.bar？因为快`; the log holds those two lines. Rolling back to 0.1.1 the same way prints `nothing to change`.
+- `make check`: 1105 passed, lint and types clean, gitleaks no leaks, self-install current.
 
 ## Ship (maintainer, from the host)
 - [ ] `git tag -a v0.1.2 -m "routewise 0.1.2" <final commit>`

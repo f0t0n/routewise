@@ -29,7 +29,7 @@ Spec: [SPEC.md](../SPEC.md), R7, success criterion 12 (approved 2026-11-14), wit
 - [x] Task 8b: Fix the review findings A, B and D
 - [x] Task 8c: One more round, scoped to the Task 8b fix
 - [x] Checkpoint: reviewed
-- [ ] Task 9: Ship checks and the tag commands
+- [x] Task 9: Ship checks and the tag commands
 
 Extended after the review round (2026-11-14): two Required regressions from my changes (G3 refused Windows scoped-package paths; ASCII edges let a stray digit group hide a card). Task 8b fixes them and two wording Nits; Task 8c is the one round the stopping rule allows for that fix.
 
