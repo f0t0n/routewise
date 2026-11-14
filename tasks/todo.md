@@ -252,11 +252,60 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 
 **Dependencies:** Task 10. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record round 4 of the 0.1.1 review`
 
+**Round 4 (2026-11-14):** fresh `reviewer` and `auditor` on `ab90528`. `reviewer`: approve; control 647 = repo 647. `auditor`: no regression against any earlier version on 6.6 million fuzzed variants except one Nit; two false positives against 0.1.0. Every finding reproduced against 0.1.0, `50f9de1` and `d84fadf`. Pattern noted: each widening of the filter caused the next round's findings, so the maintainer approved fixing only what 0.1.1 broke (success criterion 10) and moving gaps 0.1.0 also had to 0.1.2. R5 amended in `8378252`.
+
+| # | From | Finding | Answer |
+|---|---|---|---|
+| U1 | reviewer | CJK prose refused since `d84fadf`: `修复路由。然后改a/b`, `已修复。lib/x.py`, `ルーティングを修正。次にsrc/a.tsを確認` (`。` read as a dot makes a clause a host) | `。` is a dot only between ASCII letters or digits (Task 12) |
+| U2 | auditor | Code refused since round 2 or 3: `f"{user}@{cfg.domain}"`, `{{user}}@{{site.domain}}`, `obj@"pkg.json"`, `x@'a.b'`; also `a[i]@m.T`, `f(x)@w.T` | Markup only Markdown and quotes before, Markdown after (Task 12); brackets, braces, angle brackets, quotes after the `@` kept gaps |
+| G1 | auditor, Required | A CJK or Hebrew letter touching a leak hides it (`\b`): `服务器在10.0.0.12上`, `key AKIA…が漏れた`, `见www.example.com`; also in 0.1.0 | 0.1.2 (R7), listed in R5 |
+| G2 | auditor | URL-encoded link `next=https%3A%2F%2Fjira.corp.net%2F…`; also in 0.1.0 | 0.1.2, listed in R5 |
+| G3 | auditor | `me\@localhost`; also in 0.1.0 | 0.1.2, listed in R5 |
+| G4 | auditor, Nit, regression vs `d84fadf` only | `me\<U+3164>@localhost`: caught by `d84fadf` by accident (filler as a letter); 0.1.0 never did | Covered by G3 |
+| V1 | reviewer | Four identical views for normal text | Drop duplicates (Task 12) |
+| V2 | reviewer | `<` and `(` after the `@` untested | Moot: removed by U2 |
+| V3 | reviewer | No test pins `100%40 off` as allowed | Add (Task 12) |
+| – | reviewer | Equivalent survivors: Cf ranges, U+3164/U+FFA0, `_` | No change |
+| – | reviewer, auditor | `# fmt: skip` on the table; worst case 167 ms | No change |
+
+## Task 12: Fix what 0.1.1 broke (round 4)
+
+**Description:** One `fix:` commit for U1, U2, V1, V3, test first. Every round-4 false positive becomes an allowed test; the leak cases that relied on brackets, braces, angle brackets or quotes after the `@` move to a pinned "kept gap" list so the change is visible.
+
+**Acceptance criteria:**
+- [ ] Red on HEAD for each U1 and U2 phrase as an allowed test; green after.
+- [ ] `jira。corp。net/x`, `10。0。0。1`, `redirect=%40example。com/path` and every other leak still refused; the encoded-`@` and invisible-character guards still pass.
+- [ ] The cases `{anna}@`, `[anna]@`, `<anna>@`, `(anna)@`, `anna@"…"`, `anna@'…'`, `anna@{…}`, `anna@[…]`, `anna@<…>` move from the refused lists to a `KEPT_GAPS` list that asserts they pass (R5), so a later change to them is deliberate; none is silently deleted.
+- [ ] `views()` returns no duplicate; `100%40 off foo.bar` is an allowed test.
+- [ ] Mutations re-run with a control equal to the repo; survivors named.
+- [ ] CHANGELOG 0.1.1, README Safety bullet and the notes match R5 (markup list, `。` rule, kept gaps, gaps for 0.1.2).
+
+**Verification:**
+- [ ] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
+
+**Dependencies:** Task 11 round 4, R5 amended (`8378252`). **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `README.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: stop the miss-log filter refusing code and CJK text that 0.1.0 allowed`
+
+## Task 13: Round-5 review, scoped to what 0.1.1 broke
+
+**Description:** Fresh `reviewer` and `auditor` together on the Task 12 commit against R5 as amended in `8378252`. Scope, given in the brief: (1) nothing 0.1.0 allowed is refused now (success criterion 10), checked on a corpus of plausible developer text including code, templates, Markdown, CJK and RTL prose; (2) no regression against 0.1.0, `1aa6725^`, `1aa6725`, `d84fadf` or `ab90528` on fuzzed leaks; (3) the code, tests and docs match R5. A gap of a kind 0.1.0 also had is recorded for 0.1.2 (R7), not fixed in 0.1.1. Fix or answer every in-scope finding; a new R5 decision goes to the maintainer first.
+
+**Acceptance criteria:**
+- [ ] Every finding fixed, answered or recorded for 0.1.2, and listed here; no open Critical or Required in scope.
+
+**Verification:**
+- [ ] `make check` green after any fix
+
+**Dependencies:** Task 12. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record round 5 of the 0.1.1 review`
+
+## Follow-up (not in 0.1.1)
+
+- [ ] R7 for 0.1.2: G1–G3 (and whatever round 5 records), with its own Define, Plan and false-positive check.
+
 
 ## Checkpoint: reviewed
 - [ ] No open Critical or Required finding; maintainer has seen the findings
 
-## Task 12: Ship checks and the tag commands
+## Task 14: Ship checks and the tag commands
 
 **Description:** Check the release contents on the final commit and give the maintainer the exact tag and push commands.
 
@@ -269,7 +318,7 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Verification:**
 - [ ] `make check` green on the final commit
 
-**Dependencies:** Task 11. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
+**Dependencies:** Task 13. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
 
 ## Ship (maintainer, from the host)
 - [ ] `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>`
