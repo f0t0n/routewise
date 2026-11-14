@@ -7,12 +7,17 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Description:** Run today's `tests/test_privacy.py` against `lib/privacy.py` from `v0.1.0` and from `50f9de1`, each in a scratch copy, and record which tests fail.
 
 **Acceptance criteria:**
-- [ ] On `v0.1.0`: every case in `LEAKS_SINCE_0_1_1` and `REFUSED_CODE_WORDS` fails, plus `react@18.3.1` in the allowed list; every other case passes (success criterion 10: nothing 0.1.0 allowed is refused now except the named trade-offs).
-- [ ] On `50f9de1`: each case added after review fails, or is named in the record as a regression guard.
-- [ ] The result (counts and any exceptions) is recorded in this file.
+- [x] On `v0.1.0`: every case in `LEAKS_SINCE_0_1_1` and `REFUSED_CODE_WORDS` fails, plus `react@18.3.1` in the allowed list; every other case passes (success criterion 10: nothing 0.1.0 allowed is refused now except the named trade-offs).
+- [x] On `50f9de1`: each case added after review fails, or is named in the record as a regression guard.
+- [x] The result (counts and any exceptions) is recorded in this file.
 
 **Verification:**
-- [ ] `uv run pytest <scratch>/test_privacy.py` with `PYTHONPATH` pointing at each scratch `lib/`; working tree unchanged (`git status` clean)
+- [x] `uv run pytest <scratch>/test_privacy.py` with `PYTHONPATH` pointing at each scratch `lib/`; working tree unchanged (`git status` clean)
+
+**Result (2026-11-14):** today's `tests/test_privacy.py` (88 cases), run in a scratch copy with `lib/privacy.py` from each commit; `git status` clean before and after.
+
+- `v0.1.0`: 28 failed, 60 passed. Failed: 23 of the 24 `LEAKS_SINCE_0_1_1` cases, all 4 `REFUSED_CODE_WORDS`, and `react@18.3.1` in the allowed list. The one that passes, `ask jane@пример.рф`, is a regression guard: 0.1.0 refused it and `50f9de1` broke it. Every case 0.1.0 allowed or refused before still passes (no regression in the old tests).
+- `50f9de1`: 18 failed, 70 passed. Failed: all 17 leak cases added after review, and `ASP.NET/Core` (allowed there, refused on purpose since). Regression guards, which cannot fail first by nature: `os.path/join and json.loads/dumps` (already refused at `50f9de1`, pinned when the rule changed) and the allowed cases added after review (`did it call os.path? ...`, `node_modules/lodash.merge/...`, `Next.js/React and Vue.js/Svelte`).
 
 **Dependencies:** None. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the red check of R5`
 
