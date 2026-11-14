@@ -36,4 +36,6 @@ Verified 2026-11-14: the block, extracted from `README.md` by the test's rule an
 Reviewed 2026-11-14 (`reviewer`, sonnet): three Required and four Optional findings, all fixed in `c04e67d`: the block pasted over an existing install ran the old copy (now one `mkdir … && curl -fsSL … | tar --strip-components=1 -C routewise && routewise/install` chain, and Updating replaces the folder only after a successful download); the test checked only `v=` and could read the wrong block (now: the heading must exist, exactly one curl block, the chain, the `v$v` URL, and every `v=` in the README); `curl -f`; the wording of the lead-in and step 1; the failure message prints the block. Re-verified against GitHub with blocks extracted from the README: first install 9 files; pasted again it stops at `mkdir` and leaves the install untouched; Updating swaps the folder and `--check` is clean; a missing version fails on `curl: (22) 404` (the empty folder it leaves is now mentioned in the README).
 
 ## Ship
-- [ ] Maintainer pushes `main` from the host (no tag: the change ships in the next release)
+- [x] Maintainer pushes `main` from the host (no tag: the change ships in the next release)
+
+Shipped 2026-11-14: the maintainer pushed `main`. The change reaches users in the next release archive.

@@ -22,7 +22,7 @@ The 0.1.0 release notes have a four-line install; the README only describes it i
 ### Verify, Review, Ship
 - [x] Verify: the block, copied from the README and run literally in an empty git repo, installs routewise 0.1.0 from GitHub (9 files, `--check` exit 0)
 - [x] Review: `reviewer` on the README diff and the test
-- [ ] Ship: maintainer pushes `main` from the host
+- [x] Ship: maintainer pushes `main` from the host
 
 ## Risks and Mitigations
 
