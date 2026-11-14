@@ -40,10 +40,10 @@ TAG = (
     r"|latest|next|beta|alpha|canary|rc|stable|lts|main|master)(?![\w-])"
 )
 # A link without a scheme ends its host with a TLD, maybe a port, then a path, or a query or
-# anchor that goes on with a URL character (a "?" that ends a question, also "?)" or "?!", is
-# not one).
+# anchor that goes on with an ASCII URL character, $, !/ or :~: (?$top=5, #!/users, #:~:text=).
+# A "?" that ends a question, also "?)", "?!" or "?" before CJK text, is not one; nor is "?:".
 TLD = LETTER + r"{2,63}"
-LINK_END = r"(?::\d{1,5})?(?:/|[?#][\w%=&/~+-])"
+LINK_END = r"(?::\d{1,5})?(?:/|[?#](?:[A-Za-z0-9_%=&/~+$-]|!/|:~:))"
 # File types that are also TLDs: README.md/ or lib.rs/ is a path; wiki.acme.md/ is a link.
 SOURCE_TYPES = (
     "md|py|rs|ts|tsx|js|jsx|mjs|cjs|json|toml|yaml|yml|txt|lock|cfg|ini|html|css|sh|rb|kt|go"

@@ -63,10 +63,12 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green be
 **Description:** Test first: `api.corp.net?$top=5`, `app.corp.io#!/users/1`, `docs.corp.io#:~:text=x` fail on HEAD as leaks; `为什么用foo.bar？因为快`, `foo.bar?为什么`, `한국어 foo.bar?그래서` fail on HEAD as allowed (moved from `REFUSED_CODE_WORDS`). Then `LINK_END` takes `?` or `#` before an ASCII URL character, `$`, `!/` or `:~:`.
 
 **Acceptance criteria:**
-- [ ] All six red on HEAD, green after; `foo.bar?:x` allowed; `wiki.corp.io#Раздел` pinned in `KEPT_GAPS`; each character of the class still has its own case (from 0.1.1).
-- [ ] Mutations on each new alternative and on the ASCII class; survivors named.
+- [x] All six red on HEAD, green after; `foo.bar?:x` allowed; `wiki.corp.io#Раздел` pinned in `KEPT_GAPS`; each character of the class still has its own case (from 0.1.1).
+- [x] Mutations on each new alternative and on the ASCII class; survivors named.
 
 **Verification:** as Task 1. **Dependencies:** Task 4. **Files:** as Task 1. **Scope:** XS. Commit: `fix: read more link ends and stop reading CJK after ? as a query (R7)`
+
+**Result (2026-11-14):** red on HEAD (`d454d69`): `?$top=5`, `#!/users/1`, `#:~:text=salary` as leaks; the three `？`/`?` CJK and Korean questions as allowed (they were documented as a trade-off in 0.1.1 but not pinned, so they are added, not moved); `wiki.corp.io#Раздел` in `KEPT_GAPS`; guard copies (25 in all). `foo.bar?:x` passed on HEAD and after (guard). Green: `LINK_END` is `[?#](?:[A-Za-z0-9_%=&/~+$-]|!/|:~:)`. Mutations (control 957): dropping `$`, `!/`, `:~:`, `!` alone, `:` alone, the class back to `\w`, and each of `_ % = & / ~ + -` and the digits all killed.
 
 ## Checkpoint: verified
 - [ ] `make check` green.

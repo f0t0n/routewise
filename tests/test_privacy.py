@@ -171,6 +171,10 @@ LEAKS_SINCE_0_1_1 = [
     "token eyJhbGciOiJIUzI1NiJ9。eyJzdWIiOiIxIn0。-Qx9",
     "token eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbm5hIn0。",
     "token eyJhbGciOiJIUzI1Ni_。eyJzdWIiOiIxIn0.x",  # synthetic: a first 。 the views keep (R7)
+    # 0.1.2 (R7): a query or anchor that starts with $, !/ or :~: right after a host.
+    "see api.corp.net?$top=5",
+    "see app.corp.io#!/users/1",
+    "see docs.corp.io#:~:text=salary",
     # Round 6: case folds in ASCII only, and a SHA has a digit (R5).
     "ask anna@ma\u0131n",
     "ask anna@ma\u0130n",
@@ -260,6 +264,7 @@ KEPT_GAPS = [
     "ask anna@[corp.com]",
     "ask anna@<corp.com>",
     "ask jane \\@ localhost",  # spaces around a dotless @ stay a gap (R5, R7 G3)
+    "see wiki.corp.io#Раздел",  # a non-ASCII anchor right after a host with no path (R7)
 ]
 # Text 0.1.0 allowed that rounds 2 to 4 refused for a while (success criterion 10).
 CLEAN_SINCE_ROUND_4 = [
@@ -299,6 +304,11 @@ CLEAN_SINCE_ROUND_4 = [
     "ratio 100%3A and a%3Ab and 50%2F%2F",  # encoded : or / alone is not a link (R7 G2)
     "path C%3A%2Ftemp was wrong",  # an encoded :/ with one slash is not a scheme (R7 G2)
     'escaped \\@ in a Perl string, and "x"@property',  # no word right before the \\@ (R7 G3)
+    # 0.1.2 (R7): CJK or Korean right after ? is a question, not a query; Kotlin's ?: is code.
+    "为什么用foo.bar？因为快",
+    "foo.bar?为什么",
+    "한국어 foo.bar?그래서",
+    "used foo.bar?:x as a default",
 ]
 # Every character R5 counts as invisible, one per range and every one 0.1.1 listed first.
 INVISIBLE = [

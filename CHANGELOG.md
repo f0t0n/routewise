@@ -6,6 +6,7 @@
 - The miss-log filter catches a URL-encoded link: a scheme followed by `%3A%2F%2F`, in any case (`next=https%3A%2F%2Fjira.corp.net%2F…`); an encoded `:` or `/` on its own still passes (`100%3A`, `C%3A%2Ftemp`) (spec R7).
 - The miss-log filter catches an escaped `@` without a dot in the domain (`me\@localhost`); spaces around a dotless `@` still pass (spec R7).
 - The miss-log filter catches a JWT written with `。` whatever follows it (`eyJ…。eyJ…。_Qx9`, `eyJ…。eyJ…。`) (spec R7).
+- After a host, `?$`, `#!/` and `#:~:` start a query or anchor (`api.corp.net?$top=5`, `app.corp.io#!/users/1`, `docs.corp.io#:~:text=x`), and a query or anchor must start with an ASCII character, so a Chinese, Japanese or Korean question right after `?` or `？` passes again (`为什么用foo.bar？因为快`), as do `foo.bar?!` and Kotlin's `foo.bar?:x`. A non-ASCII anchor right after a host with no path (`wiki.corp.io#Раздел`) passes; a copied link has a `/` before it and is refused (spec R7).
 
 ## 0.1.1 (2026-11-14)
 
