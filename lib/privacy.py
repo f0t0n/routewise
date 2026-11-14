@@ -31,6 +31,9 @@ ENCODED_AT = re.compile(r"%40|&#0*64;|&#x0*40;|&commat;|\\u0040|\\x40", re.IGNOR
 WORD_START = r"(?<![A-Za-z0-9_])"
 WORD_END = r"(?![A-Za-z0-9_])"
 CARD = re.compile(WORD_START + r"\d(?:[ -]?\d){12,18}" + WORD_END)
+# Cards are also looked for with \b edges, as in 0.1.1: with ASCII edges alone, a stray digit
+# group next to a letter of another script joins the card and fails the Luhn check (spec R7).
+CARD_WORD = re.compile(r"\b\d(?:[ -]?\d){12,18}\b")
 LETTER = r"[^\W\d_]"  # any letter, not only ASCII: anna@корп is an address too
 # A version, commit SHA (7 to 40 hex digits, one a digit) or package tag after @, in any ASCII
 # case, when it is the whole name (HEAD@{1}, pkg@latest, foo@Latest, actions/checkout@v4,
@@ -96,8 +99,12 @@ PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         "an e-mail address",
     ),
     # One without a dot (me@localhost, also escaped as me\@localhost): the domain starts with a
-    # letter and is not a tag. No space around the @ here, so "used @property" passes.
-    (re.compile(r"\w[\w.+-]*\\?@(?!" + TAG + ")" + LETTER + r"[\w-]*"), "an e-mail address"),
+    # letter and is not a tag. No space around the @ here, so "used @property" passes. An
+    # escaped @ with a path after the name is a Windows path (node_modules\@types\node).
+    (
+        re.compile(r"\w[\w.+-]*(?:@|\\@(?![\w-]*[\\/]))(?!" + TAG + ")" + LETTER + r"[\w-]*"),
+        "an e-mail address",
+    ),
     (
         re.compile(
             r"\w+\s*(?:\(at\)|\[at\]|\{at\}|\sat\s)\s*[\w-]+"
@@ -198,7 +205,8 @@ def luhn(digits: str) -> bool:
 
 
 def has_card(text: str) -> bool:
-    return any(luhn(re.sub(r"\D", "", m.group())) for m in CARD.finditer(text))
+    matches = (m for card in (CARD, CARD_WORD) for m in card.finditer(text))
+    return any(luhn(re.sub(r"\D", "", m.group())) for m in matches)
 
 
 def finding(text: str) -> str | None:

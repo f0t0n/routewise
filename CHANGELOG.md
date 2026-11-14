@@ -2,11 +2,11 @@
 
 ## 0.1.2 (2026-11-14)
 
-- The miss-log filter catches a leak touched by a letter of another script with no space between: `服务器在10.0.0.12上`, `key AKIA…が漏れた`, `见www.example.com`, `ב10.0.0.12`, an ID or token right after Chinese or Japanese text (spec R7). Word edges are now ASCII only, so text 0.1.1 refused after a space is also refused right after such a letter (`版本1.2.3.4`, as `version 1.2.3.4` was; `运行www.py`; `café10.0.0.12`); an ASCII letter or digit still joins the word (`xAKIA…`, `v10.0.0.12` pass as before).
+- The miss-log filter catches a leak touched by a letter or digit of another script with no space between: `服务器在10.0.0.12上`, `key AKIA…が漏れた`, `见www.example.com`, `ב10.0.0.12`, an ID or token right after Chinese or Japanese text (spec R7). Word edges are now ASCII only, so text 0.1.1 refused after a space is also refused right after such a letter or digit (`版本1.2.3.4`, as `version 1.2.3.4` was; `运行www.py`; `café10.0.0.12`); an ASCII letter or digit still joins the word (`xAKIA…`, `v10.0.0.12` pass as before). Card numbers are still looked for with 0.1.1's edges too, so a stray digit group next to such a letter cannot hide one (`card 4111 1111 1111 1111 2次`).
 - The miss-log filter catches a URL-encoded link: a scheme followed by `%3A%2F%2F`, in any case (`next=https%3A%2F%2Fjira.corp.net%2F…`); an encoded `:` or `/` on its own still passes (`100%3A`, `C%3A%2Ftemp`) (spec R7).
-- The miss-log filter catches an escaped `@` without a dot in the domain (`me\@localhost`); spaces around a dotless `@` still pass (spec R7).
+- The miss-log filter catches an escaped `@` without a dot in the domain (`me\@localhost`); a Windows path with a scoped package still passes (`node_modules\@types\node`), and so do spaces around a dotless `@` (spec R7).
 - The miss-log filter catches a JWT written with `。` whatever follows it (`eyJ…。eyJ…。_Qx9`, `eyJ…。eyJ…。`) (spec R7).
-- After a host, `?$`, `#!/` and `#:~:` start a query or anchor (`api.corp.net?$top=5`, `app.corp.io#!/users/1`, `docs.corp.io#:~:text=x`), and a query or anchor must start with an ASCII character, so a Chinese, Japanese or Korean question right after `?` or `？` passes again (`为什么用foo.bar？因为快`), as do `foo.bar?!` and Kotlin's `foo.bar?:x`. A non-ASCII anchor right after a host with no path (`wiki.corp.io#Раздел`) passes; a copied link has a `/` before it and is refused (spec R7).
+- After a host, `?$`, `#!/` and `#:~:` start a query or anchor (`api.corp.net?$top=5`, `app.corp.io#!/users/1`, `docs.corp.io#:~:text=x`), and a query or anchor must start with an ASCII character, so a Chinese, Japanese or Korean question right after `?` or `？` passes again (`为什么用foo.bar？因为快`); `foo.bar?!` and Kotlin's `foo.bar?:x` still pass. A non-ASCII anchor right after a host with no path (`wiki.corp.io#Раздел`) passes; a copied link has a `/` before it and is refused (spec R7).
 
 ## 0.1.1 (2026-11-14)
 

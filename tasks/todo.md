@@ -126,14 +126,16 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green be
 **Description:** One `fix:` commit, test first. A: the dotless rule takes `\@` only when the name is not followed by `\` or `/`. B: `has_card` looks for cards with the ASCII edges and with 0.1.1's `\b` edges. D: CHANGELOG and notes wording.
 
 **Acceptance criteria:**
-- [ ] Red on HEAD: the three Windows paths as allowed; the three cards as leaks; green after. `me\@localhost` still refused; `卡号4111 1111 1111 1111了` still refused.
-- [ ] Differential check against `daa469d` on every test input: every difference is an R7 item (as amended).
-- [ ] Mutations on the new lookahead and each card edge style, with a control equal to the repo, each mutant checked to import; survivors named.
-- [ ] CHANGELOG 0.1.2 and the notes: the path exception, the card line, "still pass" for `foo.bar?!` and `?:x`, "letter or digit".
+- [x] Red on HEAD: the three Windows paths as allowed; the three cards as leaks; green after. `me\@localhost` still refused; `卡号4111 1111 1111 1111了` still refused.
+- [x] Differential check against `daa469d` on every test input: every difference is an R7 item (as amended).
+- [x] Mutations on the new lookahead and each card edge style, with a control equal to the repo, each mutant checked to import; survivors named.
+- [x] CHANGELOG 0.1.2 and the notes: the path exception, the card line, "still pass" for `foo.bar?!` and `?:x`, "letter or digit".
 
 **Verification:** `uv run pytest tests/test_privacy.py` red, then green; `make check` green.
 
 **Dependencies:** Task 8 round, R7 amended. **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `tasks/release-0.1.2.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: let Windows paths with \@ pass and keep every 0.1.1 card catch (R7)`
+
+**Result (2026-11-14):** red on HEAD (`4995b83`): the three cards as leaks, the three Windows paths as allowed, and their guard copies (24). Green: the dotless rule is `(?:@|\\@(?![\w-]*[\\/]))`, the lookahead right after the `@` so it sees the whole name (a lookahead after the name would backtrack to a shorter one); `has_card` looks with `CARD` (ASCII edges) and `CARD_WORD` (`\b`, as 0.1.1). Added `web\@scope/pkg` so the `/` half is pinned. Differential against `daa469d` on 340 inputs: the same 29 R7 differences as at the checkpoint; the new cards and paths give 0.1.1's result. Mutations (control 985 = repo): no lookahead, `\` only, `/` only, lookahead at the end, cards with one edge style only: all killed. Docs: CHANGELOG and notes have the path exception, the card line, "still pass" for `foo.bar?!` and `?:x`, and "letter or digit"; examples probed. `make check`: 1105 passed.
 
 ## Task 8c: One more round, scoped to the Task 8b fix
 

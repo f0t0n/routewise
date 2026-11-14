@@ -175,6 +175,11 @@ LEAKS_SINCE_0_1_1 = [
     "see api.corp.net?$top=5",
     "see app.corp.io#!/users/1",
     "see docs.corp.io#:~:text=salary",
+    # Found in the R7 review: a stray digit group next to a letter of another script must not
+    # join a card and hide it.
+    "card 4111 1111 1111 1111 2次",
+    "第1 4111 1111 1111 1111",
+    "card 5500-0000-0000-0004-1é",
     # Round 6: case folds in ASCII only, and a SHA has a digit (R5).
     "ask anna@ma\u0131n",
     "ask anna@ma\u0130n",
@@ -309,6 +314,11 @@ CLEAN_SINCE_ROUND_4 = [
     "foo.bar?为什么",
     "한국어 foo.bar?그래서",
     "used foo.bar?:x as a default",
+    # Found in the R7 review: a Windows path with a scoped package is not an escaped @.
+    "cannot find node_modules\\@types\\node",
+    "src\\@angular\\core missing",
+    "see C:\\proj\\@scope\\pkg",
+    "mixed path web\\@scope/pkg",  # / after the name is a path too (R7)
 ]
 # Every character R5 counts as invisible, one per range and every one 0.1.1 listed first.
 INVISIBLE = [

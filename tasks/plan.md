@@ -26,7 +26,7 @@ Spec: [SPEC.md](../SPEC.md), R7, success criterion 12 (approved 2026-11-14), wit
 - [x] Task 6: Docs and release notes for 0.1.2
 - [x] Task 7: Release bump to 0.1.2
 - [ ] Task 8: Review, one round under the stopping rule
-- [ ] Task 8b: Fix the review findings A, B and D
+- [x] Task 8b: Fix the review findings A, B and D
 - [ ] Task 8c: One more round, scoped to the Task 8b fix
 - [ ] Checkpoint: reviewed
 - [ ] Task 9: Ship checks and the tag commands
