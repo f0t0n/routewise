@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- The README's "Install into a project" opens with a copy-paste install of the current release; a test keeps its version equal to `pyproject.toml` (spec R4).
+- The README's "Install into a project" opens with a copy-paste install of the current release, and "Updating" has the same for a newer one. Both stop on an HTTP error and never run an older copy (a first install stops if `routewise/` exists; an update replaces it only after the download succeeded). A test keeps every version in the README equal to `pyproject.toml` (spec R4).
 
 ## 0.1.0 (2026-11-14)
 

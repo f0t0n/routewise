@@ -32,18 +32,34 @@ def test_a_release_archive_ships_exactly_the_runtime_files():
     assert shipped == set(COPY) | set(SHIPPED_DOCS)
 
 
+def readme() -> str:
+    return (HOME / "README.md").read_text(encoding="utf-8")
+
+
 def install_block() -> str:
-    """The first shell block of the README's "Install into a project" section."""
-    readme = (HOME / "README.md").read_text(encoding="utf-8")
-    section = readme.split("## Install into a project", 1)[-1].split("\n## ", 1)[0]
-    found = re.search(r"```sh\n(.*?)```", section, re.DOTALL)
-    assert found, "README: no shell block in the install section"
-    return found.group(1)
+    """The shell block with the download in the README's "Install into a project" section."""
+    heading = "\n## Install into a project\n"
+    assert heading in readme(), "README: no '## Install into a project' section"
+    section = readme().split(heading, 1)[1].split("\n## ", 1)[0]
+    blocks = [b for b in re.findall(r"```sh\n(.*?)```", section, re.DOTALL) if "curl " in b]
+    assert len(blocks) == 1, "README: the install section needs exactly one shell block with curl"
+    return blocks[0]
 
 
 def test_the_readme_installs_the_current_version():
-    lines = re.findall(r"^v=(\S+)$", install_block(), re.MULTILINE)
-    project = tomllib.loads((HOME / "pyproject.toml").read_text(encoding="utf-8"))
+    block = install_block()
+    version = tomllib.loads((HOME / "pyproject.toml").read_text(encoding="utf-8"))["project"][
+        "version"
+    ]
 
-    assert len(lines) == 1, "README: the install block needs exactly one v=<version> line"
-    assert lines[0] == project["project"]["version"]
+    assert re.findall(r"^v=(\S+)$", block, re.MULTILINE) == [version], block
+    assert "/archive/refs/tags/v$v.tar.gz" in block, block
+    assert set(re.findall(r"^\s*v=(\S+)$", readme(), re.MULTILINE)) == {version}
+
+
+def test_the_readme_install_never_runs_an_older_copy():
+    chain = install_block().strip().splitlines()[-1]
+
+    assert chain.startswith("mkdir routewise && curl -fsSL "), chain
+    assert chain.endswith(" && routewise/install"), chain
+    assert " mv " not in chain, chain

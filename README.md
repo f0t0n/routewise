@@ -18,18 +18,16 @@ Supported harnesses: Claude Code (`cc`) and Antigravity CLI (`agy`; its agents f
 
 ## Install into a project
 
-From the project root:
+From the project root, for a first install (it stops if `routewise/` already exists; to update, see [Updating](#updating)):
 
 ```sh
 v=0.1.0
-curl -L "https://github.com/f0t0n/routewise/archive/refs/tags/v$v.tar.gz" | tar -xz
-mv "routewise-$v" routewise
-routewise/install
+mkdir routewise && curl -fsSL "https://github.com/f0t0n/routewise/archive/refs/tags/v$v.tar.gz" | tar -xz --strip-components=1 -C routewise && routewise/install
 ```
 
-Then review `routewise.toml`, fill in `ROUTING-BINDING.md`, commit, and open a new agent session. The steps in detail:
+If the download fails, delete the empty `routewise/` folder it leaves before you try again. The first run writes `routewise.toml`: review it and re-run `routewise/install` if you change it, fill in `ROUTING-BINDING.md`, commit, and open a new agent session. The same, in detail and with alternatives:
 
-1. Download a release's "Source code" archive (or run `git archive` on a tag) and unpack it into the project root as `routewise/`. The archive holds only what a project needs: `install`, `bin/`, `lib/`, `roles/`, `harness.toml`, `templates/`, `spec/` and the docs. A git submodule or subtree works too, but brings this repo's development files (tests, `SPEC.md`, `AGENTS.md`, its own agents); make sure your test runner and linters skip `routewise/`.
+1. Put a release into the project root as `routewise/`: the block above does it from the release's "Source code" archive, or unpack that archive yourself, or run `git archive` on a tag. The archive holds only what a project needs: `install`, `bin/`, `lib/`, `roles/`, `harness.toml`, `templates/`, `spec/` and the docs. A git submodule or subtree works too, but brings this repo's development files (tests, `SPEC.md`, `AGENTS.md`, its own agents); make sure your test runner and linters skip `routewise/`.
 2. From the project root, run:
 
    ```sh
@@ -78,7 +76,14 @@ Review the miss log two weeks after install, then monthly. Change a role's tier 
 
 ## Updating
 
-Replace the `routewise/` folder with a newer release and run `routewise/install`. Project choices live outside it (`routewise.toml`, `ROUTING-BINDING.md`), so nothing is lost.
+Replace the `routewise/` folder with a newer release and run `routewise/install`. From the project root (the old folder is replaced only after the download succeeded):
+
+```sh
+v=0.1.0
+mkdir routewise.new && curl -fsSL "https://github.com/f0t0n/routewise/archive/refs/tags/v$v.tar.gz" | tar -xz --strip-components=1 -C routewise.new && rm -rf routewise && mv routewise.new routewise && routewise/install
+```
+
+Set `v` to the release you want. Project choices live outside `routewise/` (`routewise.toml`, `ROUTING-BINDING.md`), so nothing is lost.
 
 ## Safety
 
