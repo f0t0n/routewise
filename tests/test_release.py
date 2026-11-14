@@ -1,4 +1,8 @@
-"""A release archive ships only the runtime files (spec R1), and they are the files tested."""
+"""A release archive ships only the runtime files (spec R1), and they are the files tested.
+
+The check works on top-level entries: a new file inside a shipped folder (lib/, roles/, ...)
+ships by design, and a folder marked export-ignore drops everything inside it.
+"""
 
 import subprocess
 
