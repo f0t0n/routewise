@@ -141,7 +141,8 @@ LEAKS_SINCE_0_1_1 = [
     "ask anna@**пример。рф**",
     "ask anna%40corp。com",
     "server 1\u200b0。0。0。1",
-    "ssh anna@" + "deadbeef" * 5 + "a",  # 41 hex digits: a SHA is at most 40 (R5)
+    "ssh anna@" + "deadbeef" * 5 + "a",  # 41 hex digits, no digit (R5: a SHA has one)
+    "ssh anna@a1" + "a" * 39,  # 41 hex digits with a digit: a SHA is at most 40 (R5)
     # Round 6: case folds in ASCII only, and a SHA has a digit (R5).
     "ask anna@ma\u0131n",
     "ask anna@ma\u0130n",
