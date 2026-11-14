@@ -199,11 +199,55 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 
 **Dependencies:** Task 8. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record round 3 of the 0.1.1 review`
 
+**Round 3 (2026-11-14):** fresh `reviewer` and `auditor` on `d84fadf`. `reviewer`: request changes (one Required); its control matched the repo (522 = 522), so its mutation results stand. `auditor`: not ready, one regression of `d84fadf`. Every finding reproduced against `1aa6725^`, `1aa6725` and `d84fadf`. The maintainer approved the calls below; R5 amended in `818d7da`.
+
+| # | From | Finding | Answer |
+|---|---|---|---|
+| T1 | auditor, Required, **regression** | Decoding `@` and reading `。` only in the joined view hid a link: `redirect=&#x40;example。com/x`, `(&commat;corp。com/x)` (refused by `1aa6725^` and `1aa6725`); `redirect=%40example。com/path`, `redirect=%40example.co<ZWSP>m/path`, `redirect=%40example.com#<LRM>X-1`, `שלום<LRM>10。0。0。1` (refused by `1aa6725^`) | Four views; steps that only add evidence apply to all (Task 10) |
+| T2 | reviewer, Required + auditor | Not invisible yet: U+E0100–E01EF, U+180B–180D (Mn), U+2800, U+17B4, U+2065, U+FFF0, Hangul fillers inside a token, IP or path | Cf ∪ Default_Ignorable_Code_Point ∪ U+2800 (Task 10) |
+| T3 | auditor, Optional | `anna\x40corp.com` passes | Decode `\x40`; not `=40` (Task 10) |
+| T4 | auditor, Optional | `{anna}@corp.com`, `anna@"corp.com"`, `anna@'corp.com'` pass | `}` before, `{ " '` after (Task 10); `**anna **@`, HTML around `@` kept gaps |
+| T5 | reviewer, Optional | Green mutations: split view keeping raw characters, first NFKC removed, `IGNORECASE` on encodings, single markup characters `~` `)` `[` | Pin each (Task 10) |
+| T6 | reviewer, Nit | `invisible()`, `first_match()` lack a docstring | Add (Task 10) |
+| T7 | reviewer, Nit | `` `icon`@2x.png `` refused | No change: `icon@2x.png` refused since 0.1.0, a dotted domain with a letter |
+| T8 | auditor, Nit | Worst case 80 ms (two views) at the CLI limits | No change |
+| T9 | auditor, Optional | `&#64` without `;`, `%u0040`, `\u{40}`, `=40` | Kept gaps, in R5 |
+
+## Task 10: Fix the round-3 findings
+
+**Description:** One `fix:` commit for T1–T6, built test first. First, `web-reader` checks the Default_Ignorable_Code_Point ranges written in R5 against Unicode's published `DerivedCoreProperties.txt`; I open the file's lines myself before any range is used, and a wrong range goes back to the maintainer as an R5 correction. Then `views()` returns the four combinations of {invisible as space, removed} × {`@` decoded, not}, with NFKC and `。` in all; the invisible set is the R5 one; `\x40` is decoded; the markup classes gain `}` and `{ " '`.
+
+**Acceptance criteria:**
+- [ ] The R5 ranges match the Unicode file (or a correction was approved first).
+- [ ] Red shown on HEAD for the T1 regression inputs, one character per T2 range (Hangul fillers inside a token, an IP and a path too), `\x40`, the T4 markup and the T5 pins that are not already green; green after.
+- [ ] A guard test: for every encoding of `@`, a link after it (with `.` and with `。`) is refused, and with an invisible character inside the host or the anchor.
+- [ ] The guard tests of Task 8 still pass; every allowed case stays allowed, also with invisible characters inserted; no allowed case removed or moved.
+- [ ] Mutations re-run with an unmutated control whose count equals the repo's; every view, each lossy step, each new range and each markup character killed, or the survivor named here.
+- [ ] Worst-case time at the CLI limits measured and recorded.
+- [ ] CHANGELOG 0.1.1, README Safety bullet and the notes in line with R5; the notes add nothing the CHANGELOG lacks.
+
+**Verification:**
+- [ ] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
+
+**Dependencies:** Task 9 round 3, R5 amended (`818d7da`). **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `README.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** M. Commit: `fix: check four views of miss-log text so decoding cannot hide a link`
+
+## Task 11: Round-4 review of the third fix
+
+**Description:** Fresh `reviewer` and `auditor` together on the Task 10 commit against R5 as amended in `818d7da`, briefed with the diff and spec, not earlier findings. The reviewer reports its control count next to the repo's. The auditor compares against `1aa6725^`, `1aa6725` and `d84fadf` on fuzzed input. Fix or answer every finding; a new R5 decision goes to the maintainer first.
+
+**Acceptance criteria:**
+- [ ] Every finding fixed or answered and listed here; no open Critical or Required; no regression against any earlier version.
+
+**Verification:**
+- [ ] `make check` green after any fix
+
+**Dependencies:** Task 10. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record round 4 of the 0.1.1 review`
+
 
 ## Checkpoint: reviewed
 - [ ] No open Critical or Required finding; maintainer has seen the findings
 
-## Task 10: Ship checks and the tag commands
+## Task 12: Ship checks and the tag commands
 
 **Description:** Check the release contents on the final commit and give the maintainer the exact tag and push commands.
 
@@ -216,7 +260,7 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Verification:**
 - [ ] `make check` green on the final commit
 
-**Dependencies:** Task 9. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
+**Dependencies:** Task 11. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
 
 ## Ship (maintainer, from the host)
 - [ ] `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>`
