@@ -143,6 +143,23 @@ LEAKS_SINCE_0_1_1 = [
     "server 1\u200b0。0。0。1",
     "ssh anna@" + "deadbeef" * 5 + "a",  # 41 hex digits, no digit (R5: a SHA has one)
     "ssh anna@a1" + "a" * 39,  # 41 hex digits with a digit: a SHA is at most 40 (R5)
+    # 0.1.2 (R7 G1): a leak touched by a letter of another script, no space between.
+    "服务器在10.0.0.12上",
+    "key AKIA" + "IOSFODNN7EXAMPLEが漏れた",
+    "见www.example.com",
+    "见https://example.com",
+    "ב10.0.0.12",
+    "令牌eyJhbGciOi.eyJzdWIiOi.x",
+    "id 123e4567-e89b-12d3-a456-426614174000を使った",
+    "主机2001:db8::1",
+    "主机2001:0db8:85a3:0000:0000:8a2e:0370:7334了",
+    "用户U012AB3CD4了",
+    "卡号4111 1111 1111 1111了",
+    "令牌ghp_" + "a1B2c3D4e5F6g7H8i9J0",
+    # The other side of the same leaks, so each edge is tested on its own.
+    "密钥AKIA" + "IOSFODNN7EXAMPLE",
+    "编号123e4567-e89b-12d3-a456-426614174000",
+    "服务器2001:db8::1上",
     # Round 6: case folds in ASCII only, and a SHA has a digit (R5).
     "ask anna@ma\u0131n",
     "ask anna@ma\u0130n",
@@ -264,6 +281,9 @@ CLEAN_SINCE_ROUND_4 = [
     "(what is foo.bar?) and foo.bar?! and did foo.bar?, then",
     "pinned admin@facade0",  # hex with a digit is a SHA (R5)
     "renamed foo_。bar/x",  # 。 after _ is not between letters or digits (R5)
+    # An ASCII letter or digit is still part of the word (R7 G1).
+    "xAKIA" + "IOSFODNN7EXAMPLE",
+    "v10.0.0.12",
 ]
 # Every character R5 counts as invisible, one per range and every one 0.1.1 listed first.
 INVISIBLE = [

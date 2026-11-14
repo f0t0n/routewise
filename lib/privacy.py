@@ -26,7 +26,11 @@ OTHER_INVISIBLE = frozenset(
     chr(c) for low, high in DEFAULT_IGNORABLE for c in range(low, high + 1)
 ) | {"\u2800"}
 ENCODED_AT = re.compile(r"%40|&#0*64;|&#x0*40;|&commat;|\\u0040|\\x40", re.IGNORECASE)
-CARD = re.compile(r"\b\d(?:[ -]?\d){12,18}\b")
+# Word edges in ASCII only (spec R7): a letter of another script right before or after a leak
+# does not hide it (服务器在10.0.0.12上), while xAKIA... or v10.0.0.12 is still one word.
+WORD_START = r"(?<![A-Za-z0-9_])"
+WORD_END = r"(?![A-Za-z0-9_])"
+CARD = re.compile(WORD_START + r"\d(?:[ -]?\d){12,18}" + WORD_END)
 LETTER = r"[^\W\d_]"  # any letter, not only ASCII: anna@корп is an address too
 # A version, commit SHA (7 to 40 hex digits, one a digit) or package tag after @, in any ASCII
 # case, when it is the whole name (HEAD@{1}, pkg@latest, foo@Latest, actions/checkout@v4,
@@ -64,13 +68,14 @@ DOT_STOP = re.compile(f"(?<=[^\\W_{CJK}])\u3002(?=[^\\W_{CJK}])")
 PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (
         re.compile(
-            r"\b(?:gh[pousr]_|github_pat_|sk-|sk_live_|sk_test_|rk_live_|pk_live_|xox[abposr]-"
+            WORD_START
+            + r"(?:gh[pousr]_|github_pat_|sk-|sk_live_|sk_test_|rk_live_|pk_live_|xox[abposr]-"
             r"|glpat-|npm_|AIza)[A-Za-z0-9_-]{8,}"
         ),
         "a token or key",
     ),
-    (re.compile(r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b"), "a token or key"),
-    (re.compile(r"\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\."), "a token or key"),
+    (re.compile(WORD_START + r"(?:AKIA|ASIA)[A-Z0-9]{16}" + WORD_END), "a token or key"),
+    (re.compile(WORD_START + r"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\."), "a token or key"),
     (re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"), "a token or key"),
     # An e-mail: a word right before the @ (so @property and @mentions pass), maybe with markup
     # around the @, and a dotted domain with a letter in it (so react@18.3.1 passes).
@@ -97,7 +102,10 @@ PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         ),
         "an e-mail address",
     ),
-    (re.compile(r"\b[a-z][a-z0-9+.-]*://|\bwww\.\w", re.IGNORECASE), "a URL"),
+    (
+        re.compile(WORD_START + r"[a-z][a-z0-9+.-]*://|" + WORD_START + r"www\.\w", re.IGNORECASE),
+        "a URL",
+    ),
     # A link without a scheme (example.com/page, //host.corp:8080/x): a host that starts a
     # word. One with a single dot must not follow a lone slash (src/a.ts/) or end in a source
     # file type (README.md/); one with more dots may (proxy/jira.corp.net/x).
@@ -109,22 +117,39 @@ PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         "a URL",
     ),
     (
-        re.compile(r"\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b"),
+        re.compile(
+            WORD_START
+            + r"(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)"
+            + WORD_END
+        ),
         "an IP address",
     ),
     # IPv6: the full eight groups, or a shortened form with "::" and a digit (not 10:30:00,
     # not Rust paths such as Add::add).
-    (re.compile(r"\b(?:[0-9a-f]{1,4}:){7}[0-9a-f]{1,4}\b", re.IGNORECASE), "an IP address"),
+    (
+        re.compile(WORD_START + r"(?:[0-9a-f]{1,4}:){7}[0-9a-f]{1,4}" + WORD_END, re.IGNORECASE),
+        "an IP address",
+    ),
     (
         re.compile(
-            r"(?<![\w:])(?=[0-9a-f:]*::)(?=[0-9a-f:]*\d)[0-9a-f]{0,4}(?::[0-9a-f]{0,4}){2,7}"
-            r"(?![\w:])",
+            r"(?<![A-Za-z0-9_:])(?=[0-9a-f:]*::)(?=[0-9a-f:]*\d)[0-9a-f]{0,4}(?::[0-9a-f]{0,4}){2,7}"
+            r"(?![A-Za-z0-9_:])",
             re.IGNORECASE,
         ),
         "an IP address",
     ),
-    (re.compile(r"\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b", re.IGNORECASE), "an ID"),
-    (re.compile(r"\b[UWCDGTB](?=[A-Z0-9]*\d)(?=[A-Z0-9]*[A-Z])[A-Z0-9]{8,}\b"), "a chat ID"),
+    (
+        re.compile(
+            WORD_START + r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}" + WORD_END, re.IGNORECASE
+        ),
+        "an ID",
+    ),
+    (
+        re.compile(
+            WORD_START + r"[UWCDGTB](?=[A-Z0-9]*\d)(?=[A-Z0-9]*[A-Z])[A-Z0-9]{8,}" + WORD_END
+        ),
+        "a chat ID",
+    ),
     (
         re.compile(r"(?:/home/|/Users/|[A-Za-z]:\\Users\\|~)[A-Za-z_][\w.-]*|/root\b"),
         "a home folder path",

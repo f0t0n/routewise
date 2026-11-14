@@ -7,13 +7,20 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green be
 **Description:** Test first: the G1 leaks (`服务器在10.0.0.12上`, `key AKIA…が漏れた`, `见www.example.com`, `见https://example.com`, `ב10.0.0.12`, `令牌eyJ…`, `id <uuid>を使った`, `主机2001:db8::1`, and a chat ID and a card number touched by a CJK letter) fail on HEAD. Then `WORD_START` and `WORD_END` replace `\b` in the token, key, scheme, `www.`, IPv4, IPv6, UUID, chat-ID and card patterns.
 
 **Acceptance criteria:**
-- [ ] Each G1 leak red on HEAD, green after; `xAKIA…` and `v10.0.0.12` keep their 0.1.1 result.
-- [ ] Every other case in `tests/test_privacy.py` keeps its result; any text 0.1.1 allowed and now refused (accented Latin before a number, for example) is listed here and named in the CHANGELOG.
-- [ ] Mutations: each boundary in each changed pattern, with a control equal to the repo and each mutant checked to import; survivors named.
+- [x] Each G1 leak red on HEAD, green after; `xAKIA…` and `v10.0.0.12` keep their 0.1.1 result.
+- [x] Every other case in `tests/test_privacy.py` keeps its result; any text 0.1.1 allowed and now refused (accented Latin before a number, for example) is listed here and named in the CHANGELOG.
+- [x] Mutations: each boundary in each changed pattern, with a control equal to the repo and each mutant checked to import; survivors named.
 
 **Verification:** `uv run pytest tests/test_privacy.py` red, then green; `make check` green.
 
 **Dependencies:** None. **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: catch a leak touched by a letter of another script (R7 G1)`
+
+**Result (2026-11-14):**
+
+- **Red on HEAD (`630bac2`):** the 12 G1 leaks (IPv4, AKIA, `www.`, a scheme link, Hebrew before an IP, `eyJ`, a UUID, shortened and full IPv6, a chat ID, a card number, `ghp_`) and their 36 invisible-character guard copies. `xAKIA…` and `v10.0.0.12` pass on HEAD and after, as R7 says.
+- **Green:** `WORD_START` and `WORD_END` replace `\b` in the token, AKIA, `eyJ`, scheme, `www.`, IPv4, full IPv6, UUID, chat-ID and card patterns; the shortened-IPv6 lookarounds use `[A-Za-z0-9_:]` instead of `[\w:]` (not in the `\b` list, found while reading). `/root\b` in the home-folder rule is not in R7 and is unchanged. All 0.1.1 cases keep their result.
+- **Newly refused, beyond the tests:** 0.1.1 (`daa469d`) against HEAD on 30 probe phrases in several scripts: 10 differences, all the G1 effect (what 0.1.1 refused after a space is refused right after a non-ASCII letter): `café10.0.0.12`, `版本1.2.3.4`, `第3版1.2.3.4发布`, `Ошибка в версии1.2.3.4`, `运行www.py失败`, `共4111 1111 1111 1111字节`, `名前はUSER12345678です`, `值为::1`, `α10.0.0.12β`, `ﾃｽﾄ10.0.0.12`. Named in the CHANGELOG.
+- **Mutations:** each use of `WORD_START` or `WORD_END` back to `\b`, one at a time, and each shortened-IPv6 lookaround back to `\w`, with control 875 = repo 875 and each mutant checked to import. Three survived because my tests touched only one side (AKIA start, UUID start, shortened-IPv6 end); with `密钥AKIA…`, `编号<uuid>` and `服务器2001:db8::1上` added, all killed (control 887).
 
 ## Task 2: G2, URL-encoded scheme
 
