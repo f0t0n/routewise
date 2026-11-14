@@ -22,19 +22,19 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). One Conventional Commit p
 **Description:** Add a dated subsection under the 2.1.325 entry in `spec/SPEC-model-routing.md` section 13 with the five probes of 2026-11-14 (SPEC.md decision 3). A record of a test: no rule or version line changes.
 
 **Acceptance criteria:**
-- [ ] One table (Check | Probe | Result) with five rows: native read (`4`), plain `CLAUDE.md` hides `AGENTS.md` (`NONE`), root import block (`7`), `.claude/CLAUDE.md` with `@../AGENTS.md` (`8`), `.claude/CLAUDE.md` with plain `@AGENTS.md` (`NONE`, imports resolve from the file's folder); method: real `routewise/install` per probe, `claude -p --model haiku`, a different cap per probe.
-- [ ] The spec's version line is unchanged; `CHANGELOG.md` gets one line.
+- [x] One table (Check | Probe | Result) with five rows: native read (`4`), plain `CLAUDE.md` hides `AGENTS.md` (`NONE`), root import block (`7`), `.claude/CLAUDE.md` with `@../AGENTS.md` (`8`), `.claude/CLAUDE.md` with plain `@AGENTS.md` (`NONE`, imports resolve from the file's folder); method: real `routewise/install` per probe, `claude -p --model haiku`, a different cap per probe.
+- [x] The spec's version line is unchanged; `CHANGELOG.md` gets one line.
 
 **Verification:**
-- [ ] `git diff` touches only section 13 and `CHANGELOG.md`
-- [ ] `make check` green
+- [x] `git diff` touches only section 13 and `CHANGELOG.md`
+- [x] `make check` green
 
 **Dependencies:** Task 0
 **Files:** `spec/SPEC-model-routing.md`, `CHANGELOG.md`
 **Scope:** XS. Commit: `docs(spec): record the live check of the AGENTS.md import`
 
 ## Checkpoint A
-- [ ] `make check` green; Tasks 0–1 committed
+- [x] `make check` green; Tasks 0–1 committed
 
 ## Task 2: S9, accept the routewise folder itself as the project
 

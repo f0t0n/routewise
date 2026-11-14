@@ -19,10 +19,10 @@ Four small changes, built in the order that keeps every commit green: commit the
 
 ### Phase 1: Foundation
 - [x] Task 0: Commit the approved spec, agent instructions and plan
-- [ ] Task 1: Record the `@AGENTS.md` live check in rules spec section 13
+- [x] Task 1: Record the `@AGENTS.md` live check in rules spec section 13
 
 ### Checkpoint A
-- [ ] `make check` green; two commits on `main`
+- [x] `make check` green; two commits on `main`
 
 ### Phase 2: routewise on its own repo
 - [ ] Task 2: S9, accept the routewise folder itself as the project (install and miss-log)
