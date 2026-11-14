@@ -23,7 +23,7 @@ import files
 
 import block
 import settings
-from paths import PathError, holds, inside, label, relative, where
+from paths import PathError, holds, inside, label, plain_name, relative, where
 from roles import Harness, Role, RoleError, is_generated, read_roles, render
 from settings import Settings, SettingsError
 
@@ -418,6 +418,7 @@ def run(args: argparse.Namespace) -> tuple[int, str]:
     if not root.is_dir():
         raise Fail(f"{root} is not a folder")
     holds(root, HOME)
+    plain_name(HOME)
     plan = build_plan(root, args.uninstall)
     writes, removes = changed(plan)
     if args.check:

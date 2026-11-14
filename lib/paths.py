@@ -78,6 +78,20 @@ def is_home_or_above(root: Path) -> bool:
     return False
 
 
+def plain_name(home: Path) -> None:
+    """Refuse a routewise folder name that would break the lines routewise writes.
+
+    The name is spelled into agent frontmatter, the block markers and routewise.toml: a line
+    break or control character would add lines there, and `-->` would end the marker early.
+    """
+    name = home.name
+    if "-->" in name or any(ord(char) < 32 or ord(char) == 127 for char in name):
+        raise PathError(
+            f"the folder name {name!r} cannot be written into the markers routewise writes; "
+            "rename the folder (routewise/ is the usual name)"
+        )
+
+
 def label(path: Path, root: Path) -> str:
     """A path as the user should type it: relative to the project root when inside it."""
     try:

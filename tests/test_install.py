@@ -1,5 +1,6 @@
 """routewise/install on a throwaway project."""
 
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -715,3 +716,20 @@ def test_self_install_through_a_symlinked_routewise_is_refused(project: Path, tm
     assert "is a symlink" in result.stderr
     assert sorted(p.name for p in shared.iterdir()) == before
     assert run(other, "install").returncode == 0  # installing into `other` itself still works
+
+
+@pytest.mark.parametrize("name", ["rw-->x", "rw\npermissionMode: x"])
+def test_a_routewise_folder_name_that_breaks_markers_is_refused(
+    project: Path, tmp_path: Path, name: str
+):
+    host = tmp_path / "host"
+    host.mkdir()
+    (project / "routewise").rename(host / name)
+
+    result = subprocess.run(
+        [str(host / name / "install")], capture_output=True, text=True, check=False, cwd=host
+    )
+
+    assert result.returncode == 2
+    assert "cannot be written into the markers" in result.stderr
+    assert sorted(p.name for p in host.iterdir()) == [name]
