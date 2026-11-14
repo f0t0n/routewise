@@ -77,8 +77,11 @@ Replace the `routewise/` folder with a newer release and run `routewise/install`
 
 ```sh
 uv sync
-make check   # lint, format check, typecheck, tests
+make check   # lint, format check, typecheck, secret scan (gitleaks), tests
+make hooks   # once per clone: run `make check` before every commit
 ```
+
+`make check` needs `uv`, `shellcheck` and `gitleaks` on the `PATH`.
 
 ## License
 
