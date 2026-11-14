@@ -24,10 +24,10 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Description:** `git tag -a v0.1.0 -m "routewise 0.1.0"` on the Task 1 commit. Local only; not pushed.
 
 **Acceptance criteria:**
-- [ ] `git tag -l` shows `v0.1.0`; `git cat-file -t v0.1.0` is `tag` (annotated); `git rev-list -n1 v0.1.0` is the Task 1 commit.
+- [x] `git tag -l` shows `v0.1.0`; `git cat-file -t v0.1.0` is `tag` (annotated); `git rev-list -n1 v0.1.0` is the Task 1 commit.
 
 **Verification:**
-- [ ] The three commands above
+- [x] The three commands above
 
 **Dependencies:** Task 1
 **Files:** none (a git ref)
@@ -38,18 +38,20 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Description:** Check the release archive as users will get it.
 
 **Acceptance criteria:**
-- [ ] `git archive --prefix=routewise-0.1.0/ v0.1.0 | tar -t` holds exactly the 11 R1 entries under `routewise-0.1.0/`.
-- [ ] Unpacked into a fresh project as `routewise/`, `routewise/install` writes the 9 files of success criterion 2, a second run changes nothing, `--check` exits 0, and the installed `CHANGELOG.md` says `0.1.0 (2026-11-14)`.
+- [x] `git archive --prefix=routewise-0.1.0/ v0.1.0 | tar -t` holds exactly the 11 R1 entries under `routewise-0.1.0/`.
+- [x] Unpacked into a fresh project as `routewise/`, `routewise/install` writes the 9 files of success criterion 2, a second run changes nothing, `--check` exits 0, and the installed `CHANGELOG.md` says `0.1.0 (2026-11-14)`.
 
 **Verification:**
-- [ ] The commands above, output recorded here
+- [x] The commands above, output recorded here
+
+Results 2026-11-14: tag `v0.1.0` is annotated (`git cat-file -t` → `tag`), tagger f0t0n, on `8dc5d4d`. The archive holds exactly `ADOPT.md CHANGELOG.md LICENSE README.md bin harness.toml install lib roles spec templates`; unpacked as `routewise/` in a fresh project, install wrote 9 files, a second run and `--check` were clean, and the shipped CHANGELOG reads `0.1.0 (2026-11-14)`.
 
 **Dependencies:** Task 2
 **Files:** `tasks/todo.md` (results)
 **Scope:** XS
 
 ## Checkpoint
-- [ ] `make check` green; `v0.1.0` on the release commit; archive verified
+- [x] `make check` green; `v0.1.0` on the release commit; archive verified
 
 ## Review
 - [ ] `reviewer` brief (role body, sonnet, medium): the notes against `CHANGELOG.md`, `README.md` and the code

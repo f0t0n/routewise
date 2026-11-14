@@ -16,11 +16,11 @@ routewise 0.1.0 has been "unreleased" in `CHANGELOG.md` since the first commit; 
 ## Task List
 
 - [x] Task 1: Date the changelog and draft the release notes
-- [ ] Task 2: Create the annotated tag `v0.1.0`
-- [ ] Task 3: Verify the archive of `v0.1.0`
+- [x] Task 2: Create the annotated tag `v0.1.0`
+- [x] Task 3: Verify the archive of `v0.1.0`
 
 ### Checkpoint
-- [ ] `make check` green; tag on the release commit; archive verified
+- [x] `make check` green; tag on the release commit; archive verified
 
 ### Review, Ship
 - [ ] Review: `reviewer` reads the notes against `CHANGELOG.md`, `README.md` and the code (claims true, install steps work)
