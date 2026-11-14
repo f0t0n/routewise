@@ -9,15 +9,15 @@ The 0.1.0 release notes have a four-line install; the README only describes it i
 ## Architecture Decisions
 
 - **The test reads the README** (`tests/test_release.py`, next to the archive test): find the `v=<version>` line inside the shell block under "## Install into a project", compare with `version` from `pyproject.toml` (read with `tomllib`). No templating, no generated README. The test skips nothing: both files are in every checkout.
-- **Block content** follows the release notes, with `$v`: `cd your-project`, `v=0.1.0`, `curl -L "https://github.com/f0t0n/routewise/archive/refs/tags/v$v.tar.gz" | tar -xz`, `mv "routewise-$v" routewise`, `routewise/install`. The existing step 1 prose stays as the explanation (archive contents, submodule caveat), and the steps after it are unchanged.
+- **Block content** follows the release notes, with `$v`: "From the project root:" then `v=0.1.0`, `curl -L "https://github.com/f0t0n/routewise/archive/refs/tags/v$v.tar.gz" | tar -xz`, `mv "routewise-$v" routewise`, `routewise/install`. The existing step 1 prose stays as the explanation (archive contents, submodule caveat), and the steps after it are unchanged.
 - **No new tag.** The change rides with the next release; the maintainer pushes `main`.
 
 ## Task List
 
-- [ ] Task 1: README install block and the version test
+- [x] Task 1: README install block and the version test
 
 ### Checkpoint
-- [ ] `make check` green
+- [x] `make check` green
 
 ### Verify, Review, Ship
 - [ ] Verify: the block, copied from the README and run literally in an empty git repo, installs routewise 0.1.0 from GitHub (9 files, `--check` exit 0)

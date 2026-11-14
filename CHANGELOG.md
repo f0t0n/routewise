@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The README's "Install into a project" opens with a copy-paste install of the current release; a test keeps its version equal to `pyproject.toml` (spec R4).
+
 ## 0.1.0 (2026-11-14)
 
 - First release, extracted from a personal assistants repo: spec version 2 (default parallel cap 5), five roles without write or edit tools, `install` (with `--check` and `--uninstall`), `bin/miss-log`, templates for the binding and the delegation block, Claude Code and Antigravity CLI support.

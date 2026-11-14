@@ -18,6 +18,17 @@ Supported harnesses: Claude Code (`cc`) and Antigravity CLI (`agy`; its agents f
 
 ## Install into a project
 
+From the project root:
+
+```sh
+v=0.1.0
+curl -L "https://github.com/f0t0n/routewise/archive/refs/tags/v$v.tar.gz" | tar -xz
+mv "routewise-$v" routewise
+routewise/install
+```
+
+Then review `routewise.toml`, fill in `ROUTING-BINDING.md`, commit, and open a new agent session. The steps in detail:
+
 1. Download a release's "Source code" archive (or run `git archive` on a tag) and unpack it into the project root as `routewise/`. The archive holds only what a project needs: `install`, `bin/`, `lib/`, `roles/`, `harness.toml`, `templates/`, `spec/` and the docs. A git submodule or subtree works too, but brings this repo's development files (tests, `SPEC.md`, `AGENTS.md`, its own agents); make sure your test runner and linters skip `routewise/`.
 2. From the project root, run:
 
