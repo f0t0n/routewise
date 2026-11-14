@@ -423,23 +423,24 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Description:** No filter code changes (stopping rule). One commit: the 41-hex SHA test gets a digit so the length cap is tested again; CHANGELOG 0.1.1 says "words of a non-CJK script", names the full-width `？` trade-off and the round-7 gaps for 0.1.2; the notes match. Then `reviewer` checks the diff of this commit only (docs and one test), no fuzzing.
 
 **Acceptance criteria:**
-- [ ] `ssh anna@a1` + 39 `a` (41 hex with a digit) is a leak test; it passes on HEAD; the `{7,41}` mutant fails it (checked in a scratch copy with a control).
-- [ ] CHANGELOG 0.1.1 and `tasks/release-0.1.1.md` name the `？` trade-off and the round-7 gaps; every behaviour claim in the notes is in the CHANGELOG.
-- [ ] `lib/` unchanged since `662eb71` (`git diff 662eb71 -- lib/` empty).
-- [ ] `reviewer` on this commit's diff: no Critical or Required.
+- [x] `ssh anna@a1` + 39 `a` (41 hex with a digit) is a leak test; it passes on HEAD; the `{7,41}` mutant fails it (checked in a scratch copy with a control).
+- [x] CHANGELOG 0.1.1 and `tasks/release-0.1.1.md` name the `？` trade-off and the round-7 gaps; every behaviour claim in the notes is in the CHANGELOG.
+- [x] `lib/` unchanged since `662eb71` (`git diff 662eb71 -- lib/` empty).
+- [x] `reviewer` on this commit's diff: no Critical or Required.
 
 **Verification:**
-- [ ] `make check` green
+- [x] `make check` green
 
 **Dependencies:** Task 17 round 7, R5 and stopping rule (`docs(spec): add a stopping rule…`). **Files:** `tests/test_privacy.py`, `CHANGELOG.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** XS. Commit: `docs: name the round-7 gaps of 0.1.1 and test the SHA length cap again`
 
 ## Follow-up (not in 0.1.1)
 
-- [ ] R7 for 0.1.2: G1–G3, H, the JWT item (widened in round 7), `#:~:` `?$` `#!`, the full-width `？` trade-off, with its own Define, Plan and false-positive check.
+- [x] R7 for 0.1.2: G1–G3, H, the JWT item (widened in round 7), `#:~:` `?$` `#!`, the full-width `？` trade-off, with its own Define, Plan and false-positive check.
 
+**Result (2026-11-14):** `04eb8e5`: the 41-hex SHA test with a digit (`ssh anna@a1` + 39 `a`) passes on HEAD and fails the `{7,41}` mutant (control 819); CHANGELOG and notes name the `？` trade-off, the round-7 gaps and "some JWTs written with `。`" (only a second `。` not followed by a letter or digit passes). `git diff 662eb71 -- lib/` is empty. `reviewer` on that diff: one Required (the notes lacked "`。` between words of a non-CJK script", which the CHANGELOG lists), one Optional (a pass rule, notes-only, left), one Nit (Chinese and Japanese vs Chinese, Japanese and Korean). Fixed in `7440e60`; `reviewer` on that one-line diff, the one round the stopping rule allows: no findings, approve.
 
 ## Checkpoint: reviewed
-- [ ] No open Critical or Required finding; maintainer has seen the findings
+- [x] No open Critical or Required finding; maintainer has seen the findings (rounds 1–7 and the Task 18 checks; everything else fixed, answered or moved to 0.1.2 by the stopping rule)
 
 ## Task 19: Ship checks and the tag commands
 

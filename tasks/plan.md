@@ -24,21 +24,21 @@ Extended after Task 2: R6 (bin/miss-log printed `miss-log: ` instead of `routewi
 - [x] Checkpoint: verified
 - [x] Task 3: R6, one error prefix in `bin/miss-log`
 - [x] Task 4: Draft the 0.1.1 release notes
-- [ ] Task 5: Review and audit of the final change and the notes
+- [x] Task 5: Review and audit of the final change and the notes
 - [x] Task 6: Fix the review findings
-- [ ] Task 7: Re-review the fix
+- [x] Task 7: Re-review the fix
 - [x] Task 8: Fix the re-review findings
-- [ ] Task 9: Re-review the second fix
+- [x] Task 9: Re-review the second fix
 - [x] Task 10: Fix the round-3 findings
-- [ ] Task 11: Round-4 review of the third fix
+- [x] Task 11: Round-4 review of the third fix
 - [x] Task 12: Fix what 0.1.1 broke (round 4)
-- [ ] Task 13: Round-5 review, scoped to what 0.1.1 broke
+- [x] Task 13: Round-5 review, scoped to what 0.1.1 broke
 - [x] Task 14: Fix the round-5 findings
-- [ ] Task 15: Round-6 review, same scope as round 5
+- [x] Task 15: Round-6 review, same scope as round 5
 - [x] Task 16: Fix the round-6 findings
-- [ ] Task 17: Round-7 review of the round-6 fix
-- [ ] Task 18: Last doc and test edits after round 7
-- [ ] Checkpoint: reviewed
+- [x] Task 17: Round-7 review of the round-6 fix
+- [x] Task 18: Last doc and test edits after round 7
+- [x] Checkpoint: reviewed
 - [ ] Task 19: Ship checks and the tag commands
 - [ ] Follow-up: R7 for 0.1.2 (gaps 0.1.0 also had)
 
