@@ -93,10 +93,54 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 
 **Dependencies:** Tasks 1–4. **Files:** `tasks/todo.md`; for fixes `lib/privacy.py`, `lib/miss_log.py`, their tests, `CHANGELOG.md`, `SPEC.md`, `tasks/release-0.1.1.md`. **Scope:** S. Commit: `docs(tasks): record the review of R5 and R6`
 
+**Round 1 (2026-11-14):** `reviewer` and `auditor` started together, briefed with the spec and the diff, not with earlier findings. Every finding was reproduced by hand before triage. No Critical. `auditor`: OK to ship; `reviewer`: request changes (one Required). The maintainer saw all findings and approved the calls below; R5 was amended for A–E (`6665dff`).
+
+| # | From | Finding | Answer |
+|---|---|---|---|
+| 1 | reviewer, Required | CHANGELOG and notes: "`react@18.3.1` and other versions after `@` now pass"; `checkout@v4.1.0`, `pkg@v1.2.3`, `tsc@5.4.x` are still refused (as in 0.1.0) | Fix the wording (Task 6); honouring the tag list in the dotted rule would let `anna@main.corp.com` through |
+| 2 | reviewer, Optional | `v\d+(?:\.\d+)*` in `TAG` is dead (mutation to `v\d+` stays green) | Simplify to `v\d+` (Task 6) |
+| 3 | reviewer, Optional | Green mutations: tag words `rc`/`lts`/`stable`/`master`, a 5-digit port, the 2-letter TLD minimum, most `SOURCE_TYPES` | Pin with tests (Task 6) |
+| 4 | reviewer, Optional/Nit | String-built host patterns lack an example; `normal()` lacks a why | Comments and one docstring line (Task 6) |
+| A | auditor, Optional | LRM/RLM, U+2061–2064, U+180E, U+034F not stripped: `anna\u200f@corp.com`, a token split by LRM pass | Strip them (Task 6, R5 amended) |
+| B | auditor, Optional | `anna%40corp.com`, `anna&#64;corp.com` pass | Read `%40` and `&#64;` as `@` (Task 6, R5 amended) |
+| C | auditor, Optional | `anna\@corp.com`, `"anna"@corp.com`, `**anna**@corp.com` pass | Up to two of `\ " ' *` before the `@` of a dotted address (Task 6, R5 amended) |
+| D | auditor + reviewer, Optional | `localhost:3000/admin`, `jenkins-prod:8080/job/x`, `//jenkins/job/x`, `proxy/jira.com/x` pass (also in 0.1.0) | Kept gap, listed in R5; follow-up needs its own false-positive check |
+| E | auditor, Nit | Combining marks / vowel signs: `सीता@corp.com`, `कंपनी.भारत/x` pass | Kept gap, listed in R5 (`re` has no `\p{M}`) |
+| F | auditor, Nit | NFKC can grow 200 characters to 3600; worst case 44 ms (34 ms in 0.1.0) | No change |
+| – | auditor | Only regression: a domain without a letter (`user@10.0.1`) passes | Documented in R5 "Also changed" |
+| – | auditor | R6 changes only the two stderr prefixes; write path, fields, exit codes unchanged | Nothing to do |
+
+## Task 6: Fix the review findings
+
+**Description:** One `fix:` commit for findings 1–4 and A–C. Test first: add the A–C leaks and the finding-3 pins to `tests/test_privacy.py`, show which fail on HEAD, then change `lib/privacy.py`; update the CHANGELOG 0.1.1 line and `tasks/release-0.1.1.md` (finding 1 and the new refusals).
+
+**Acceptance criteria:**
+- [ ] The A–C cases fail on HEAD before the fix (red shown) and pass after; the finding-3 pins are recorded as guards (they pass on HEAD by nature) and each one fails under the mutation the reviewer named.
+- [ ] `TAG` is `v\d+` plus the words; every case allowed before still passes (no test removed or moved).
+- [ ] CHANGELOG 0.1.1 and the notes say "a version made only of digits and dots"; both name the new refusals (markup before `@`, `%40`, invisible characters); the notes still add nothing the CHANGELOG lacks.
+
+**Verification:**
+- [ ] `uv run pytest tests/test_privacy.py` red, then green; mutations re-run in a scratch copy; `make check` green
+
+**Dependencies:** Task 5 round 1. **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: close the gaps found in the review of the 0.1.1 filter`
+
+## Task 7: Re-review the fix
+
+**Description:** Fresh `reviewer` and `auditor` together on the Task 6 commit (with R5 as amended), briefed with the diff and spec, not the round-1 findings. Fix or answer every finding as in Task 5; a new R5 decision goes to the maintainer first.
+
+**Acceptance criteria:**
+- [ ] Every finding fixed or answered and listed here; no open Critical or Required.
+
+**Verification:**
+- [ ] `make check` green after any fix
+
+**Dependencies:** Task 6. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record the review of R5 and R6`
+
+
 ## Checkpoint: reviewed
 - [ ] No open Critical or Required finding; maintainer has seen the findings
 
-## Task 6: Ship checks and the tag commands
+## Task 8: Ship checks and the tag commands
 
 **Description:** Check the release contents on the final commit and give the maintainer the exact tag and push commands.
 
@@ -109,7 +153,7 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Verification:**
 - [ ] `make check` green on the final commit
 
-**Dependencies:** Task 5. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
+**Dependencies:** Task 7. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
 
 ## Ship (maintainer, from the host)
 - [ ] `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>`
