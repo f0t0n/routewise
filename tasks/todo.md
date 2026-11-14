@@ -104,7 +104,7 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green be
 **Description:** Fresh `reviewer` and `auditor` together on `daa469d..HEAD` (`v0.1.1` is tagged on the host only), briefed with R7 and its bar: nothing 0.1.1 refuses passes, nothing it allows is refused except what R7 names; code, tests and docs match R7. The reviewer reports its control count next to the repo's. Findings are fixed (one more round scoped to the fix, if Critical or Required) or recorded for the next release.
 
 **Acceptance criteria:**
-- [ ] Every finding fixed, answered or recorded, and listed here; no open Critical or Required in scope.
+- [x] Every finding fixed, answered or recorded, and listed here; no open Critical or Required in scope.
 
 **Dependencies:** Task 7. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record the review of R7`
 
@@ -142,12 +142,20 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green be
 **Description:** Stopping rule: a fix for a Required finding gets one round scoped to it. Fresh `reviewer` and `auditor` on the Task 8b commit only: A and B do what R7 says, open nothing, and break nothing 0.1.1 allowed or refused (differential against `daa469d` on the touched rules); the doc wording matches. Findings outside that scope go to the next release.
 
 **Acceptance criteria:**
-- [ ] No open Critical or Required finding in scope; findings listed here.
+- [x] No open Critical or Required finding in scope; findings listed here.
 
 **Dependencies:** Task 8b. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS. Commit: `docs(tasks): record the review of R7`
 
+**Result (2026-11-14):** fresh `reviewer` and `auditor` on `8a40290` only. Both: no Critical or Required; approve / OK to ship. `auditor`: 818,880 escaped-`@` inputs and 70,602 card inputs over `daa469d`, `8a40290^` and HEAD: nothing 0.1.1 refused passes; everything newly passed is R7's path exception (including `＼` `／` `﹨`, which NFKC maps to `\` `/`); cards cannot regress by construction (both edge styles run); the second card pattern costs at most about 0.09 ms. `reviewer`: about 22k inputs, nothing 0.1.1 refused passes; its five mutants killed; its control count was cut off (my Task 8b control: 985 = repo). An automated security check raised the same escape issue as the Optional below.
+
+**For the next release** (stopping rule; not fixed in 0.1.2):
+- An escape after `\@` reads as a path and hides the address: `print "root\@buildhost\n";` (plausible in Perl), `anna\@corp\.com`, `anna\@corp\_prod`, `me\@localhost/`, `me\@corp\` (all passed in 0.1.1 too). Suggested: a path part of 2 or more characters after the separator.
+- Pin the exception's narrow side: `me\@localhost:22`, `me\@localhost)`, `me\@localhost,` (refused now, untested).
+- `a\@b\@c\d` passes.
+- With the R7 list: two backslashes before a dotless `@`; `x 1 4111 1111 1111 1111` and a long digit run with a card inside; `foo.bar?İstanbul`; tests for the ASCII side of `WORD_END` and an ASCII letter before `eyJ`.
+
 ## Checkpoint: reviewed
-- [ ] No open Critical or Required finding; maintainer has seen the findings.
+- [x] No open Critical or Required finding; maintainer has seen the findings (Task 8 round, Task 8c round).
 
 ## Task 9: Ship checks and the tag commands
 
