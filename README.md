@@ -4,7 +4,7 @@ Model routing and delegation for coding and assistant agents, set up by rules in
 
 routewise gives a project:
 
-- **Five read-only subagents**, each on the cheapest model that does its job well: `Explore` (file sweeps) on `haiku`, `log-reader` and `web-reader` on `haiku`, `reviewer` on `sonnet` at `medium`, `auditor` on `opus` at `high`. The main session keeps the decisions and the edits.
+- **Five subagents without write or edit tools**, each on the cheapest model that does its job well: `Explore` (file sweeps) on `haiku`, `log-reader` and `web-reader` on `haiku`, `reviewer` on `sonnet` at `medium`, `auditor` on `opus` at `high`. The main session keeps the decisions and the edits. `log-reader`, `reviewer` and `auditor` keep `Bash` to run tests and read logs; their instructions allow only commands that read, but nothing sandboxes them.
 - **A delegation block** in the project's `AGENTS.md`: what to delegate, what never to delegate, a parallel cap (5 by default), and an escalation ladder (add a check, then raise effort, then move one tier up).
 - **A miss log** (`routewise/bin/miss-log`) that records each delegated result that was wrong or redone, so roles change on evidence, not taste.
 
@@ -33,7 +33,7 @@ Supported harnesses: Claude Code (`cc`) and Antigravity CLI (`agy`; its agents f
    | `ROUTING-BINDING.md` | The binding (spec section 9): fill in who approved it and the first miss-log review date. |
    | `.claude/agents/*.md` | The five roles for Claude Code (and `.agents/agents/` for agy). |
    | `AGENTS.md` | The delegation block, between `routewise:start` and `routewise:end` markers. Created if missing; the rest of the file is kept. |
-| `CLAUDE.md` or `.claude/CLAUDE.md` | Only when one already exists (or with `claude_md = "import"`): a routewise block holding just an `@AGENTS.md` import line. See below. |
+   | `CLAUDE.md` or `.claude/CLAUDE.md` | Only when one already exists (or with `claude_md = "import"`): a routewise block holding just an `@AGENTS.md` import line. See below. |
    | `logs/delegation-misses.jsonl` | The empty miss log. |
 
 3. Review `routewise.toml`, re-run `routewise/install` if you changed it, fill in `ROUTING-BINDING.md`, and commit.
@@ -78,7 +78,7 @@ Replace the `routewise/` folder with a newer release and run `routewise/install`
 - routewise never creates a symlink: Claude Code's Edit and Write tools refuse to write through one, and Windows checks a committed symlink out as a one-line file. An existing symlinked instruction file (`CLAUDE.md` -> `AGENTS.md`) is edited through its target and never deleted.
 - `CLAUDE.local.md` and files above the project are never written. Uninstall removes the routewise blocks from `AGENTS.md` and `CLAUDE.md`, and deletes either file only when nothing else is left in it.
 - Before writing, the installer checks that every target can be written, and each file is written to a temporary file first and then renamed into place, so a failed run does not leave a half-written or empty file.
-- Roles are read-only (spec R-A1): role files may hold only `name`, `description`, `tools`, `tier` and `effort`; a role needs at least one tool, and only each harness's known read-only tools can be granted.
+- Roles get no write or edit tools (spec R-A1): role files may hold only `name`, `description`, `tools`, `tier` and `effort`; a role needs at least one tool, and only each harness's known read and search tools, its shell and its web tools can be granted. A shell (`Bash`) can still change files: roles that have one are told to run only commands that read, which is an instruction, not a sandbox.
 - `miss-log` refuses clear leaks: e-mail addresses (also spelled out), URLs, IP addresses, UUIDs and chat IDs, home folder paths, phone and card numbers, and common token and key formats. It lets normal code words pass (`logger.info`, `@property`, `GPT-4`), so it cannot catch a name, a bare host name or an internal ID: the agent writes the miss in its own words.
 
 ## Changing the rules
