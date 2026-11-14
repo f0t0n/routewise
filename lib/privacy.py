@@ -3,19 +3,29 @@
 High precision by design: every pattern matches only text that is almost surely private, so
 normal descriptions of code (logger.info, @property, GPT-4, a git SHA, a long test name) pass.
 It cannot catch a person's name, a bare host name or an internal ID; the agent is told to
-describe the miss in its own words. The patterns run on two normalised views of the text
-(spec R5), and the text is refused if either matches: in the split view an invisible character
-is a space, so it still ends the word before a leak; in the joined view it is removed and an
-encoded @ is decoded, so neither can split an address or a token.
+describe the miss in its own words. The patterns run on four normalised views of the text
+(spec R5), and the text is refused if any matches. A step that only adds evidence (NFKC, an
+ideographic full stop read as a dot) is in every view; a step that can also hide text gets a
+view with it and one without: invisible characters as spaces (they end the word before a leak)
+or removed (they cannot split one), and an encoded @ decoded (it cannot split an address) or
+not (it cannot hide the link after it).
 """
 
 import re
 import unicodedata
 
-# Invisible characters besides the format characters (category Cf: zero-width, LRM/RLM, bidi
-# controls, soft hyphen, BOM, tags): the grapheme joiner and the variation selectors.
-OTHER_INVISIBLE = frozenset("\u034f" + "".join(chr(c) for c in range(0xFE00, 0xFE10)))
-ENCODED_AT = re.compile(r"%40|&#0*64;|&#x0*40;|&commat;|\\u0040", re.IGNORECASE)
+# Invisible besides the format characters (category Cf): Unicode's Default_Ignorable_Code_Point
+# (DerivedCoreProperties 18.0; variation selectors, Hangul fillers, ...) and the braille blank.
+DEFAULT_IGNORABLE = (
+    (0x00AD, 0x00AD), (0x034F, 0x034F), (0x061C, 0x061C), (0x115F, 0x1160), (0x17B4, 0x17B5),
+    (0x180B, 0x180F), (0x200B, 0x200F), (0x202A, 0x202E), (0x2060, 0x206F), (0x3164, 0x3164),
+    (0xFE00, 0xFE0F), (0xFEFF, 0xFEFF), (0xFFA0, 0xFFA0), (0xFFF0, 0xFFF8), (0x1BCA0, 0x1BCA3),
+    (0x1D173, 0x1D17A), (0xE0000, 0xE0FFF),
+)  # fmt: skip
+OTHER_INVISIBLE = frozenset(
+    chr(c) for low, high in DEFAULT_IGNORABLE for c in range(low, high + 1)
+) | {"\u2800"}
+ENCODED_AT = re.compile(r"%40|&#0*64;|&#x0*40;|&commat;|\\u0040|\\x40", re.IGNORECASE)
 CARD = re.compile(r"\b\d(?:[ -]?\d){12,18}\b")
 LETTER = r"[^\W\d_]"  # any letter, not only ASCII: anna@корп is an address too
 # A version or package tag after @ (HEAD@{1}, pkg@latest, actions/checkout@v4), when it is the
@@ -35,9 +45,9 @@ SOURCE_TYPES = (
 DEEP_HOST = r"[\w-]+(?:\.[\w-]+)+\." + TLD
 SHALLOW_HOST = r"[\w-]+\.(?!(?:" + SOURCE_TYPES + r")(?![\w-]))" + TLD
 # Markdown, quotes or an escape around the @ of a dotted address: "anna"@, anna\@, `anna`@,
-# [anna]@, ***anna***@, anna@**corp.com**. Up to three characters each side.
-MARKUP_BEFORE_AT = r"""[\\"'*`_~)\]>]{0,3}"""
-MARKUP_AFTER_AT = r"[*`_~(\[<]{0,3}"
+# [anna]@, {anna}@, ***anna***@, anna@**corp.com**, anna@"corp.com". Up to three each side.
+MARKUP_BEFORE_AT = r"""[\\"'*`_~)\]}>]{0,3}"""
+MARKUP_AFTER_AT = r"""[*`_~(\[{<"']{0,3}"""
 
 PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (
@@ -112,18 +122,23 @@ PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
 
 
 def invisible(char: str) -> bool:
+    """Whether `char` does not show (spec R5): a format character or a default-ignorable one."""
     return unicodedata.category(char) == "Cf" or char in OTHER_INVISIBLE
 
 
-def views(text: str) -> tuple[str, str]:
-    """The split and the joined view of the text (spec R5); see the module docstring."""
-    text = unicodedata.normalize("NFKC", text)
-    split = "".join(" " if invisible(c) else c for c in text)
-    joined = ENCODED_AT.sub("@", "".join(c for c in text if not invisible(c)))
-    return split, unicodedata.normalize("NFKC", joined.replace("\u3002", "."))
+def views(text: str) -> list[str]:
+    """The four views of the text (spec R5); see the module docstring."""
+    text = unicodedata.normalize("NFKC", text)  # first, so ％40 decodes and ＡＫＩＡ joins
+    out = []
+    for gap in (" ", ""):
+        spaced = "".join(gap if invisible(c) else c for c in text)
+        for decoded in (spaced, ENCODED_AT.sub("@", spaced)):
+            out.append(unicodedata.normalize("NFKC", decoded).replace("\u3002", "."))
+    return out
 
 
 def first_match(text: str) -> str | None:
+    """The first kind of private data a pattern finds in `text`, or None."""
     for pattern, what in PATTERNS:
         if pattern.search(text):
             return what
@@ -144,5 +159,4 @@ def has_card(text: str) -> bool:
 
 def finding(text: str) -> str | None:
     """What kind of private data `text` holds, or None."""
-    split, joined = views(text)
-    return first_match(split) or first_match(joined)
+    return next((found for view in views(text) if (found := first_match(view))), None)

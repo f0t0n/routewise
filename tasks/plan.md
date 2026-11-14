@@ -29,7 +29,7 @@ Extended after Task 2: R6 (bin/miss-log printed `miss-log: ` instead of `routewi
 - [ ] Task 7: Re-review the fix
 - [x] Task 8: Fix the re-review findings
 - [ ] Task 9: Re-review the second fix
-- [ ] Task 10: Fix the round-3 findings
+- [x] Task 10: Fix the round-3 findings
 - [ ] Task 11: Round-4 review of the third fix
 - [ ] Checkpoint: reviewed
 - [ ] Task 12: Ship checks and the tag commands

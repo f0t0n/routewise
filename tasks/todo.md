@@ -218,18 +218,27 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Description:** One `fix:` commit for T1–T6, built test first. First, `web-reader` checks the Default_Ignorable_Code_Point ranges written in R5 against Unicode's published `DerivedCoreProperties.txt`; I open the file's lines myself before any range is used, and a wrong range goes back to the maintainer as an R5 correction. Then `views()` returns the four combinations of {invisible as space, removed} × {`@` decoded, not}, with NFKC and `。` in all; the invisible set is the R5 one; `\x40` is decoded; the markup classes gain `}` and `{ " '`.
 
 **Acceptance criteria:**
-- [ ] The R5 ranges match the Unicode file (or a correction was approved first).
-- [ ] Red shown on HEAD for the T1 regression inputs, one character per T2 range (Hangul fillers inside a token, an IP and a path too), `\x40`, the T4 markup and the T5 pins that are not already green; green after.
-- [ ] A guard test: for every encoding of `@`, a link after it (with `.` and with `。`) is refused, and with an invisible character inside the host or the anchor.
-- [ ] The guard tests of Task 8 still pass; every allowed case stays allowed, also with invisible characters inserted; no allowed case removed or moved.
-- [ ] Mutations re-run with an unmutated control whose count equals the repo's; every view, each lossy step, each new range and each markup character killed, or the survivor named here.
-- [ ] Worst-case time at the CLI limits measured and recorded.
-- [ ] CHANGELOG 0.1.1, README Safety bullet and the notes in line with R5; the notes add nothing the CHANGELOG lacks.
+- [x] The R5 ranges match the Unicode file (or a correction was approved first).
+- [x] Red shown on HEAD for the T1 regression inputs, one character per T2 range (Hangul fillers inside a token, an IP and a path too), `\x40`, the T4 markup and the T5 pins that are not already green; green after.
+- [x] A guard test: for every encoding of `@`, a link after it (with `.` and with `。`) is refused, and with an invisible character inside the host or the anchor.
+- [x] The guard tests of Task 8 still pass; every allowed case stays allowed, also with invisible characters inserted; no allowed case removed or moved.
+- [x] Mutations re-run with an unmutated control whose count equals the repo's; every view, each lossy step, each new range and each markup character killed, or the survivor named here.
+- [x] Worst-case time at the CLI limits measured and recorded.
+- [x] CHANGELOG 0.1.1, README Safety bullet and the notes in line with R5; the notes add nothing the CHANGELOG lacks.
 
 **Verification:**
-- [ ] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
+- [x] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
 
 **Dependencies:** Task 9 round 3, R5 amended (`818d7da`). **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `README.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** M. Commit: `fix: check four views of miss-log text so decoding cannot hide a link`
+
+**Result (2026-11-14):**
+
+- **Ranges:** unicode.org returned 403 to `curl` and to `web-reader` (four URLs). Unicode's own copy in the ICU repository (`raw.githubusercontent.com/unicode-org/icu/main/icu4c/source/data/unidata/DerivedCoreProperties.txt`, header `DerivedCoreProperties-18.0.0.txt`, dated 2026-08-07) was read directly: its 27 Default_Ignorable_Code_Point lines, merged where adjacent, are exactly the 17 ranges in R5, and add up to its `Total code points: 4174`. No correction needed.
+- **Red on HEAD (`c455cbe`):** 72 failed: the 6 T1 regression inputs, `\x40`, `{anna}@`, `anna@"…"`, `anna@'…'`, `anna@{…}` (11 leak cases, 24 more behind an invisible character), 13 new invisible characters, 12 Hangul-filler cases (token, IP, path) and 12 encoded-`@` link guards. The first draft of the link guard used two-dot hosts and never failed: `corp.io/x` inside `wiki.corp.io/x` is a link by itself; it uses one-dot hosts now.
+- **Green:** four views ({invisible as space, removed} × {`@` decoded, not}); NFKC first (so `％40` decodes and `ＡＫＩＡ` joins) and again in each view, with `。` read as a dot; invisible is Cf plus the R5 ranges plus U+2800; `\x40` decoded; `}` before and `{ " '` after the `@`; docstrings on `invisible()` and `first_match()`. No allowed case removed or moved; the allowed-with-invisible guard still passes.
+- **Mutations:** control 643 = repo 643. 32 run: 25 killed at once; three more killed after test fixes (no first NFKC: added `anna％40corp.com`; `~` before and after the `@`: the tests used `~anna` and `@~corp`, which the home-folder rule refuses anyway; now `anna~@corp.com` and `anna@~~1password.com~~`); one equivalent dropped (`。` before the views, every view reads it). Four equivalent survivors kept as R5 lists them: U+3164 and U+FFA0 (NFKC maps both to U+1160, in the set), U+1BCA0–1BCA3 and U+1D173–1D17A (already Cf).
+- **Time** (best of 5, 200 characters): 200 × U+3316 159 ms (NFKC grows it to 1200 word characters), 200 × U+FDFA 7 ms, 200 × `a` 4 ms, normal text 0.1 ms.
+- **Docs:** CHANGELOG 0.1.1, README Safety bullet and the notes name the four views, the invisible set, `\x40`, the new markup and the new kept gaps. `make check`: 767 passed.
 
 ## Task 11: Round-4 review of the third fix
 

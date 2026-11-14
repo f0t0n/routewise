@@ -116,6 +116,30 @@ LEAKS_SINCE_0_1_1 = [
     "ask anna@**corp.com**",
     "ask anna@`corp.com`",
     "ask anna@***corp.com",
+    # Found in round 3 of the 0.1.1 review (R5, four views). Regressions of d84fadf: a decoded @
+    # or a full stop read in only one view hid a link or an IP.
+    "redirect=&#x40;example。com/x",
+    "(&commat;corp。com/x)",
+    "redirect=%40example。com/path",
+    "redirect=%40example.co\u200bm/path",
+    "redirect=%40example.com#\u200eX-1",
+    "שלום\u200e10。0。0。1",
+    # \x40, more markup, and pins for each lossy step and markup character.
+    "ask anna\\x40corp.com",
+    "ask {anna}@corp.com",
+    'ask anna@"corp.com"',
+    "ask anna@'corp.com'",
+    "ask anna@{corp.com}",
+    "ask anna~@corp.com",  # not ~anna: that is a home folder path and hides the case
+    "ask (anna)@corp.com",
+    "ask anna@[corp.com]",
+    "ask anna@~~1password.com~~",  # a digit after ~, so the home folder rule does not fire
+    "ask anna％40corp.com",  # a full-width % becomes %40 only after NFKC
+    "ask anna&#X40;corp.com",
+    "ask anna&COMMAT;corp.com",
+    "jane\u200eat\u200eexample\u200edot\u200ecom",
+    "jane\u200e(at)\u200eexample\u200e(dot)\u200ecom",
+    "x\u200eＡＫＩＡ" + "ABCDEFGHIJKLMNOP",
 ]
 # Code words refused on purpose since 0.1.1: they read exactly like a link or an address.
 REFUSED_CODE_WORDS = [
@@ -168,7 +192,15 @@ INVISIBLE = [
     *"\u200b\u200c\u200d\u200e\u200f\u2060\u2061\u2062\u2063\u2064\ufeff\u00ad\u180e\u034f",
     *"\u202a\u202b\u202c\u202d\u202e\u2066\u2067\u2068\u2069\u061c\u0600",
     *"\ufe00\ufe0f\U000e0001\U000e0041\U000e007f",
+    # Default_Ignorable_Code_Point (Unicode 18.0 DerivedCoreProperties): both ends of each range
+    # that is not all Cf; and the braille blank.
+    *"\u17b4\u17b5\u180b\u180d\u180f\u2065\u206f\uffa0\ufff0\ufff8",
+    *"\U0001bca0\U0001bca3\U0001d173\U0001d17a\U000e0000\U000e0100\U000e01ef\U000e0fff",
+    "\u2800",
 ]
+# Hangul fillers are letters, so one before an @ joins the local part; inside a token, an IP
+# or a path they must not hide it.
+FILLERS = ["\u115f", "\u1160", "\u3164", "\uffa0"]
 # A host with one dot that ends in a source file type is a path (R5: the full list).
 SOURCE_TYPES = (
     "md py rs ts tsx js jsx mjs cjs json toml yaml yml txt lock cfg ini html css sh rb kt go java"
@@ -196,8 +228,27 @@ def test_refuses_an_address_split_by_an_invisible_character(char: str):
     assert finding(f"ask anna{char}@corp.com") is not None
 
 
+ENCODED_AT = ["%40", "&#64;", "&#064;", "&#x40;", "&commat;", "\\u0040", "\\x40"]
+
+
+# One dot only: in wiki.corp.io/x the inner corp.io/x is a link by itself, which hides the bug.
+@pytest.mark.parametrize("host", ["corp.io/x", "corp。io/x", "co\u200brp.io/x", "corp.io#\u200ex"])
+@pytest.mark.parametrize("at", ENCODED_AT)
+def test_refuses_a_link_after_an_encoded_at(at: str, host: str):
+    """Decoding an @ must not hide the link after it (R5, four views)."""
+    assert finding(f"redirect={at}{host}") is not None
+
+
+@pytest.mark.parametrize("char", FILLERS, ids=lambda c: f"U+{ord(c):04X}")
+@pytest.mark.parametrize(
+    "template", ["ghp_{}a1B2c3D4e5F6g7H8i9J0", "server 10.0.0{}.12", "file /home/{}jane/x"]
+)
+def test_refuses_a_leak_split_by_a_hangul_filler(template: str, char: str):
+    assert finding(template.format(char)) is not None
+
+
 def visible(text: str) -> bool:
-    return not any(unicodedata.category(c) == "Cf" or c in "\u034f\ufe0f" for c in text)
+    return not any(unicodedata.category(c) == "Cf" or c in INVISIBLE + FILLERS for c in text)
 
 
 @pytest.mark.parametrize("char", ["\u200e", "\u2066", "\u200b"], ids=["LRM", "LRI", "ZWSP"])
