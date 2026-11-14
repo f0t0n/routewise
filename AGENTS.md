@@ -53,7 +53,7 @@ A new harness, role or setting; a changed default; a change to the marker text, 
 
 Give a role a write, edit, send or commit tool; write outside the project or through a symlink that leads out; delete a file routewise did not create; commit secrets or tokens.
 
-<!-- routewise:start (generated: edit routewise.toml and re-run routewise/install) -->
+<!-- routewise:start (generated: edit routewise.toml and re-run ./install --project .) -->
 ## Delegation
 
 - Delegate verbose reading to a subagent: `Explore` (file sweeps), `log-reader` (test, build and run output), `web-reader` (web pages). Delegate a review of a finished change to `reviewer`, and a security, secrets, permission or approval check to `auditor`. Brief it with the goal, what is ruled out, where to start and the return shape. A tool without these subagents does the work itself.

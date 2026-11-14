@@ -7,7 +7,13 @@ normalised to one. Anything but zero markers, or one start line followed by one 
 refused: a guess could delete the user's text.
 """
 
-START = "<!-- routewise:start (generated: edit routewise.toml and re-run routewise/install) -->"
+
+def start_line(command: str) -> str:
+    """The start marker naming the project's re-install command; only START_KEY finds a block."""
+    return f"<!-- routewise:start (generated: edit routewise.toml and re-run {command}) -->"
+
+
+START = start_line("routewise/install")
 END = "<!-- routewise:end -->"
 START_KEY = "<!-- routewise:start"
 FENCES = ("```", "~~~")
@@ -52,19 +58,19 @@ def span(text: str) -> tuple[int, int] | None:
     return starts[0][0], ends[0][1]
 
 
-def render(block: str, nl: str) -> str:
+def render(block: str, nl: str, start: str) -> str:
     body = block.replace("\r\n", "\n").rstrip("\n").replace("\n", nl)
-    return START + nl + body + nl + END
+    return start + nl + body + nl + END
 
 
-def insert(text: str, block: str) -> str:
+def insert(text: str, block: str, start: str = START) -> str:
     """`text` with the block replaced, or appended after one blank line."""
     nl = newline(text)
     found = span(text)
     if found is not None:
-        return text[: found[0]] + render(block, nl) + text[found[1] :]
+        return text[: found[0]] + render(block, nl, start) + text[found[1] :]
     lead = text.rstrip("\r\n") + nl + nl if text.strip() else ""
-    return lead + render(block, nl) + nl
+    return lead + render(block, nl, start) + nl
 
 
 def remove(text: str) -> str:

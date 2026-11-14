@@ -77,6 +77,13 @@ def default_settings_text(root: Path) -> str:
     return text.replace("{{harnesses}}", toml_list(harnesses))
 
 
+def rerun(root: Path) -> str:
+    """The re-install command as typed from the project root (spec R3)."""
+    if root == HOME:
+        return "./install --project ."
+    return label(HOME / "install", root)
+
+
 def toml_list(items: list[str]) -> str:
     return "[" + ", ".join(f'"{item}"' for item in items) + "]"
 
@@ -111,7 +118,7 @@ def plan_agents(plan: Plan, roles: list[Role], harness: Harness) -> None:
         if (target.exists() or target.is_symlink()) and not is_generated(target):
             name = label(target, plan.root)
             raise Fail(f"{name} exists and was not written by routewise; move it")
-        plan.write(target, render(role, harness, label(role.source, plan.root)))
+        plan.write(target, render(role, harness, label(role.source, plan.root), rerun(plan.root)))
         wanted.add(target)
     for stale in generated_files(folder):
         if stale not in wanted:
@@ -166,7 +173,8 @@ def plan_block(plan: Plan, path: Path, body: str | None, linked: bool) -> None:
     """
     old = read_exact(path)
     try:
-        new = block.insert(old, body) if body is not None else block.remove(old)
+        start = block.start_line(rerun(plan.root))
+        new = block.insert(old, body, start) if body is not None else block.remove(old)
     except block.BlockError as err:
         raise Fail(f"{label(path, plan.root)}: {err}") from err
     if new == old:

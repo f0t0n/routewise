@@ -96,13 +96,13 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). One Conventional Commit p
 **Description:** Add `rerun(root)` in `lib/install.py`, `block.start_line(command)` (with `START = start_line("routewise/install")`, and `insert(text, body, start=START)`), and a `command` argument to `roles.render`. Test first, then `make self` rewrites this repo's agents and block once.
 
 **Acceptance criteria:**
-- [ ] A vendored install writes exactly the same start marker and agent marker as before (`re-run routewise/install`); a self-install writes `re-run ./install --project .` in both.
-- [ ] An agent file and a block in the old self-install format are still recognised: the next run rewrites them and nothing else (no "exists and was not written by routewise").
-- [ ] `make self` updates `.claude/agents/*.md` and the block in `AGENTS.md`; `make selfcheck` then prints `routewise: nothing to change`.
+- [x] A vendored install writes exactly the same start marker and agent marker as before (`re-run routewise/install`); a self-install writes `re-run ./install --project .` in both.
+- [x] An agent file and a block in the old self-install format are still recognised: the next run rewrites them and nothing else (no "exists and was not written by routewise").
+- [x] `make self` updates `.claude/agents/*.md` and the block in `AGENTS.md`; `make selfcheck` then prints `routewise: nothing to change`.
 
 **Verification:**
-- [ ] New tests fail first, then pass: `uv run pytest tests/test_install.py tests/test_block.py -k "marker or rerun"`
-- [ ] `make check` green
+- [x] New tests fail first, then pass: `uv run pytest tests/test_install.py tests/test_block.py -k "marker or rerun"`
+- [x] `make check` green
 
 **Dependencies:** Task 3
 **Files:** `lib/install.py`, `lib/block.py`, `lib/roles.py`, `tests/test_install.py`, `CHANGELOG.md`; generated: `AGENTS.md` block, `.claude/agents/*.md`

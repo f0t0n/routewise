@@ -2,7 +2,7 @@
 
 import pytest
 
-from block import END, START, BlockError, insert, remove
+from block import END, START, BlockError, insert, remove, start_line
 
 BLOCK = "## Delegation\n\n- rule\n"
 
@@ -60,3 +60,13 @@ def test_markers_mentioned_in_prose_or_code_are_not_markers():
         added = insert(text, BLOCK)
         assert added.startswith(text)
         assert remove(added) == text
+
+
+def test_the_start_line_names_the_given_command():
+    assert start_line("routewise/install") == START
+    own = start_line("./install --project .")
+
+    text = insert("# Mine\n", "- rule", start=own)
+
+    assert text == f"# Mine\n\n{own}\n- rule\n{END}\n"
+    assert remove(text) == "# Mine\n"

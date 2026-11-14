@@ -38,7 +38,7 @@ Four small changes, built in the order that keeps every commit green: commit the
 - [x] Task 4: `export-ignore` every development file, one-list test, README install from the archive
 
 ### Phase 4: Commands spelled per project (R3)
-- [ ] Task 5: The start marker and the agent marker name the project's own re-install command
+- [x] Task 5: The start marker and the agent marker name the project's own re-install command
 - [ ] Task 6: The binding template spells routewise paths from the project root
 
 ### Checkpoint C (end of Build)

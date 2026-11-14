@@ -608,3 +608,45 @@ def test_a_folder_above_the_project_is_refused(project: Path, tmp_path: Path):
     assert (result.returncode, log.returncode) == (2, 2)
     assert "copy routewise/ into the project first" in result.stderr
     assert sorted(p.name for p in tmp_path.iterdir()) == before
+
+
+# --- R3: commands spelled for the project ---------------------------------------------------
+
+OWN = "./install --project ."
+
+
+def agent_marker(folder: Path) -> str:
+    return (folder / ".claude" / "agents" / "explore.md").read_text().splitlines()[1]
+
+
+def test_vendored_markers_name_routewise_install(project: Path):
+    run(project, "install")
+
+    assert agent_marker(project).endswith("; edit that file and re-run routewise/install")
+    assert (project / "AGENTS.md").read_text().startswith(START + "\n")
+
+
+def test_self_install_markers_name_its_own_command(project: Path):
+    home = project / "routewise"
+
+    run(project, "install", "--project", str(home))
+
+    assert agent_marker(home).endswith(f"; edit that file and re-run {OWN}")
+    text = (home / "AGENTS.md").read_text()
+    assert text.startswith(START.replace("routewise/install", OWN) + "\n")
+    assert "routewise/install" not in text
+
+
+def test_old_marker_text_is_recognised_and_rewritten_once(project: Path):
+    home = project / "routewise"
+    run(project, "install", "--project", str(home))
+    old = {}
+    for path in [home / "AGENTS.md", *(home / ".claude" / "agents").iterdir()]:
+        old[path] = path.read_text()
+        path.write_text(old[path].replace(OWN, "routewise/install"))
+
+    result = run(project, "install", "--project", str(home))
+
+    assert result.returncode == 0, result.stderr
+    assert all(path.read_text() == text for path, text in old.items())
+    assert run(project, "install", "--project", str(home), "--check").returncode == 0
