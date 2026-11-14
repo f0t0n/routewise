@@ -1,0 +1,38 @@
+[project]
+name = "routewise"
+version = "0.1.0"
+description = "Model routing and delegation for coding and assistant agents: tiered read-only subagents, a parallel cap, an escalation ladder and a miss log."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["lib"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C901", "PLR0912", "PLR0913", "PLR0915"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-branches = 12
+max-statements = 50
+max-args = 6
+
+[tool.ruff.lint.isort]
+known-first-party = ["block", "install", "miss_log", "paths", "privacy", "roles", "settings"]

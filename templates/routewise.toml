@@ -1,0 +1,25 @@
+# routewise settings for this project: the machine-readable half of the binding
+# (spec section 9). Edit, then re-run `routewise/install`. The human half, with the
+# approvals and reasons, is ROUTING-BINDING.md.
+
+# Harnesses to render agents for: "cc" (Claude Code, .claude/agents/) and "agy"
+# (Antigravity CLI, .agents/agents/).
+harnesses = {{harnesses}}
+
+# Instruction files that get the delegation block. A symlink to another listed file is
+# written once.
+instructions = {{instructions}}
+
+# "dev" for an agent that builds the project; "assistant" for a user-facing assistant
+# (it may delegate only web-page reading).
+fragment = "dev"
+
+# Parallel cap (PA1): read-only subagents started together. Raising it needs approval.
+cap = 5
+
+# Miss log (M1), relative to the project root.
+miss_log = "logs/delegation-misses.jsonl"
+
+# Optional: override a tier's model for Claude Code, e.g. to pin a version.
+[tiers]
+# fast = "claude-haiku-5-5"

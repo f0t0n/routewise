@@ -1,0 +1,343 @@
+"""routewise/install on a throwaway project."""
+
+from pathlib import Path
+
+from conftest import run
+
+ROLES = ["auditor.md", "explore.md", "log-reader.md", "reviewer.md", "web-reader.md"]
+
+
+def front(path: Path) -> str:
+    return path.read_text(encoding="utf-8").split("---\n")[1]
+
+
+def set_config(root: Path, old: str, new: str) -> None:
+    path = root / "routewise.toml"
+    path.write_text(path.read_text(encoding="utf-8").replace(old, new), encoding="utf-8")
+
+
+def test_first_run_sets_up_claude_code(project: Path):
+    result = run(project, "install")
+
+    assert result.returncode == 0, result.stderr
+    assert (project / "routewise.toml").exists()
+    assert (project / "ROUTING-BINDING.md").exists()
+    assert (project / "logs" / "delegation-misses.jsonl").read_text() == ""
+    assert sorted(p.name for p in (project / ".claude" / "agents").iterdir()) == ROLES
+    assert not (project / ".agents").exists()
+    claude = (project / "CLAUDE.md").read_text()
+    assert "at most 5" in claude
+    assert "`routewise/bin/miss-log add --mode dev" in claude
+
+
+def test_roles_get_model_effort_and_tool_names(project: Path):
+    run(project, "install")
+    agents = project / ".claude" / "agents"
+
+    explore = front(agents / "explore.md")
+    assert "name: Explore" in explore
+    assert "model: haiku" in explore
+    assert "effort:" not in explore
+    assert "tools: Read, Glob, Grep" in explore
+    assert "tier:" not in explore
+    assert "description: >-" in explore
+    assert "model: sonnet\neffort: medium" in front(agents / "reviewer.md")
+    assert "model: opus\neffort: high" in front(agents / "auditor.md")
+    assert "tools: WebSearch, WebFetch, Read" in front(agents / "web-reader.md")
+
+
+def test_second_run_changes_nothing(project: Path):
+    run(project, "install")
+
+    again = run(project, "install")
+    check = run(project, "install", "--check")
+
+    assert again.stdout.strip() == "routewise: nothing to change"
+    assert check.returncode == 0
+
+
+def test_check_reports_drift_and_install_fixes_it(project: Path):
+    run(project, "install")
+    set_config(project, "cap = 5", "cap = 3")
+
+    check = run(project, "install", "--check")
+    assert check.returncode == 1
+    assert "drift CLAUDE.md" in check.stdout
+    assert "at most 5" in (project / "CLAUDE.md").read_text()
+
+    run(project, "install")
+    assert "at most 3" in (project / "CLAUDE.md").read_text()
+
+
+def test_keeps_existing_instructions_and_uninstall_restores_them(project: Path):
+    (project / "CLAUDE.md").write_text("# My project\n\nKeep this.\n")
+
+    run(project, "install")
+    text = (project / "CLAUDE.md").read_text()
+    assert text.startswith("# My project\n\nKeep this.\n\n<!-- routewise:start")
+
+    result = run(project, "install", "--uninstall")
+    assert result.returncode == 0, result.stderr
+    assert (project / "CLAUDE.md").read_text() == "# My project\n\nKeep this.\n"
+    assert list((project / ".claude" / "agents").iterdir()) == []
+    assert (project / "ROUTING-BINDING.md").exists()
+
+
+def test_refuses_to_overwrite_an_agent_it_did_not_write(project: Path):
+    agents = project / ".claude" / "agents"
+    agents.mkdir(parents=True)
+    (agents / "reviewer.md").write_text("---\nname: reviewer\n---\nmine\n")
+
+    result = run(project, "install")
+
+    assert result.returncode == 2
+    assert ".claude/agents/reviewer.md exists and was not written by routewise" in result.stderr
+    assert (agents / "reviewer.md").read_text() == "---\nname: reviewer\n---\nmine\n"
+
+
+def test_antigravity_gets_agents_without_model_and_one_block(project: Path):
+    (project / ".agents").mkdir()
+    (project / "AGENTS.md").write_text("# Rules\n")
+    (project / "CLAUDE.md").symlink_to("AGENTS.md")
+
+    result = run(project, "install")
+
+    assert result.returncode == 0, result.stderr
+    explore = front(project / ".agents" / "agents" / "explore.md")
+    assert "tools: [view_file, list_dir, find_by_name, grep_search]" in explore
+    assert "model:" not in explore
+    assert "effort:" not in front(project / ".agents" / "agents" / "reviewer.md")
+    assert (project / "AGENTS.md").read_text().count("routewise:start") == 1
+    assert (project / "CLAUDE.md").is_symlink()
+
+
+def test_tier_override_pins_a_model(project: Path):
+    run(project, "install")
+    set_config(project, '# fast = "claude-haiku-5-5"', 'fast = "claude-haiku-5-5"')
+
+    run(project, "install")
+
+    assert "model: claude-haiku-5-5" in front(project / ".claude" / "agents" / "explore.md")
+
+
+def test_removes_a_generated_agent_whose_role_is_gone(project: Path):
+    run(project, "install")
+    (project / "routewise" / "roles" / "auditor.md").unlink()
+
+    result = run(project, "install")
+
+    assert "remove .claude/agents/auditor.md" in result.stdout
+    assert not (project / ".claude" / "agents" / "auditor.md").exists()
+
+
+def test_assistant_fragment(project: Path):
+    run(project, "install")
+    set_config(project, 'fragment = "dev"', 'fragment = "assistant"')
+
+    run(project, "install")
+
+    text = (project / "CLAUDE.md").read_text()
+    assert "## Delegation (assistant mode)" in text
+    assert "--mode assistant --role web-reader" in text
+    assert "`Explore`" not in text
+
+
+def test_rejects_an_unknown_harness(project: Path):
+    run(project, "install")
+    set_config(project, 'harnesses = ["cc"]', 'harnesses = ["cc", "vim"]')
+
+    result = run(project, "install")
+
+    assert result.returncode == 2
+    assert "harness 'vim' is not one of cc, agy" in result.stderr
+
+
+# --- review and audit findings (2026-11-14) -------------------------------------------------
+
+
+def test_a_lone_start_marker_is_refused_and_the_text_kept(project: Path):
+    start = "<!-- routewise:start (generated: edit routewise.toml and re-run routewise/install) -->"
+    text = f"# Mine\n\n{start}\nIMPORTANT USER TEXT\n"
+    (project / "CLAUDE.md").write_text(text)
+
+    first = run(project, "install")
+    second = run(project, "install", "--uninstall")
+
+    assert (first.returncode, second.returncode) == (2, 2)
+    assert "fix the markers by hand" in first.stderr
+    assert (project / "CLAUDE.md").read_text() == text
+
+
+def test_a_failed_run_writes_nothing(project: Path):
+    agents = project / ".claude" / "agents"
+    agents.mkdir(parents=True)
+    (agents / "reviewer.md").write_text("mine\n")
+
+    run(project, "install")
+
+    assert not (project / "routewise.toml").exists()
+    assert not (project / "CLAUDE.md").exists()
+
+
+def test_check_without_settings_reports_drift(project: Path):
+    result = run(project, "install", "--check")
+
+    assert result.returncode == 1
+    assert "drift routewise.toml" in result.stdout
+    assert not (project / "routewise.toml").exists()
+
+
+def test_uninstall_removes_a_claude_md_it_created_and_check_sees_drift(project: Path):
+    run(project, "install")
+
+    run(project, "install", "--uninstall")
+
+    assert not (project / "CLAUDE.md").exists()
+    assert run(project, "install", "--check").returncode == 1
+
+
+def test_a_renamed_copy_of_a_generated_agent_is_kept(project: Path):
+    run(project, "install")
+    agents = project / ".claude" / "agents"
+    copy = agents / "strict-reviewer.md"
+    copy.write_text((agents / "reviewer.md").read_text().replace("name: reviewer", "name: strict"))
+
+    run(project, "install")
+    run(project, "install", "--uninstall")
+
+    assert copy.exists()
+
+
+def test_dropping_a_harness_removes_its_agents(project: Path):
+    (project / ".agents").mkdir()
+    run(project, "install")
+    set_config(project, 'harnesses = ["cc", "agy"]', 'harnesses = ["cc"]')
+
+    run(project, "install")
+
+    assert list((project / ".agents" / "agents").iterdir()) == []
+
+
+def test_a_symlink_out_of_the_project_is_refused(project: Path, tmp_path: Path):
+    outside = tmp_path / "outside.md"
+    (project / "CLAUDE.md").symlink_to(outside)  # dangling
+
+    result = run(project, "install")
+
+    assert result.returncode == 2
+    assert "leads outside the project" in result.stderr
+    assert not outside.exists()
+
+
+def test_a_symlinked_agents_folder_out_of_the_project_is_refused(project: Path, tmp_path: Path):
+    (tmp_path / "shared").mkdir()
+    (project / ".claude").mkdir()
+    (project / ".claude" / "agents").symlink_to(tmp_path / "shared")
+
+    result = run(project, "install")
+
+    assert result.returncode == 2
+    assert list((tmp_path / "shared").iterdir()) == []
+
+
+def test_a_symlinked_routewise_installs_into_the_project(tmp_path: Path, project: Path):
+    other = tmp_path / "other"
+    other.mkdir()
+    (other / "routewise").symlink_to(project / "routewise")
+
+    result = run(other, "install")
+
+    assert result.returncode == 0, result.stderr
+    assert (other / "CLAUDE.md").exists()
+    assert not (project / "CLAUDE.md").exists()
+
+
+def test_crlf_instructions_keep_their_line_ends(project: Path):
+    (project / "CLAUDE.md").write_bytes(b"# Mine\r\n\r\nKeep.\r\n")
+
+    run(project, "install")
+    data = (project / "CLAUDE.md").read_bytes()
+    assert b"\n" not in data.replace(b"\r\n", b"")
+
+    run(project, "install", "--uninstall")
+    assert (project / "CLAUDE.md").read_bytes() == b"# Mine\r\n\r\nKeep.\r\n"
+
+
+def test_a_tier_value_cannot_add_frontmatter(project: Path):
+    run(project, "install")
+    set_config(project, '# fast = "claude-haiku-5-5"', 'fast = "haiku\\ntools: Write"')
+
+    result = run(project, "install")
+
+    assert result.returncode == 2
+    assert "must be a model name" in result.stderr
+    assert "Write" not in (project / ".claude" / "agents" / "explore.md").read_text()
+
+
+# --- second review and audit (2026-11-14) ---------------------------------------------------
+
+
+def test_uninstall_keeps_a_symlinked_claude_md_and_cleans_its_target(project: Path):
+    (project / "CLAUDE.md").symlink_to("AGENTS.md")
+    set_up = run(project, "install")
+    assert set_up.returncode == 0, set_up.stderr
+    set_config(project, 'instructions = ["CLAUDE.md"]', 'instructions = ["CLAUDE.md", "AGENTS.md"]')
+
+    result = run(project, "install", "--uninstall")
+
+    assert result.returncode == 0, result.stderr
+    assert (project / "CLAUDE.md").is_symlink()
+    assert "routewise:start" not in (project / "AGENTS.md").read_text()
+    assert run(project, "install").returncode == 0
+    assert (project / "CLAUDE.md").is_symlink()
+
+
+def test_a_read_only_instruction_file_stops_the_run_before_any_write(project: Path):
+    claude = project / "CLAUDE.md"
+    claude.write_text("# Mine\n")
+    claude.chmod(0o444)
+    try:
+        result = run(project, "install")
+    finally:
+        claude.chmod(0o644)
+
+    assert result.returncode == 2
+    assert "cannot be written" in result.stderr
+    assert not (project / "routewise.toml").exists()
+    assert not (project / ".claude").exists()
+    assert claude.read_text() == "# Mine\n"
+
+
+def test_a_project_that_does_not_hold_routewise_is_refused(project: Path, tmp_path: Path):
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+
+    result = run(project, "install", "--project", str(elsewhere))
+    log = run(project, "bin/miss-log", "--project", str(elsewhere), "report")
+
+    assert (result.returncode, log.returncode) == (2, 2)
+    assert "copy routewise/ into the project first" in result.stderr
+    assert list(elsewhere.iterdir()) == []
+
+
+def test_a_harness_tier_cannot_add_frontmatter(project: Path):
+    harness = project / "routewise" / "harness.toml"
+    harness.write_text(
+        harness.read_text().replace('fast = "haiku"', 'fast = "haiku\\npermissionMode: x"')
+    )
+
+    result = run(project, "install")
+
+    assert result.returncode == 2
+    assert "must be a model name" in result.stderr
+    assert not (project / ".claude").exists()
+
+
+def test_a_role_with_no_tools_is_refused(project: Path):
+    role = project / "routewise" / "roles" / "zz.md"
+    role.write_text("---\nname: zz\ndescription: x\ntools: [ , ]\ntier: fast\n---\nBody\n")
+
+    result = run(project, "install")
+
+    assert result.returncode == 2
+    assert "tools is empty" in result.stderr

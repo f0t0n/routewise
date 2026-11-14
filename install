@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Set up model routing and delegation in the project that holds this folder.
+# Needs Python 3.11 or newer (standard library only). Run with --help for details.
+# Run it from its place inside routewise/; do not symlink this file alone.
+set -euo pipefail
+here="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")/." >/dev/null && pwd)"
+if [[ ! -f "$here/lib/install.py" ]]; then
+  echo "routewise: $here/lib/install.py is missing; run this from inside the routewise folder" >&2
+  exit 2
+fi
+if ! python3 -c 'import sys; sys.exit(sys.version_info < (3, 11))' 2>/dev/null; then
+  echo "routewise: needs Python 3.11 or newer as python3" >&2
+  exit 2
+fi
+exec python3 -B "$here/lib/install.py" "$@"

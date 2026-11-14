@@ -1,0 +1,28 @@
+# How routewise renders the neutral role files in roles/ for each harness.
+# A project overrides a tier's model in its own routewise.toml ([tiers]), never here,
+# so this folder can be replaced whole by a newer release.
+
+[cc]
+dir = ".claude/agents"
+# Claude Code aliases: each always means the latest version of that model
+# (verified on Claude Code 2.1.322, spec section 13).
+tiers = { fast = "haiku", balanced = "sonnet", deep = "opus", frontier = "fable" }
+efforts = ["low", "medium", "high", "xhigh", "max"]
+
+[cc.tools]
+read = ["Read"]
+search = ["Glob", "Grep"]
+shell = ["Bash"]
+web = ["WebSearch", "WebFetch"]
+
+# Antigravity CLI: agent files cannot set a model or an effort, so agents follow the
+# session model (spec section 13: not verified otherwise). Omitting `tools:` means read
+# tools only, and an unknown tool name fails the agent.
+[agy]
+dir = ".agents/agents"
+
+[agy.tools]
+read = ["view_file", "list_dir"]
+search = ["find_by_name", "grep_search"]
+shell = ["run_command"]
+web = ["search_web", "read_url_content"]
