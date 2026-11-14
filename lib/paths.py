@@ -51,6 +51,11 @@ def holds(root: Path, home: Path) -> None:
         raise PathError(
             f"{root} must hold {home} directly, or be it; copy routewise/ into the project first"
         )
+    if root == home and home.is_symlink():
+        raise PathError(
+            f"{home} is a symlink, so its files belong to every project that links to it; "
+            "install into the project that holds it, or run in the real routewise folder"
+        )
     if is_home_or_above(root):
         raise PathError(
             f"{root} is your home folder or above it, where agents and CLAUDE.md are global; "

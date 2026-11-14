@@ -700,3 +700,18 @@ def test_the_home_folder_is_never_a_project(project: Path):
     assert "is your home folder" in result.stderr
     assert personal.read_text() == "# my personal rules\n"
     assert sorted(str(p) for p in project.rglob("*") if "routewise" not in p.parts) == before
+
+
+def test_self_install_through_a_symlinked_routewise_is_refused(project: Path, tmp_path: Path):
+    shared = project / "routewise"  # a copy that several projects link to
+    other = tmp_path / "other"
+    other.mkdir()
+    (other / "routewise").symlink_to(shared)
+    before = sorted(p.name for p in shared.iterdir())
+
+    result = run(other, "install", "--project", str(other / "routewise"))
+
+    assert result.returncode == 2
+    assert "is a symlink" in result.stderr
+    assert sorted(p.name for p in shared.iterdir()) == before
+    assert run(other, "install").returncode == 0  # installing into `other` itself still works
