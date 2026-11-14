@@ -71,9 +71,11 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green be
 **Result (2026-11-14):** red on HEAD (`d454d69`): `?$top=5`, `#!/users/1`, `#:~:text=salary` as leaks; the three `？`/`?` CJK and Korean questions as allowed (they were documented as a trade-off in 0.1.1 but not pinned, so they are added, not moved); `wiki.corp.io#Раздел` in `KEPT_GAPS`; guard copies (25 in all). `foo.bar?:x` passed on HEAD and after (guard). Green: `LINK_END` is `[?#](?:[A-Za-z0-9_%=&/~+$-]|!/|:~:)`. Mutations (control 957): dropping `$`, `!/`, `:~:`, `!` alone, `:` alone, the class back to `\w`, and each of `_ % = & / ~ + -` and the digits all killed.
 
 ## Checkpoint: verified
-- [ ] `make check` green.
-- [ ] Differential check: `daa469d` (the commit tagged `v0.1.1`)'s `lib/privacy.py` and HEAD's on every input of `tests/test_privacy.py`; every difference is an R7 item; listed here.
-- [ ] Worst-case time at the CLI limits measured.
+- [x] `make check` green.
+- [x] Differential check: `daa469d` (the commit tagged `v0.1.1`)'s `lib/privacy.py` and HEAD's on every input of `tests/test_privacy.py`; every difference is an R7 item; listed here.
+- [x] Worst-case time at the CLI limits measured.
+
+**Result (2026-11-14):** `make check` 1077 passed. Differential check, `daa469d` against `bfee316`, on 427 inputs (every constant list of `tests/test_privacy.py` plus the generated source-type, invisible-character and encoded-`@` forms): 29 differ, all R7 items: G1 15 (IPv4, IPv6 short and full, AKIA both sides, `eyJ`, `ghp_`, UUID both sides, scheme, `www.`, Hebrew, chat ID, card), G2 2, G3 1, JWT with `。` 4, link ends 3, the `？` and `?` CJK and Korean questions now allowed 3, the new kept gap `wiki.corp.io#Раздел` 1. Worst case (best of 5): 200 × U+3316 44.5 ms, 200 × U+FDFA 3.1 ms, normal text under 0.1 ms.
 
 ## Task 6: Docs and release notes for 0.1.2
 
