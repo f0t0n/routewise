@@ -1,37 +1,36 @@
-# Implementation Plan: copy-paste install in the README (R4)
+# Implementation Plan: miss-log privacy fix, release 0.1.1 (R5)
 
-Spec: [SPEC.md](../SPEC.md), R4, success criterion 9, Ship row (approved 2026-11-14, after the 0.1.0 release). Tasks: [todo.md](todo.md). Earlier plans: [done/](done/).
+Spec: [SPEC.md](../SPEC.md), R5, S7, success criterion 10 (approved 2026-11-14). Tasks: [todo.md](todo.md). Earlier plans: [done/](done/).
 
 ## Overview
 
-The 0.1.0 release notes have a four-line install; the README only describes it in prose. Add the same block to the top of the README's "Install into a project", with the version in one `v=` variable, and a test that keeps that version equal to `pyproject.toml`. Docs only; it reaches users in the next release's archive (the 0.1.0 notes already carry the commands).
+A catch-up plan. The fix (`44376cb`) and the release bump (`bcc480f`) were built before Define and Plan, which were skipped; the spec (`4290752`) has since been approved. This plan does not rebuild the code. It closes what the workflow still owes before the tag: proof that the tests were written to fail first, an end-to-end check of `bin/miss-log`, a review and audit of the final change, and the ship checks. Any fix found on the way is a new `fix:` commit made test first; history is not rewritten.
 
 ## Architecture Decisions
 
-- **The test reads the README** (`tests/test_release.py`, next to the archive test): find the `v=<version>` line inside the shell block under "## Install into a project", compare with `version` from `pyproject.toml` (read with `tomllib`). No templating, no generated README. The test skips nothing: both files are in every checkout.
-- **Block content** follows the release notes, with `$v`: "From the project root:" then `v=0.1.0`, `curl -L "https://github.com/f0t0n/routewise/archive/refs/tags/v$v.tar.gz" | tar -xz`, `mv "routewise-$v" routewise`, `routewise/install`. The existing step 1 prose stays as the explanation (archive contents, submodule caveat), and the steps after it are unchanged.
-- **No new tag.** The change rides with the next release; the maintainer pushes `main`.
+- **Red is proven against the old code, not by reverting the repo.** Task 1 runs today's `tests/test_privacy.py` against `lib/privacy.py` from `v0.1.0` and from `50f9de1` (the first fix, before review; squashed into `44376cb`, still reachable), each copied into a scratch folder, so the working tree is never changed.
+- **Review covers the whole change** `v0.1.0..HEAD` restricted to `lib/`, `tests/`, `README.md`, `CHANGELOG.md` and `SPEC.md`, with a fresh `reviewer` and a fresh `auditor` (S7 is a safety rule), started together. Neither is told the earlier findings, so they are not anchored on them.
+- **The tag goes on the last commit of this plan** (decision 6 of the spec gate). `SPEC.md` and `tasks/` are `export-ignore`, so commits after `bcc480f` do not change what the archive ships unless a fix lands.
+- **The maintainer tags and pushes** from the host; this plan only states the exact commands.
 
 ## Task List
 
-- [x] Task 1: README install block and the version test
-
-### Checkpoint
-- [x] `make check` green
-
-### Verify, Review, Ship
-- [x] Verify: the block, copied from the README and run literally in an empty git repo, installs routewise 0.1.0 from GitHub (9 files, `--check` exit 0)
-- [x] Review: `reviewer` on the README diff and the test
-- [x] Ship: maintainer pushes `main` from the host
+- [ ] Task 1: Prove the new tests fail first
+- [ ] Task 2: End-to-end check of `bin/miss-log`
+- [ ] Checkpoint: verified
+- [ ] Task 3: Review and audit of the final change
+- [ ] Checkpoint: reviewed
+- [ ] Task 4: Ship checks and the tag commands
 
 ## Risks and Mitigations
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| The test finds the wrong `v=` line, or none | Med | It requires exactly one `v=` line inside the first shell block of the install section, and fails with a clear message otherwise |
-| `curl \| tar` differs between macOS and Linux | Low | Both ship bsdtar or GNU tar with `-xz`; Verify runs it on Linux, and the maintainer already unpacked the archive on macOS |
-| The block is run inside an existing install (`routewise/` exists) | Low | `mv` then fails without overwriting; updating is a separate README section ("Updating") |
+| A post-review test already passes on `50f9de1` (no red) | Low | Recorded as a regression guard, not a test-first proof; it must still fail on `v0.1.0` or be named in the record |
+| Review or audit finds a new leak or false positive | Med | Fix in a new `fix:` commit, test first with red shown; a change to an R5 decision goes back to the spec gate first |
+| A fix after `bcc480f` changes shipped files | Low | Task 4 re-checks the archive and `make check` on the final commit; the CHANGELOG 0.1.1 line is updated in the same fix commit |
+| `50f9de1` is garbage-collected | Low | Task 1 runs first; the commit is in the reflog |
 
 ## Open Questions
 
-None.
+1. Draft release notes in `tasks/release-0.1.1.md` (as for 0.1.0), or does the CHANGELOG entry suffice?

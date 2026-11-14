@@ -1,41 +1,70 @@
-# Tasks: copy-paste install in the README (R4)
+# Tasks: miss-log privacy fix, release 0.1.1 (R5)
 
-Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before each commit (the pre-commit hook enforces it).
+Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before each commit (the pre-commit hook enforces it). Tick a box in the commit that records the task.
 
-## Task 1: README install block and the version test
+## Task 1: Prove the new tests fail first
 
-**Description:** Test first: `tests/test_release.py` gains a test that the README's install block names the `pyproject.toml` version; it fails while the block does not exist. Then add the block at the top of "## Install into a project".
+**Description:** Run today's `tests/test_privacy.py` against `lib/privacy.py` from `v0.1.0` and from `50f9de1`, each in a scratch copy, and record which tests fail.
 
 **Acceptance criteria:**
-- [x] The test fails before the README change ("no `v=` line in the install block"), passes after, and fails if either version is changed alone (checked by hand, then reverted).
-- [x] The README block matches the plan (`v=0.1.0`, curl, `tar -xz`, `mv "routewise-$v" routewise`, `routewise/install`) and the prose steps after it are unchanged.
-- [x] `CHANGELOG.md` gets an entry under a new `## Unreleased` section.
+- [ ] On `v0.1.0`: every case in `LEAKS_SINCE_0_1_1` and `REFUSED_CODE_WORDS` fails, plus `react@18.3.1` in the allowed list; every other case passes (success criterion 10: nothing 0.1.0 allowed is refused now except the named trade-offs).
+- [ ] On `50f9de1`: each case added after review fails, or is named in the record as a regression guard.
+- [ ] The result (counts and any exceptions) is recorded in this file.
 
 **Verification:**
-- [x] `uv run pytest tests/test_release.py` red, then green
-- [x] `make check` green
+- [ ] `uv run pytest <scratch>/test_privacy.py` with `PYTHONPATH` pointing at each scratch `lib/`; working tree unchanged (`git status` clean)
 
-Note: the block starts at `v=` with "From the project root:" above it, instead of the planned `cd your-project` line, so it runs as pasted (Verify runs it literally).
+**Dependencies:** None. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the red check of R5`
 
-**Dependencies:** the spec change and this plan committed first
-**Files:** `tests/test_release.py`, `README.md`, `CHANGELOG.md`, `tasks/todo.md`, `tasks/plan.md`
-**Scope:** S. Commit: `docs: add a copy-paste install to the README`
+## Task 2: End-to-end check of `bin/miss-log`
 
-## Checkpoint
-- [x] `make check` green
+**Description:** In a temporary project with a copy of routewise installed, `bin/miss-log add` refuses one dotless address and one scheme-less link and allows one code word that R5 keeps passing.
 
-## Verify
-- [x] The block copied out of `README.md` and run as a script in an empty git repo installs routewise 0.1.0 from GitHub: 9 files, a second run changes nothing, `--check` exits 0
+**Acceptance criteria:**
+- [ ] `--what "mailed me@localhost"` and `--what "see jira.corp.net/browse/X-1"` exit 2 with a `routewise:` message naming the kind of leak, and the log is unchanged.
+- [ ] `--what "edited lib/privacy.py and src/a.ts/"` exits 0 and appends one line.
+- [ ] If `tests/test_miss_log.py` has no end-to-end refusal test for the new kinds, one is added test first (red shown on `v0.1.0`'s `lib/privacy.py`).
 
-Verified 2026-11-14: the block, extracted from `README.md` by the test's rule and run with `bash -e` in an empty git repo, downloaded the published `v0.1.0` archive from GitHub and installed routewise 0.1.0: 9 files, a second run and `--check` clean, the installed folder holds the 11 runtime entries.
+**Verification:**
+- [ ] Commands and outputs recorded here; `make check` green
 
-## Review
-- [x] `reviewer` brief (role body, sonnet, medium) on the README diff and the test
-- [x] Findings fixed or answered
+**Dependencies:** None. **Files:** `tasks/todo.md`, maybe `tests/test_miss_log.py`. **Scope:** XS–S. Commit: `docs(tasks): record the miss-log check of R5` (or `test:` if a test is added)
 
-Reviewed 2026-11-14 (`reviewer`, sonnet): three Required and four Optional findings, all fixed in `c04e67d`: the block pasted over an existing install ran the old copy (now one `mkdir … && curl -fsSL … | tar --strip-components=1 -C routewise && routewise/install` chain, and Updating replaces the folder only after a successful download); the test checked only `v=` and could read the wrong block (now: the heading must exist, exactly one curl block, the chain, the `v$v` URL, and every `v=` in the README); `curl -f`; the wording of the lead-in and step 1; the failure message prints the block. Re-verified against GitHub with blocks extracted from the README: first install 9 files; pasted again it stops at `mkdir` and leaves the install untouched; Updating swaps the folder and `--check` is clean; a missing version fails on `curl: (22) 404` (the empty folder it leaves is now mentioned in the README).
+## Checkpoint: verified
+- [ ] `make check` green; Tasks 1–2 recorded
 
-## Ship
-- [x] Maintainer pushes `main` from the host (no tag: the change ships in the next release)
+## Task 3: Review and audit of the final change
 
-Shipped 2026-11-14: the maintainer pushed `main`. The change reaches users in the next release archive.
+**Description:** Start `reviewer` and `auditor` together on `v0.1.0..HEAD` (`lib/privacy.py`, `tests/test_privacy.py`, `README.md`, `CHANGELOG.md`, `SPEC.md` R5 and S7). Fix or answer every finding.
+
+**Acceptance criteria:**
+- [ ] Every finding is fixed (new `fix:` commit, failing test first, CHANGELOG line updated) or answered with a reason, and listed here.
+- [ ] A fix that changes an R5 decision is taken to the maintainer before it is built.
+- [ ] No open Critical or Required finding.
+
+**Verification:**
+- [ ] `make check` green after each fix
+
+**Dependencies:** Tasks 1–2. **Files:** `tasks/todo.md`; for fixes `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `SPEC.md`. **Scope:** S. Commit: `docs(tasks): record the review of R5`
+
+## Checkpoint: reviewed
+- [ ] No open Critical or Required finding; maintainer has seen the findings
+
+## Task 4: Ship checks and the tag commands
+
+**Description:** Check the release contents on the final commit and give the maintainer the exact tag and push commands.
+
+**Acceptance criteria:**
+- [ ] `pyproject.toml`, `uv.lock` and every README `v=` say `0.1.1`; `CHANGELOG.md` has `## 0.1.1 (2026-11-14)` with the R5 line and no `Unreleased` section.
+- [ ] `git archive --prefix=routewise-0.1.1/ HEAD | tar -t` holds exactly the 11 R1 entries, and its `lib/privacy.py` equals the working tree's.
+- [ ] Release notes drafted in `tasks/release-0.1.1.md` if the maintainer asks (open question 1).
+- [ ] The maintainer gets: `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>` and `git push origin main v0.1.1`.
+
+**Verification:**
+- [ ] `make check` green on the final commit
+
+**Dependencies:** Task 3. **Files:** `tasks/todo.md`, maybe `tasks/release-0.1.1.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of R5`
+
+## Ship (maintainer, from the host)
+- [ ] `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>`
+- [ ] `git push origin main v0.1.1`
