@@ -304,15 +304,58 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 
 **Dependencies:** Task 12. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record round 5 of the 0.1.1 review`
 
+**Round 5 (2026-11-14):** fresh `reviewer` and `auditor` on `582a2fa`, scoped as above. `reviewer`: request changes (two Required, both spec gaps for criterion 10); control 668 = repo 668. `auditor`: no regression against 0.1.0 outside listed kinds on about 95,000 fuzzed inputs over six versions; one Required against the unreleased versions. An automated security check raised the `。` gap and the bracket kept gap. Every finding reproduced; the auditor's `。` fix checked in a scratch copy (668 green). The maintainer approved the calls below; R5 amended (`docs(spec): amend R5 after round 5…`).
+
+| # | From | Finding | Answer |
+|---|---|---|---|
+| A | auditor, Required + security check | `。` beside a non-ASCII letter is not a dot: `see пример。рф/x`, `see café。com/x`, `ip ١٠。٠。٠。١` pass (refused from `1aa6725^` to `ab90528`) | `。` is a dot between letters or digits of any script except CJK and Hangul (Task 14) |
+| B | reviewer, Required | `改了config。lib/x.py`, `路由用了GPT-4。Next.js/React` refused (0.1.0 allowed) | Trade-off, named in R5 |
+| C | reviewer, Required | `Class.method#overload`, `config.key#section`, `repo.name#123`, `abc.def?x=1` refused | Trade-off, named in R5 |
+| D | reviewer | `user/repo@e83a1b2`, `foo@Latest` refused (0.1.0 allowed) | SHA 7–40 hex and any case in `TAG` (Task 14); `pip install foo@git` stays a trade-off |
+| E | reviewer | `anna%40corp。com`, `1<ZWSP>0。0。0。1` untested | Add (Task 14) |
+| F | reviewer | Notes claim what the CHANGELOG lacks: `redirect=%40…`, `anna%40corp.com`, entries not re-checked | Add to CHANGELOG (Task 14); update steps stay notes-only |
+| G | auditor, Nits | Kept-gap wording: brackets before the `@` too; double disguise with the character after | R5 wording fixed |
+| H | both | `foo.@bar`; double disguise after; `see example。中国/x` | 0.1.2, listed in R5 |
+| – | reviewer | Equivalent survivors: `_` in markup, dedupe, `ASCII_STOP` before the second NFKC | No change |
+| – | security check | Brackets after `@` as markup when a full host follows | No change: `f"{user}@{cfg.domain}"` has a full host; kept gap stands |
+
+## Task 14: Fix the round-5 findings
+
+**Description:** One `fix:` commit for A, D, E, F, test first. `ASCII_STOP` (renamed for what it does) reads `。` as a dot between letters or digits that are not CJK or Hangul; `TAG` also accepts a 7–40 hex SHA and ignores case; the two `。` cases become leak tests; B and C phrases become pinned trade-off tests (refused on purpose); the CHANGELOG gains the notes' behaviour claims.
+
+**Acceptance criteria:**
+- [ ] Red on HEAD for the A leaks (`пример。рф/x`, `café。com/x`, `ελ。gr/x`, `١٠。٠。٠。١`, `anna@**пример。рф**`) and the D phrases as allowed tests (`user/repo@e83a1b2`, `actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3`, `foo@Latest`); green after.
+- [ ] Every allowed case still passes, CJK prose with `。` included, also with invisible characters; the B and C phrases are pinned in `REFUSED_CODE_WORDS`.
+- [ ] `anna%40corp。com` and `1<ZWSP>0。0。0。1` are leak tests.
+- [ ] Mutations re-run with a control equal to the repo and each mutant checked to import; survivors named.
+- [ ] CHANGELOG 0.1.1 names `。` beside non-CJK letters, SHA pins, the wider trade-offs and the notes' behaviour claims; notes and README in line.
+
+**Verification:**
+- [ ] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
+
+**Dependencies:** Task 13 round 5, R5 amended. **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `README.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: read 。 as a dot beside any non-CJK letter and let SHA pins pass`
+
+## Task 15: Round-6 review, same scope as round 5
+
+**Description:** Fresh `reviewer` and `auditor` together on the Task 14 commit against R5 as amended after round 5, with the round-5 scope: criterion 10 against 0.1.0 on a developer-text corpus (now with Cyrillic, Greek, Arabic and CJK prose using `。`), no regression against 0.1.0, `1aa6725^`, `1aa6725`, `d84fadf`, `ab90528` or `582a2fa`, code, tests and docs match R5. Gaps of a kind 0.1.0 also had go to 0.1.2.
+
+**Acceptance criteria:**
+- [ ] Every finding fixed, answered or recorded for 0.1.2, and listed here; no open Critical or Required in scope.
+
+**Verification:**
+- [ ] `make check` green after any fix
+
+**Dependencies:** Task 14. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record round 6 of the 0.1.1 review`
+
 ## Follow-up (not in 0.1.1)
 
-- [ ] R7 for 0.1.2: G1–G3 (and whatever round 5 records), with its own Define, Plan and false-positive check.
+- [ ] R7 for 0.1.2: G1–G3, H (and whatever round 6 records), with its own Define, Plan and false-positive check.
 
 
 ## Checkpoint: reviewed
 - [ ] No open Critical or Required finding; maintainer has seen the findings
 
-## Task 14: Ship checks and the tag commands
+## Task 16: Ship checks and the tag commands
 
 **Description:** Check the release contents on the final commit and give the maintainer the exact tag and push commands.
 
@@ -325,7 +368,7 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Verification:**
 - [ ] `make check` green on the final commit
 
-**Dependencies:** Task 13. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
+**Dependencies:** Task 15. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.1`
 
 ## Ship (maintainer, from the host)
 - [ ] `git tag -a v0.1.1 -m "routewise 0.1.1" <final commit>`
