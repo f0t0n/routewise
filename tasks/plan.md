@@ -25,7 +25,7 @@ Extended after Task 2: R6 (bin/miss-log printed `miss-log: ` instead of `routewi
 - [x] Task 3: R6, one error prefix in `bin/miss-log`
 - [x] Task 4: Draft the 0.1.1 release notes
 - [ ] Task 5: Review and audit of the final change and the notes
-- [ ] Task 6: Fix the review findings
+- [x] Task 6: Fix the review findings
 - [ ] Task 7: Re-review the fix
 - [ ] Checkpoint: reviewed
 - [ ] Task 8: Ship checks and the tag commands

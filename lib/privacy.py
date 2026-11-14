@@ -3,20 +3,23 @@
 High precision by design: every pattern matches only text that is almost surely private, so
 normal descriptions of code (logger.info, @property, GPT-4, a git SHA, a long test name) pass.
 It cannot catch a person's name, a bare host name or an internal ID; the agent is told to
-describe the miss in its own words. Text is normalised first (NFKC, zero-width characters
-removed, an ideographic full stop read as a dot), so a full-width or small at sign, a
-full stop or a split token does not hide a leak.
+describe the miss in its own words. Text is normalised first (NFKC, invisible characters
+removed, an ideographic full stop read as a dot, %40 and &#64; read as @), so a full-width
+or small at sign, a full stop, an encoded @ or a split token does not hide a leak.
 """
 
 import re
 import unicodedata
 
-ZERO_WIDTH = re.compile("[​-‍⁠﻿­]")
+# Invisible characters that can split a token or an address: zero-width, LRM/RLM, word joiner
+# and invisible operators, BOM, soft hyphen, Mongolian vowel separator, grapheme joiner.
+INVISIBLE = re.compile("[\u200b-\u200f\u2060-\u2064\ufeff\u00ad\u180e\u034f]")
+ENCODED_AT = re.compile("%40|&#64;")
 CARD = re.compile(r"\b\d(?:[ -]?\d){12,18}\b")
 LETTER = r"[^\W\d_]"  # any letter, not only ASCII: anna@корп is an address too
 # A version or package tag after @ (HEAD@{1}, pkg@latest, actions/checkout@v4), when it is the
 # whole name: v2-gateway or master-01 is a host.
-TAG = r"(?:v\d+(?:\.\d+)*|latest|next|beta|alpha|canary|rc|stable|lts|main|master)(?![\w-])"
+TAG = r"(?:v\d+|latest|next|beta|alpha|canary|rc|stable|lts|main|master)(?![\w-])"
 # A link without a scheme ends its host with a TLD, maybe a port, then a path, query or anchor
 # (a "?" that ends a question is not one).
 TLD = LETTER + r"{2,63}"
@@ -26,6 +29,8 @@ SOURCE_TYPES = (
     "md|py|rs|ts|tsx|js|jsx|mjs|cjs|json|toml|yaml|yml|txt|lock|cfg|ini|html|css|sh|rb|kt|go"
     "|java|cpp|hpp"
 )
+# A host with two or more dots (jira.corp.net), or one dot not before a source file type
+# (example.com, not README.md).
 DEEP_HOST = r"[\w-]+(?:\.[\w-]+)+\." + TLD
 SHALLOW_HOST = r"[\w-]+\.(?!(?:" + SOURCE_TYPES + r")(?![\w-]))" + TLD
 
@@ -40,10 +45,11 @@ PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b"), "a token or key"),
     (re.compile(r"\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\."), "a token or key"),
     (re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"), "a token or key"),
-    # An e-mail: a word right before the @ (so @property and @mentions pass), a dotted domain
-    # with a letter in it (so react@18.3.1 passes).
+    # An e-mail: a word right before the @ (so @property and @mentions pass), maybe quoted or
+    # escaped ("anna"@, anna\@, **anna**@), and a dotted domain with a letter in it (so
+    # react@18.3.1 passes).
     (
-        re.compile(r"\w[\w.+-]*\s?@\s?(?=[\w.-]*" + LETTER + r")[\w-]+(?:\.[\w-]+)+"),
+        re.compile(r"\w[\w.+-]*[\\\"'*]{0,2}\s?@\s?(?=[\w.-]*" + LETTER + r")[\w-]+(?:\.[\w-]+)+"),
         "an e-mail address",
     ),
     # One without a dot (me@localhost): the domain starts with a letter and is not a tag. No
@@ -94,7 +100,9 @@ PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
 
 
 def normal(text: str) -> str:
-    return ZERO_WIDTH.sub("", unicodedata.normalize("NFKC", text)).replace("\u3002", ".")
+    """The text as the patterns see it: a disguised character reads as the plain one."""
+    text = INVISIBLE.sub("", unicodedata.normalize("NFKC", text)).replace("\u3002", ".")
+    return ENCODED_AT.sub("@", text)
 
 
 def luhn(digits: str) -> bool:

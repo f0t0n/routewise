@@ -115,14 +115,21 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Description:** One `fix:` commit for findings 1–4 and A–C. Test first: add the A–C leaks and the finding-3 pins to `tests/test_privacy.py`, show which fail on HEAD, then change `lib/privacy.py`; update the CHANGELOG 0.1.1 line and `tasks/release-0.1.1.md` (finding 1 and the new refusals).
 
 **Acceptance criteria:**
-- [ ] The A–C cases fail on HEAD before the fix (red shown) and pass after; the finding-3 pins are recorded as guards (they pass on HEAD by nature) and each one fails under the mutation the reviewer named.
-- [ ] `TAG` is `v\d+` plus the words; every case allowed before still passes (no test removed or moved).
-- [ ] CHANGELOG 0.1.1 and the notes say "a version made only of digits and dots"; both name the new refusals (markup before `@`, `%40`, invisible characters); the notes still add nothing the CHANGELOG lacks.
+- [x] The A–C cases fail on HEAD before the fix (red shown) and pass after; the finding-3 pins are recorded as guards (they pass on HEAD by nature) and each one fails under the mutation the reviewer named.
+- [x] `TAG` is `v\d+` plus the words; every case allowed before still passes (no test removed or moved).
+- [x] CHANGELOG 0.1.1 and the notes say "a version made only of digits and dots"; both name the new refusals (markup before `@`, `%40`, invisible characters); the notes still add nothing the CHANGELOG lacks.
 
 **Verification:**
-- [ ] `uv run pytest tests/test_privacy.py` red, then green; mutations re-run in a scratch copy; `make check` green
+- [x] `uv run pytest tests/test_privacy.py` red, then green; mutations re-run in a scratch copy; `make check` green
 
 **Dependencies:** Task 5 round 1. **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: close the gaps found in the review of the 0.1.1 filter`
+
+**Result (2026-11-14):**
+
+- **Red:** 11 new A–C cases in `tests/test_privacy.py` failed on HEAD (`451aaf5`): `anna\@`, `"anna"@`, `**anna**@`, `'anna'@`, `%40`, `&#64;`, RLM before `@`, LRM inside `ghp_`, U+2062, U+180E, U+034F before `@`. A first draft put U+2062/180E/034F inside the local part, where `na@corp.com` is refused anyway; moved before the `@` so they test the split. Green after the fix (131 privacy tests).
+- **Pins (finding 3):** tag words `rc` … `canary`, `root@master`/`me@main`, `host.corp:65535/x`, `a.b/c`, a 64-letter TLD, `anna@v`, and every R5 source type (listed in the test, not imported, so dropping one from the code is caught). Mutations run on a scratch copy with an unmutated control (130 passed, survived): all 10 killed, `v\d+`→`v\d*` after adding `anna@v`. A first run reported every mutation killed because `uv run` could not find the project from the scratch folder; the control exposed it.
+- **Code:** `ZERO_WIDTH` → `INVISIBLE` (adds U+200E/F, U+2061–2064, U+180E, U+034F), `ENCODED_AT` read as `@` in `normal()` (with a docstring), up to two of `\ " ' *` before the `@` of a dotted address, `TAG` uses `v\d+`, host patterns have examples. No allowed case removed or moved.
+- **Docs:** CHANGELOG 0.1.1 and the notes say "a version made only of digits and dots", name the new refusals and the kept gaps. Found while writing them: both claimed `//host/x` is refused, but a dotless host is a kept gap; changed to `//host.com/x` (checked: `//host/x` passes, `//host.com/x` is refused). README Safety bullet names encoded addresses.
 
 ## Task 7: Re-review the fix
 

@@ -69,6 +69,21 @@ LEAKS_SINCE_0_1_1 = [
     "jira.corp.net?id=1",
     "jira.corp.net#X-1",
     "git.company.sh/repo and wiki.acme.md/page",
+    "host.corp:65535/x",
+    "ssh anna@v",  # only v<digits> is a tag (R5)
+    # Found in the review and audit of 0.1.1 (R5 amended): markup before the @, an encoded @,
+    # invisible characters inside an address or a token.
+    "ask anna\\@corp.com",
+    'ask "anna"@corp.com',
+    "ask **anna**@corp.com",
+    "ask 'anna'@corp.com",
+    "ask anna%40corp.com",
+    "ask anna&#64;corp.com",
+    "ask anna\u200f@corp.com",
+    "ghp\u200e_" + "a1B2c3D4e5F6g7H8i9J0",
+    "ask anna\u2062@corp.com",
+    "ask anna\u180e@corp.com",
+    "ask anna\u034f@corp.com",
 ]
 # Code words refused on purpose since 0.1.1: they read exactly like a link or an address.
 REFUSED_CODE_WORDS = [
@@ -109,7 +124,16 @@ CLEAN_SINCE_0_1_1 = [
     "pinned actions/checkout@v4 and org/action@main",
     "reset to HEAD@{1} and dropped stash@{0}",
     "used @property and @types/node",
+    "pinned pkg@rc, pkg@lts, pkg@stable, pkg@next, pkg@beta, pkg@alpha, pkg@canary",
+    "ssh root@master and me@main still pass (R5 kept gap)",
+    "a.b/c is too short a TLD",
+    "x." + "a" * 64 + "/y is too long a TLD",
 ]
+# A host with one dot that ends in a source file type is a path (R5: the full list).
+SOURCE_TYPES = (
+    "md py rs ts tsx js jsx mjs cjs json toml yaml yml txt lock cfg ini html css sh rb kt go java"
+    " cpp hpp"
+).split()
 
 
 @pytest.mark.parametrize("text", SECRETS + LEAKS + LEAKS_SINCE_0_1_1 + REFUSED_CODE_WORDS)
@@ -120,3 +144,8 @@ def test_refuses_clear_leaks(text: str):
 @pytest.mark.parametrize("text", CLEAN + CLEAN_SINCE_0_1_1)
 def test_allows_normal_code_words(text: str):
     assert finding(text) is None
+
+
+@pytest.mark.parametrize("ext", SOURCE_TYPES)
+def test_allows_a_source_file_before_a_slash(ext: str):
+    assert finding(f"see name.{ext}/x") is None
