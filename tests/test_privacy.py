@@ -163,6 +163,8 @@ LEAKS_SINCE_0_1_1 = [
     # 0.1.2 (R7 G2): a URL-encoded link.
     "next=https%3A%2F%2Fjira.corp.net%2Fbrowse%2FX-1",
     "next=https%3a%2f%2fjira.corp.net",
+    # 0.1.2 (R7 G3): an escaped @ without a dot in the domain.
+    "mailed me\\@localhost",
     # Round 6: case folds in ASCII only, and a SHA has a digit (R5).
     "ask anna@ma\u0131n",
     "ask anna@ma\u0130n",
@@ -251,6 +253,7 @@ KEPT_GAPS = [
     "ask anna@{corp.com}",
     "ask anna@[corp.com]",
     "ask anna@<corp.com>",
+    "ask jane \\@ localhost",  # spaces around a dotless @ stay a gap (R5, R7 G3)
 ]
 # Text 0.1.0 allowed that rounds 2 to 4 refused for a while (success criterion 10).
 CLEAN_SINCE_ROUND_4 = [
@@ -289,6 +292,7 @@ CLEAN_SINCE_ROUND_4 = [
     "v10.0.0.12",
     "ratio 100%3A and a%3Ab and 50%2F%2F",  # encoded : or / alone is not a link (R7 G2)
     "path C%3A%2Ftemp was wrong",  # an encoded :/ with one slash is not a scheme (R7 G2)
+    'escaped \\@ in a Perl string, and "x"@property',  # no word right before the \\@ (R7 G3)
 ]
 # Every character R5 counts as invisible, one per range and every one 0.1.1 listed first.
 INVISIBLE = [

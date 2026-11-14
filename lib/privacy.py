@@ -91,9 +91,9 @@ PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         ),
         "an e-mail address",
     ),
-    # One without a dot (me@localhost): the domain starts with a letter and is not a tag. No
-    # space around the @ here, so "used @property" passes.
-    (re.compile(r"\w[\w.+-]*@(?!" + TAG + ")" + LETTER + r"[\w-]*"), "an e-mail address"),
+    # One without a dot (me@localhost, also escaped as me\@localhost): the domain starts with a
+    # letter and is not a tag. No space around the @ here, so "used @property" passes.
+    (re.compile(r"\w[\w.+-]*\\?@(?!" + TAG + ")" + LETTER + r"[\w-]*"), "an e-mail address"),
     (
         re.compile(
             r"\w+\s*(?:\(at\)|\[at\]|\{at\}|\sat\s)\s*[\w-]+"

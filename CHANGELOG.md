@@ -4,6 +4,7 @@
 
 - The miss-log filter catches a leak touched by a letter of another script with no space between: `服务器在10.0.0.12上`, `key AKIA…が漏れた`, `见www.example.com`, `ב10.0.0.12`, an ID or token right after Chinese or Japanese text (spec R7). Word edges are now ASCII only, so text 0.1.1 refused after a space is also refused right after such a letter (`版本1.2.3.4`, as `version 1.2.3.4` was; `运行www.py`; `café10.0.0.12`); an ASCII letter or digit still joins the word (`xAKIA…`, `v10.0.0.12` pass as before).
 - The miss-log filter catches a URL-encoded link: a scheme followed by `%3A%2F%2F`, in any case (`next=https%3A%2F%2Fjira.corp.net%2F…`); an encoded `:` or `/` on its own still passes (`100%3A`, `C%3A%2Ftemp`) (spec R7).
+- The miss-log filter catches an escaped `@` without a dot in the domain (`me\@localhost`); spaces around a dotless `@` still pass (spec R7).
 
 ## 0.1.1 (2026-11-14)
 

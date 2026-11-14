@@ -39,10 +39,12 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green be
 **Description:** Test first: `me\@localhost` fails on HEAD. Then the dotless rule allows one backslash before the `@`.
 
 **Acceptance criteria:**
-- [ ] Red on HEAD, green after; `"x"@property`, `used @property` and `jane \@ example.com` (spaces stay a kept gap, pinned in `KEPT_GAPS`) keep their 0.1.1 result.
-- [ ] Mutations; survivors named.
+- [x] Red on HEAD, green after; `"x"@property`, `used @property` and `jane \@ example.com` (spaces stay a kept gap, pinned in `KEPT_GAPS`) keep their 0.1.1 result.
+- [x] Mutations; survivors named.
 
 **Verification:** as Task 1. **Dependencies:** Task 2. **Files:** as Task 1. **Scope:** XS. Commit: `fix: catch an escaped @ without a dot in the domain (R7 G3)`
+
+**Result (2026-11-14):** red on HEAD (`15d6a1f`): `mailed me\@localhost` and its guard copies (4). Green: the dotless rule takes `\\?` before the `@`. Pinned: `jane \@ localhost` in `KEPT_GAPS`; `escaped \@ in a Perl string, and "x"@property` allowed. Mutations (control 912): no backslash, backslash or quote, backslash or Markdown, backslash and spaces all killed. **Survivor, named:** any number of backslashes (`\\*`): two backslashes before the `@` (`me\\@localhost`) pass, since R7 allows one; not in R7, recorded for the next release list.
 
 ## Task 4: a JWT written with `。`
 
