@@ -52,15 +52,17 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Description:** Test first: `tests/test_miss_log.py` asserts that a refused entry's stderr starts with `routewise: `; it fails while `lib/miss_log.py` prints `miss-log: `. Then change both prints in `main` and add a `CHANGELOG.md` line under 0.1.1.
 
 **Acceptance criteria:**
-- [ ] The new assertion fails on HEAD before the fix (red shown), passes after.
-- [ ] Both error branches of `lib/miss_log.py` `main` print `routewise: `; the file-error branch is tested if a log path that is a folder reaches it, otherwise checked by reading and named here.
-- [ ] Exit code 2 and the message text after the prefix are unchanged (existing tests still pass); argparse usage errors unchanged.
-- [ ] `CHANGELOG.md` 0.1.1 has one line for R6.
+- [x] The new assertion fails on HEAD before the fix (red shown), passes after.
+- [x] Both error branches of `lib/miss_log.py` `main` print `routewise: `; the file-error branch is tested if a log path that is a folder reaches it, otherwise checked by reading and named here.
+- [x] Exit code 2 and the message text after the prefix are unchanged (existing tests still pass); argparse usage errors unchanged.
+- [x] `CHANGELOG.md` 0.1.1 has one line for R6.
 
 **Verification:**
-- [ ] `uv run pytest tests/test_miss_log.py` red, then green; `make check` green
+- [x] `uv run pytest tests/test_miss_log.py` red, then green; `make check` green
 
 **Dependencies:** None. **Files:** `lib/miss_log.py`, `tests/test_miss_log.py`, `CHANGELOG.md`, `tasks/todo.md`. **Scope:** XS. Commit: `fix: print miss-log errors with the routewise: prefix`
+
+**Result (2026-11-14):** `test_errors_start_with_the_routewise_prefix` failed on HEAD before the fix (`'miss-log: what holds an e-mail address; ...'.startswith('routewise: what holds an e-mail address')` is False) and passes after. The file-error branch is tested: `report` on a log path that is a folder raises `IsADirectoryError`, which reaches the `OSError` branch, no symlink or permission trick needed. `grep '"miss-log:' lib bin` finds nothing left; argparse usage errors still read `miss-log add: error: ...`. All 9 tests in `tests/test_miss_log.py` pass.
 
 ## Task 4: Draft the 0.1.1 release notes
 

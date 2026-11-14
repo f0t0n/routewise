@@ -156,10 +156,10 @@ def main(argv: list[str] | None = None) -> int:
     try:
         print(run(args))
     except (Fail, RoleError, SettingsError, PathError) as err:
-        print(f"miss-log: {err}", file=sys.stderr)
+        print(f"routewise: {err}", file=sys.stderr)
         return 2
     except (OSError, ValueError) as err:
-        print(f"miss-log: cannot read or write a file: {err}", file=sys.stderr)
+        print(f"routewise: cannot read or write a file: {err}", file=sys.stderr)
         return 2
     return 0
 

@@ -67,6 +67,17 @@ def test_refuses_a_dotless_address_and_a_link_without_a_scheme(project: Path):
     assert [r["what"] for r in lines(log)] == ["edited lib/privacy.py and src/a.ts/"]
 
 
+def test_errors_start_with_the_routewise_prefix(project: Path):
+    """Like every routewise error (R6): a refused entry, and a log that cannot be read."""
+    refused = run(project, *ADD, "--role", "reviewer", "--what", "ask someone@example.com")
+    (project / "logs" / "delegation-misses.jsonl").mkdir(parents=True)
+    unreadable = run(project, "bin/miss-log", "report")
+
+    assert (refused.returncode, unreadable.returncode) == (2, 2)
+    assert refused.stderr.startswith("routewise: what holds an e-mail address"), refused.stderr
+    assert unreadable.stderr.startswith("routewise: cannot read or write a file"), unreadable.stderr
+
+
 def test_report_counts_by_role_tier_and_effort(project: Path):
     run(project, *ADD, "--role", "reviewer", "--what", "one")
     run(project, *ADD, "--role", "reviewer", "--what", "two")
