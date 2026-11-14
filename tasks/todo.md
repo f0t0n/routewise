@@ -51,10 +51,12 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green be
 **Description:** Test first: `eyJ…。eyJ…。_Qx9` and `eyJ…。eyJ…。` (no signature) fail on HEAD. Then the JWT rule reads `[.。]` as its dots.
 
 **Acceptance criteria:**
-- [ ] Both red on HEAD, green after; the existing JWT cases keep their result.
-- [ ] Mutations; survivors named.
+- [x] Both red on HEAD, green after; the existing JWT cases keep their result.
+- [x] Mutations; survivors named.
 
 **Verification:** as Task 1. **Dependencies:** Task 3. **Files:** as Task 1. **Scope:** XS. Commit: `fix: catch a JWT written with 。 (R7)`
+
+**Result (2026-11-14):** red on HEAD (`9faf983`): the three `。` JWTs (signature starting with `_`, with `-`, none) and their guard copies (12). Green: the JWT rule reads `[.\u3002]` for both dots. Mutations (control 924, then 928): second dot back to `.` killed; first dot back to `.` survived because `DOT_STOP` already turns that `。` into a dot when the header ends in a letter or digit, which every real header does (`J9`, `In0`, `fQ`); a synthetic header ending in `_` pins R7's "wherever it sits", then killed. Existing JWT cases keep their result.
 
 ## Task 5: link ends `$`, `!/`, `:~:`, ASCII after `?` and `#`
 

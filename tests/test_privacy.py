@@ -165,6 +165,12 @@ LEAKS_SINCE_0_1_1 = [
     "next=https%3a%2f%2fjira.corp.net",
     # 0.1.2 (R7 G3): an escaped @ without a dot in the domain.
     "mailed me\\@localhost",
+    # 0.1.2 (R7): a JWT written with 。, where a signature starting with _ or - or none kept the
+    # last 。 from reading as a dot.
+    "token eyJhbGciOiJIUzI1NiJ9。eyJzdWIiOiIxIn0。_Qx9",
+    "token eyJhbGciOiJIUzI1NiJ9。eyJzdWIiOiIxIn0。-Qx9",
+    "token eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbm5hIn0。",
+    "token eyJhbGciOiJIUzI1Ni_。eyJzdWIiOiIxIn0.x",  # synthetic: a first 。 the views keep (R7)
     # Round 6: case folds in ASCII only, and a SHA has a digit (R5).
     "ask anna@ma\u0131n",
     "ask anna@ma\u0130n",

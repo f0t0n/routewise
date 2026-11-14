@@ -75,7 +75,11 @@ PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         "a token or key",
     ),
     (re.compile(WORD_START + r"(?:AKIA|ASIA)[A-Z0-9]{16}" + WORD_END), "a token or key"),
-    (re.compile(WORD_START + r"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\."), "a token or key"),
+    # A JWT: header and payload, each followed by a dot, also written as 。 (spec R7).
+    (
+        re.compile(WORD_START + r"eyJ[A-Za-z0-9_-]+[.\u3002][A-Za-z0-9_-]+[.\u3002]"),
+        "a token or key",
+    ),
     (re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"), "a token or key"),
     # An e-mail: a word right before the @ (so @property and @mentions pass), maybe with markup
     # around the @, and a dotted domain with a letter in it (so react@18.3.1 passes).
