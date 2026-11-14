@@ -167,17 +167,25 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md). `make check` green before
 **Description:** One `fix:` commit for R1–R7 and R9–R12, built test first. `lib/privacy.py` `finding()` checks a split view and a joined view (SPEC.md R5, "Normalisation, two views of the text"); invisible characters are every Cf character plus U+034F and U+FE00–FE0F; the joined view decodes the six forms of `@` and runs NFKC again; the markup before and after the `@` of a dotted address is named and allows up to three characters.
 
 **Acceptance criteria:**
-- [ ] Red shown on HEAD for: the 7 regression inputs (R1, R2), the bidi, variation-selector and tag cases (R3, R4), the accent case (R5), the four `@` encodings (R6) and the markup cases (R7); green after.
-- [ ] A guard test: every refused case (secrets, leaks, 0.1.1 leaks) stays refused with `x` + an invisible character put in front of it, for LRM, U+2066 and ZWSP; every allowed case stays allowed with an invisible character inserted after its first word (assumption 2 of the R5 amendment).
-- [ ] A test per invisible class (Cf sample from each range, U+034F, U+FE0F) and for every code point of the old list, U+2063 and U+2064 included; the markup limit of three is pinned (four passes, three is refused).
-- [ ] The markup classes are named constants; no allowed case removed or moved.
-- [ ] Mutations re-run with an unmutated control, including round 2's survivors (`\u2060-\u2063`, `{0,2}`→`{0,3}`); survivors named here.
-- [ ] CHANGELOG 0.1.1, README Safety bullet and `tasks/release-0.1.1.md` say what is refused now; the notes add nothing the CHANGELOG lacks.
+- [x] Red shown on HEAD for: the 7 regression inputs (R1, R2), the bidi, variation-selector and tag cases (R3, R4), the accent case (R5), the four `@` encodings (R6) and the markup cases (R7); green after.
+- [x] A guard test: every refused case (secrets, leaks, 0.1.1 leaks) stays refused with `x` + an invisible character put in front of it, for LRM, U+2066 and ZWSP; every allowed case stays allowed with an invisible character inserted after its first word (assumption 2 of the R5 amendment).
+- [x] A test per invisible class (Cf sample from each range, U+034F, U+FE0F) and for every code point of the old list, U+2063 and U+2064 included; the markup limit of three is pinned (four passes, three is refused).
+- [x] The markup classes are named constants; no allowed case removed or moved.
+- [x] Mutations re-run with an unmutated control, including round 2's survivors (`\u2060-\u2063`, `{0,2}`→`{0,3}`); survivors named here.
+- [x] CHANGELOG 0.1.1, README Safety bullet and `tasks/release-0.1.1.md` say what is refused now; the notes add nothing the CHANGELOG lacks.
 
 **Verification:**
-- [ ] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
+- [x] `uv run pytest tests/test_privacy.py` red, then green; `make check` green
 
 **Dependencies:** Task 7 round 2, R5 amended (`51c13dc`). **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `README.md`, `tasks/release-0.1.1.md`, `tasks/todo.md`. **Scope:** M. Commit: `fix: check two views of miss-log text so invisible characters cannot hide a leak`
+
+**Result (2026-11-14):**
+
+- **Red on HEAD (`4e797a4`):** all 26 new leak cases (7 regression inputs of `1aa6725`, bidi, variation-selector, tag, accent, 4 encodings, 8 markup); 16 of 30 invisible characters (every one outside the old list; the old 14, U+2063 and U+2064 included, pass as guards); 94 guard cases (a leak right after LRM, LRI or ZWSP). The allowed-with-invisible guard passed on HEAD and after (no false positive from an inserted invisible character).
+- **Green:** `views()` gives the split view (invisible → space, nothing decoded) and the joined view (invisible removed, six `@` encodings decoded, `。` → `.`, NFKC again); `finding()` refuses if either matches. Invisible is category Cf plus U+034F and U+FE00–FE0F. `MARKUP_BEFORE_AT` and `MARKUP_AFTER_AT` are named, three each. No allowed case removed or moved.
+- **Found during the build:** the guard failed for `ghp<LRM>_…` (a round-1 case) with an invisible character in front: disguised twice, neither view sees it. The maintainer chose to keep it as a gap; R5 amended (`docs(spec): keep a leak disguised twice…`). The guard skips inputs that already hold an invisible character; its docstring says why. CHANGELOG and notes list the gap.
+- **Mutations:** 18 run on a scratch copy with an unmutated control (522 passed, survived); all 18 killed, among them each view alone, removing instead of spacing in the split view, no second NFKC, each encoding, both markup limits ({0,3}→{0,4} and →{0,2}), and round 2's survivors (Cf ranges, the markup limit).
+- **Docs:** CHANGELOG 0.1.1, README Safety bullet and the notes name markup, encodings, invisible characters, the two views and the kept gaps; the clause the CHANGELOG lacked (R12) is gone. `make check`: 642 passed.
 
 ## Task 9: Re-review the second fix
 

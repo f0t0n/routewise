@@ -27,7 +27,7 @@ Extended after Task 2: R6 (bin/miss-log printed `miss-log: ` instead of `routewi
 - [ ] Task 5: Review and audit of the final change and the notes
 - [x] Task 6: Fix the review findings
 - [ ] Task 7: Re-review the fix
-- [ ] Task 8: Fix the re-review findings
+- [x] Task 8: Fix the re-review findings
 - [ ] Task 9: Re-review the second fix
 - [ ] Checkpoint: reviewed
 - [ ] Task 10: Ship checks and the tag commands

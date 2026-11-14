@@ -1,5 +1,7 @@
 """The miss-log privacy filter (spec M1): clear leaks refused, normal code words allowed."""
 
+import unicodedata
+
 import pytest
 
 from privacy import finding
@@ -84,6 +86,36 @@ LEAKS_SINCE_0_1_1 = [
     "ask anna\u2062@corp.com",
     "ask anna\u180e@corp.com",
     "ask anna\u034f@corp.com",
+    # Found in the re-audit of 0.1.1 (R5, two views of the text). Regressions of 1aa6725: an
+    # invisible character removed joined a leak to the word before it; a decoded %40 hid a link.
+    "x\u200eAKIA" + "ABCDEFGHIJKLMNOP",
+    "שלום\u200eghp_" + "abcdefgh12345678",
+    "כתובת\u200e10.0.0.1",
+    "שלום\u200ehttps://example.com",
+    "id\u200e123e4567-e89b-12d3-a456-426614174000",
+    "redirect=%40host.com/path",
+    "(%40example.com/x)",
+    # Bidi controls, variation selectors and tag characters; an accent split from its letter.
+    "ask anna\u2066@corp.com",
+    "ask anna\u202a@corp.com",
+    "ask anna\u061c@corp.com",
+    "ask anna\u2066@localhost",
+    "ask anna\ufe0f@corp.com",
+    "ask anna\U000e0041@corp.com",
+    "ask jose\u200b\u0301@corp.com",
+    # Other ways to write @, and markup around it.
+    "ask anna\\u0040corp.com",
+    "ask anna&#x40;corp.com",
+    "ask anna&#064;corp.com",
+    "ask anna&commat;corp.com",
+    "ask `anna`@corp.com",
+    "ask [anna]@corp.com",
+    "ask <anna>@corp.com",
+    "ask anna***@corp.com",
+    "ask ***anna***@corp.com",
+    "ask anna@**corp.com**",
+    "ask anna@`corp.com`",
+    "ask anna@***corp.com",
 ]
 # Code words refused on purpose since 0.1.1: they read exactly like a link or an address.
 REFUSED_CODE_WORDS = [
@@ -128,6 +160,14 @@ CLEAN_SINCE_0_1_1 = [
     "ssh root@master and me@main still pass (R5 kept gap)",
     "a.b/c is too short a TLD",
     "x." + "a" * 64 + "/y is too long a TLD",
+    "anna****@corp.com and anna@****corp.com: markup is up to three characters (R5)",
+    'printf %40s, 100%40 done, a["k"]@b, he said "hi"@ noon',
+]
+# Every character R5 counts as invisible, one per range and every one 0.1.1 listed first.
+INVISIBLE = [
+    *"\u200b\u200c\u200d\u200e\u200f\u2060\u2061\u2062\u2063\u2064\ufeff\u00ad\u180e\u034f",
+    *"\u202a\u202b\u202c\u202d\u202e\u2066\u2067\u2068\u2069\u061c\u0600",
+    *"\ufe00\ufe0f\U000e0001\U000e0041\U000e007f",
 ]
 # A host with one dot that ends in a source file type is a path (R5: the full list).
 SOURCE_TYPES = (
@@ -149,3 +189,29 @@ def test_allows_normal_code_words(text: str):
 @pytest.mark.parametrize("ext", SOURCE_TYPES)
 def test_allows_a_source_file_before_a_slash(ext: str):
     assert finding(f"see name.{ext}/x") is None
+
+
+@pytest.mark.parametrize("char", INVISIBLE, ids=lambda c: f"U+{ord(c):04X}")
+def test_refuses_an_address_split_by_an_invisible_character(char: str):
+    assert finding(f"ask anna{char}@corp.com") is not None
+
+
+def visible(text: str) -> bool:
+    return not any(unicodedata.category(c) == "Cf" or c in "\u034f\ufe0f" for c in text)
+
+
+@pytest.mark.parametrize("char", ["\u200e", "\u2066", "\u200b"], ids=["LRM", "LRI", "ZWSP"])
+@pytest.mark.parametrize("text", [t for t in SECRETS + LEAKS + LEAKS_SINCE_0_1_1 if visible(t)])
+def test_refuses_a_leak_right_after_an_invisible_character(text: str, char: str):
+    """An invisible character must not join a leak to the word before it (R5, split view).
+
+    A leak that is also split by one inside it is not covered by either view (see SPEC R5).
+    """
+    assert finding("x" + char + text) is not None
+
+
+@pytest.mark.parametrize("char", ["\u200e", "\u2066", "\u200b"], ids=["LRM", "LRI", "ZWSP"])
+@pytest.mark.parametrize("text", CLEAN + CLEAN_SINCE_0_1_1)
+def test_allows_normal_text_with_an_invisible_character(text: str, char: str):
+    first, _, rest = text.partition(" ")
+    assert finding(f"{first}{char} {rest}") is None

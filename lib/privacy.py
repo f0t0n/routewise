@@ -3,18 +3,19 @@
 High precision by design: every pattern matches only text that is almost surely private, so
 normal descriptions of code (logger.info, @property, GPT-4, a git SHA, a long test name) pass.
 It cannot catch a person's name, a bare host name or an internal ID; the agent is told to
-describe the miss in its own words. Text is normalised first (NFKC, invisible characters
-removed, an ideographic full stop read as a dot, %40 and &#64; read as @), so a full-width
-or small at sign, a full stop, an encoded @ or a split token does not hide a leak.
+describe the miss in its own words. The patterns run on two normalised views of the text
+(spec R5), and the text is refused if either matches: in the split view an invisible character
+is a space, so it still ends the word before a leak; in the joined view it is removed and an
+encoded @ is decoded, so neither can split an address or a token.
 """
 
 import re
 import unicodedata
 
-# Invisible characters that can split a token or an address: zero-width, LRM/RLM, word joiner
-# and invisible operators, BOM, soft hyphen, Mongolian vowel separator, grapheme joiner.
-INVISIBLE = re.compile("[\u200b-\u200f\u2060-\u2064\ufeff\u00ad\u180e\u034f]")
-ENCODED_AT = re.compile("%40|&#64;")
+# Invisible characters besides the format characters (category Cf: zero-width, LRM/RLM, bidi
+# controls, soft hyphen, BOM, tags): the grapheme joiner and the variation selectors.
+OTHER_INVISIBLE = frozenset("\u034f" + "".join(chr(c) for c in range(0xFE00, 0xFE10)))
+ENCODED_AT = re.compile(r"%40|&#0*64;|&#x0*40;|&commat;|\\u0040", re.IGNORECASE)
 CARD = re.compile(r"\b\d(?:[ -]?\d){12,18}\b")
 LETTER = r"[^\W\d_]"  # any letter, not only ASCII: anna@корп is an address too
 # A version or package tag after @ (HEAD@{1}, pkg@latest, actions/checkout@v4), when it is the
@@ -33,6 +34,10 @@ SOURCE_TYPES = (
 # (example.com, not README.md).
 DEEP_HOST = r"[\w-]+(?:\.[\w-]+)+\." + TLD
 SHALLOW_HOST = r"[\w-]+\.(?!(?:" + SOURCE_TYPES + r")(?![\w-]))" + TLD
+# Markdown, quotes or an escape around the @ of a dotted address: "anna"@, anna\@, `anna`@,
+# [anna]@, ***anna***@, anna@**corp.com**. Up to three characters each side.
+MARKUP_BEFORE_AT = r"""[\\"'*`_~)\]>]{0,3}"""
+MARKUP_AFTER_AT = r"[*`_~(\[<]{0,3}"
 
 PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (
@@ -45,11 +50,18 @@ PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b"), "a token or key"),
     (re.compile(r"\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\."), "a token or key"),
     (re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"), "a token or key"),
-    # An e-mail: a word right before the @ (so @property and @mentions pass), maybe quoted or
-    # escaped ("anna"@, anna\@, **anna**@), and a dotted domain with a letter in it (so
-    # react@18.3.1 passes).
+    # An e-mail: a word right before the @ (so @property and @mentions pass), maybe with markup
+    # around the @, and a dotted domain with a letter in it (so react@18.3.1 passes).
     (
-        re.compile(r"\w[\w.+-]*[\\\"'*]{0,2}\s?@\s?(?=[\w.-]*" + LETTER + r")[\w-]+(?:\.[\w-]+)+"),
+        re.compile(
+            r"\w[\w.+-]*"
+            + MARKUP_BEFORE_AT
+            + r"\s?@\s?"
+            + MARKUP_AFTER_AT
+            + r"(?=[\w.-]*"
+            + LETTER
+            + r")[\w-]+(?:\.[\w-]+)+"
+        ),
         "an e-mail address",
     ),
     # One without a dot (me@localhost): the domain starts with a letter and is not a tag. No
@@ -99,10 +111,23 @@ PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
 )
 
 
-def normal(text: str) -> str:
-    """The text as the patterns see it: a disguised character reads as the plain one."""
-    text = INVISIBLE.sub("", unicodedata.normalize("NFKC", text)).replace("\u3002", ".")
-    return ENCODED_AT.sub("@", text)
+def invisible(char: str) -> bool:
+    return unicodedata.category(char) == "Cf" or char in OTHER_INVISIBLE
+
+
+def views(text: str) -> tuple[str, str]:
+    """The split and the joined view of the text (spec R5); see the module docstring."""
+    text = unicodedata.normalize("NFKC", text)
+    split = "".join(" " if invisible(c) else c for c in text)
+    joined = ENCODED_AT.sub("@", "".join(c for c in text if not invisible(c)))
+    return split, unicodedata.normalize("NFKC", joined.replace("\u3002", "."))
+
+
+def first_match(text: str) -> str | None:
+    for pattern, what in PATTERNS:
+        if pattern.search(text):
+            return what
+    return "a card number" if has_card(text) else None
 
 
 def luhn(digits: str) -> bool:
@@ -119,8 +144,5 @@ def has_card(text: str) -> bool:
 
 def finding(text: str) -> str | None:
     """What kind of private data `text` holds, or None."""
-    text = normal(text)
-    for pattern, what in PATTERNS:
-        if pattern.search(text):
-            return what
-    return "a card number" if has_card(text) else None
+    split, joined = views(text)
+    return first_match(split) or first_match(joined)
