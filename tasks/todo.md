@@ -1,5 +1,7 @@
 # Tasks: miss-log gaps, release 0.1.2 (R7)
 
+Shipped 2026-11-14: the maintainer pushed `main` and the tag `v0.1.2` (on `0327b67`) from the host and published the GitHub release.
+
 Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green before each commit (the pre-commit hook enforces it). For each fix task: red shown against HEAD before the change, the whole `tests/test_privacy.py` green after, a CHANGELOG line under `## Unreleased`.
 
 ## Task 1: G1, ASCII word boundaries
@@ -175,6 +177,6 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green be
 - `make check`: 1105 passed, lint and types clean, gitleaks no leaks, self-install current.
 
 ## Ship (maintainer, from the host)
-- [ ] `git tag -a v0.1.2 -m "routewise 0.1.2" <final commit>`
-- [ ] `git push origin main v0.1.2`
-- [ ] `gh release create v0.1.2 --title "routewise 0.1.2" --notes-file tasks/release-0.1.2.md`
+- [x] `git tag -a v0.1.2 -m "routewise 0.1.2" <final commit>`
+- [x] `git push origin main v0.1.2`
+- [x] `gh release create v0.1.2 --title "routewise 0.1.2" --notes-file tasks/release-0.1.2.md`
