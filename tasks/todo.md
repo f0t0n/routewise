@@ -60,6 +60,8 @@ Results 2026-11-14: tag `v0.1.0` is annotated (`git cat-file -t` → `tag`), tag
 Reviewed 2026-11-14 (`reviewer`, sonnet): four Required and three Optional findings, all fixed in `a1a4678`: "read-only" corrected to "no write or edit tools" with the `Bash` caveat (notes, README, CHANGELOG, SPEC S6); Explore on Haiku in 11 of 12 entries; the miss-log categories in CHANGELOG match `lib/privacy.py`; the README install table row indented; `--uninstall` says what it keeps; the `CLAUDE.md` caveat and the source of the version floors; CHANGELOG in the present tense. The fourth Optional (publish only after pushing the tag) was already the Ship order. The local tag was deleted (it was on `8dc5d4d`, never pushed) and re-created on `a1a4678`; its archive passed the Task 3 checks again.
 
 ## Ship
-- [ ] Maintainer, from the host: `git push origin main v0.1.0`
-- [ ] Maintainer: `gh release create v0.1.0 --title "routewise 0.1.0" --notes-file tasks/release-0.1.0.md`
-- [ ] Maintainer: download the release's "Source code" archive and check it holds the 11 runtime entries
+- [x] Maintainer, from the host: `git push origin main v0.1.0`
+- [x] Maintainer: `gh release create v0.1.0 --title "routewise 0.1.0" --notes-file tasks/release-0.1.0.md`
+- [x] Maintainer: download the release's "Source code" archive and check it holds the 11 runtime entries
+
+Shipped 2026-11-14: the maintainer pushed `main` and `v0.1.0`, published the GitHub release "routewise 0.1.0" with these notes, and confirmed the downloaded "Source code" archive holds `routewise-0.1.0/` with the 11 runtime entries.
