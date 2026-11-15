@@ -21,5 +21,6 @@
 # routewise installed on its own repo (spec R2)
 /routewise.toml export-ignore
 /ROUTING-BINDING.md export-ignore
+/.agents export-ignore
 /.claude export-ignore
 /logs export-ignore

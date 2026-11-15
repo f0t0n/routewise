@@ -4,7 +4,7 @@
 
 # Harnesses to render agents for: "cc" (Claude Code, .claude/agents/) and "agy"
 # (Antigravity CLI, .agents/agents/).
-harnesses = ["cc"]
+harnesses = ["cc", "agy"]
 
 # Instruction files that get the delegation block. AGENTS.md is read by Claude Code
 # (v2.1.277 or newer), Antigravity CLI and most other agent tools.
