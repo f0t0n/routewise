@@ -175,3 +175,40 @@ def test_a_line_break_cannot_smuggle_a_key_through_skills(tmp_path: Path):
 
     with pytest.raises(RoleError):
         read_role(path)
+
+
+SKILL_RULES = (
+    "this file wins",  # a skill and the body disagree
+    "report it as a suggestion",  # a skill step that would change a file
+    "High is Required",  # severity mapping
+    "report template",  # the skill's template is not used
+    "`Checklist: <skill names> loaded`",
+    "`Checklist: none`",
+)
+
+
+@pytest.mark.parametrize(
+    ("name", "skill"),
+    [
+        ("reviewer", "agent-skills:code-review-and-quality"),
+        ("auditor", "agent-skills:security-and-hardening"),
+    ],
+)
+def test_review_roles_load_a_checklist_skill_and_keep_their_rules(name: str, skill: str):
+    """R8: the skill says what to check; the body keeps behaviour, tools and return shape."""
+    shipped = read_role(HOME / "roles" / f"{name}.md")
+
+    assert shipped.skills == (skill,)
+    for rule in SKILL_RULES:
+        assert rule in shipped.body, rule
+    assert "Every Critical and Required finding" in shipped.body
+
+
+def test_reviewer_returns_mutation_suggestions():
+    assert "Mutation suggestions" in read_role(HOME / "roles" / "reviewer.md").body
+
+
+def test_other_roles_load_no_skills():
+    for shipped in read_roles(HOME / "roles"):
+        if shipped.source.stem not in ("reviewer", "auditor"):
+            assert shipped.skills == (), shipped.source.name

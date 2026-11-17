@@ -4,6 +4,7 @@
 
 - A role file may list skills (`skills: [plugin:skill, other-skill]`); the generated agent gets a `skills:` line, which Claude Code uses to load each skill's full text into the subagent at startup (spec R8). Names are checked strictly (lower-case letters, digits, `-`, one optional `plugin:` part, at most 32), so a skill name cannot add frontmatter. Antigravity CLI 1.5.9 accepts the line and ignores it.
 - `routewise.toml` may set `[skills]` per role (`reviewer = ["my-review"]`), replacing the role's own list; `[]` turns a role's skills off; an unknown role or a bad skill name stops the run (spec R8). New installs show the table commented out.
+- `reviewer` loads agent-skills' `code-review-and-quality` and `auditor` its `security-and-hardening` by default, for what to check; the role still fixes how it behaves and what it returns (spec R8). Its reply starts with `Checklist: <skills> loaded` or `Checklist: none`; a skill step that would change a file comes back as a suggestion, and `reviewer` returns up to 3 mutation suggestions for the main session to run; a skill's severity names are mapped to Critical, Required, Optional and Nit. Without the plugin the roles review by their own method, as before.
 
 ## 0.1.2 (2026-11-14)
 
