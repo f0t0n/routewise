@@ -63,6 +63,32 @@ def holds(root: Path, home: Path) -> None:
         )
 
 
+def not_a_repo(root: Path, home: Path) -> None:
+    """Refuse a vendored copy whose project root is itself a routewise repo (spec R12).
+
+    There the copy would rewrite the repo's own agents and block with vendored spelling;
+    the repo installs on itself instead. The self-install (`root == home`) is never refused.
+    """
+    if root != home.parent or not is_repo(root):
+        return
+    name = label(home, root)
+    raise PathError(
+        f"{root} is a routewise repo, so {name}/ inside it is not its installer; "
+        f"run ./install --project . there (make self in a clone), "
+        f"and delete {name}/ if a download put it there"
+    )
+
+
+def is_repo(root: Path) -> bool:
+    """`root` holds what the wrapper and the renderer need: routewise's own layout."""
+    return (
+        (root / "install").is_file()
+        and (root / "lib" / "install.py").is_file()
+        and (root / "roles").is_dir()
+        and (root / "harness.toml").is_file()
+    )
+
+
 def is_home_or_above(root: Path) -> bool:
     """`root` is the user's home folder or a folder above it (compared as typed and resolved)."""
     try:

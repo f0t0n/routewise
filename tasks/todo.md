@@ -7,14 +7,14 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R12, S9, criterion 17. `m
 **Description:** A new check in `lib/paths.py`, called by `lib/install.py` `run` after `holds` and before `build_plan`: when `root == home.parent` and the root holds `install` (file), `lib/install.py`, `roles/` (folder) and `harness.toml`, raise `PathError` with the R12 message, the copy named by `label(home, root)`.
 
 **Acceptance criteria (tests under the S9 heading in `tests/test_install.py`, on a repo-shaped root with a self-install done first):**
-- [ ] `routewise/install` (default project), `routewise/install --project <root>`, `--check` and `--uninstall` each exit 2; stderr is the R12 message naming `./install --project .`; every file under the root is byte-identical afterwards.
-- [ ] On a repo-shaped root with no self-install, the refusal creates no `routewise.toml`, `ROUTING-BINDING.md` or miss log.
-- [ ] A copy reached through a symlink (`routewise -> ../release`) is refused the same way; a copy in a folder named other than `routewise` is named by that name in the message.
-- [ ] With any one of the four paths removed (parametrised), the vendored install runs and exits 0.
-- [ ] `./install --project .` on the root and `routewise/install --project routewise` still exit 0.
-- [ ] `routewise/bin/miss-log add …` from the root still appends one line to the root's log.
-- [ ] Existing vendored-install tests unchanged and green.
-- [ ] `CHANGELOG.md` `## Unreleased`: one line, including that a refused update leaves the unpacked folder to delete.
+- [x] `routewise/install` (default project), `routewise/install --project <root>`, `--check` and `--uninstall` each exit 2; stderr is the R12 message naming `./install --project .`; every file under the root is byte-identical afterwards.
+- [x] On a repo-shaped root with no self-install, the refusal creates no `routewise.toml`, `ROUTING-BINDING.md` or miss log.
+- [x] A copy reached through a symlink (`routewise -> ../release`) is refused the same way; a copy in a folder named other than `routewise` is named by that name in the message.
+- [x] With any one of the four paths removed (parametrised), the vendored install runs and exits 0.
+- [x] `./install --project .` on the root and `routewise/install --project routewise` still exit 0.
+- [x] `routewise/bin/miss-log add …` from the root still appends one line to the root's log.
+- [x] Existing vendored-install tests unchanged and green.
+- [x] `CHANGELOG.md` `## Unreleased`: one line, including that a refused update leaves the unpacked folder to delete.
 
 **Verification:** `uv run pytest tests/test_install.py -k "S9 or routewise_repo"`; tests shown red before the code; `make check`.
 

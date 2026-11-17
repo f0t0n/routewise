@@ -19,7 +19,7 @@ Spec: [SPEC.md](../SPEC.md), R12, S9 and success criterion 17 (approved 2026-11-
 
 ### Phase 1: R12
 
-- [ ] Task 1: installer refuses a vendored install into a routewise repo
+- [x] Task 1: installer refuses a vendored install into a routewise repo
 - [ ] Task 2: docs: README "Safety", `AGENTS.md` S1–S9
 
 ### Checkpoint A (after Task 2)

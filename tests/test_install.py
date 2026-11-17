@@ -1,10 +1,11 @@
 """routewise/install on a throwaway project."""
 
+import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
-from conftest import run
+from conftest import COPY, run
 
 ROLES = ["auditor.md", "explore.md", "log-reader.md", "reviewer.md", "web-reader.md"]
 
@@ -629,6 +630,143 @@ def test_a_folder_above_the_project_is_refused(project: Path, tmp_path: Path):
     assert (result.returncode, log.returncode) == (2, 2)
     assert "copy routewise/ into the project first" in result.stderr
     assert sorted(p.name for p in tmp_path.iterdir()) == before
+
+
+# --- S9 / R12: a vendored copy never installs into a routewise repo -------------------------
+
+REPO_MARKERS = ("install", "lib/install.py", "roles", "harness.toml")
+REFUSED = (
+    "is a routewise repo, so {name}/ inside it is not its installer; run ./install --project ."
+)
+
+
+def make_repo(project: Path, self_install: bool = True) -> Path:
+    """Turn the fixture's project root into a routewise repo holding a release in routewise/."""
+    copy = project / "routewise"
+    for name in COPY:
+        source = copy / name
+        if source.is_dir():
+            shutil.copytree(source, project / name)
+        else:
+            shutil.copy2(source, project / name)
+    if self_install:
+        own = own_install(project)
+        assert own.returncode == 0, own.stderr
+    return project
+
+
+def own_install(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [str(repo / "install"), "--project", ".", *args],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=repo,
+    )
+
+
+def snapshot(root: Path) -> dict[str, bytes]:
+    return {
+        p.relative_to(root).as_posix(): p.read_bytes()
+        for p in sorted(root.rglob("*"))
+        if p.is_file() and not p.is_symlink()
+    }
+
+
+@pytest.mark.parametrize(
+    "args",
+    [(), ("--project", "."), ("--check",), ("--uninstall",)],
+    ids=["default", "explicit-project", "check", "uninstall"],
+)
+def test_a_vendored_copy_refuses_a_routewise_repo(project: Path, args: tuple[str, ...]):
+    repo = make_repo(project)
+    before = snapshot(repo)
+    if args[:1] == ("--project",):
+        args = ("--project", str(repo))
+
+    result = run(repo, "install", *args)
+
+    assert result.returncode == 2, result.stdout
+    assert result.stderr.startswith(f"routewise: {repo} ")
+    assert REFUSED.format(name="routewise") in result.stderr
+    assert snapshot(repo) == before
+
+
+def test_a_refused_first_run_in_a_routewise_repo_writes_nothing(project: Path):
+    repo = make_repo(project, self_install=False)
+    before = snapshot(repo)
+
+    result = run(repo, "install")
+
+    assert result.returncode == 2
+    assert snapshot(repo) == before
+    for name in ("routewise.toml", "ROUTING-BINDING.md", "AGENTS.md", "logs"):
+        assert not (repo / name).exists()
+
+
+def test_a_symlinked_copy_is_refused_in_a_routewise_repo(project: Path, tmp_path: Path):
+    repo = make_repo(project)
+    release = tmp_path / "release"
+    (repo / "routewise").rename(release)
+    (repo / "routewise").symlink_to(release)
+    before = snapshot(repo)
+
+    result = run(repo, "install")
+
+    assert result.returncode == 2
+    assert REFUSED.format(name="routewise") in result.stderr
+    assert snapshot(repo) == before
+
+
+def test_the_message_names_the_copy_as_it_is_called(project: Path):
+    repo = make_repo(project)
+    (repo / "routewise").rename(repo / "rw-0.2.1")
+
+    result = subprocess.run(
+        [str(repo / "rw-0.2.1" / "install")], capture_output=True, text=True, check=False, cwd=repo
+    )
+
+    assert result.returncode == 2
+    assert REFUSED.format(name="rw-0.2.1") in result.stderr
+    assert "delete rw-0.2.1/ if a download put it there" in result.stderr
+
+
+@pytest.mark.parametrize("missing", REPO_MARKERS)
+def test_a_root_missing_one_marker_is_an_ordinary_project(project: Path, missing: str):
+    repo = make_repo(project, self_install=False)
+    target = repo / missing
+    if target.is_dir():
+        shutil.rmtree(target)
+    else:
+        target.unlink()
+
+    result = run(repo, "install")
+
+    assert result.returncode == 0, result.stderr
+    assert "`routewise/bin/miss-log add" in (repo / "AGENTS.md").read_text()
+
+
+def test_a_routewise_repo_still_installs_on_itself_and_its_copy(project: Path):
+    repo = make_repo(project)
+
+    again = own_install(repo, "--check")
+    copy = run(repo, "install", "--project", str(repo / "routewise"))
+
+    assert again.returncode == 0, again.stdout + again.stderr
+    assert copy.returncode == 0, copy.stderr
+    assert (repo / "routewise" / "AGENTS.md").exists()
+
+
+def test_a_vendored_miss_log_still_writes_the_repo_log(project: Path):
+    repo = make_repo(project)
+
+    add = run(
+        repo, "bin/miss-log",
+        "add", "--mode", "dev", "--role", "reviewer", "--task", "review", "--what", "missed a case",
+    )  # fmt: skip
+
+    assert add.returncode == 0, add.stderr
+    assert (repo / "logs" / "delegation-misses.jsonl").read_text().count("\n") == 1
 
 
 # --- R3: commands spelled for the project ---------------------------------------------------
