@@ -90,8 +90,8 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R8, R9. `make check` gree
 **Description:** `{{stand_ins}}` in `templates/fragment-dev.md` becomes one line when stand-ins are set: for those names, also inside `/ship`, start the project agent, never the `agent-skills:` one (named per stand-in). Nothing when none are set.
 
 **Acceptance criteria:**
-- [ ] With stand-ins, the block has the line naming each stand-in; without, the block equals Task 4's output.
-- [ ] This repo's `AGENTS.md` (no stand-ins) is unchanged by `make self`.
+- [x] With stand-ins, the block has the line naming each stand-in; without, the block equals Task 4's output.
+- [x] This repo's `AGENTS.md` (no stand-ins) is unchanged by `make self`.
 
 **Verification:** `uv run pytest tests/test_install.py -k stand_in`; `make self`; `make check`.
 
@@ -99,7 +99,7 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R8, R9. `make check` gree
 
 ## Checkpoint B
 
-- [ ] `make check` green; criterion 14's tests pass.
+- [x] `make check` green; criterion 14's tests pass.
 
 ## Task 8: rules spec version 3
 

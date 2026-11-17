@@ -139,9 +139,23 @@ def plan_agents(
             plan.remove(stale)
 
 
+def stand_ins_line(stand_ins: dict[str, tuple[str, ...]]) -> str:
+    """The block's line about stand-ins (spec R9), or nothing when none are set."""
+    pairs = [(name, role) for role, names in stand_ins.items() for name in names]
+    if not pairs:
+        return ""
+    named = ", ".join(f"`{name}` (for `{role}`)" for name, role in pairs)
+    example = f"`agent-skills:{pairs[0][0]}`"
+    return (
+        f"- This project's stand-in agents: {named}. For these names, also inside `/ship`, "
+        f"start the project agent, never a plugin agent of the same name such as {example}.\n"
+    )
+
+
 def fragment_text(root: Path, chosen: Settings) -> str:
     text = (HOME / "templates" / f"fragment-{chosen.fragment}.md").read_text(encoding="utf-8")
     text = text.replace("{{cap}}", str(chosen.cap))
+    text = text.replace("{{stand_ins}}", stand_ins_line(chosen.stand_ins))
     return text.replace("{{miss_log}}", label(HOME / "bin" / "miss-log", root))
 
 

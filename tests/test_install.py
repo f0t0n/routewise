@@ -848,3 +848,20 @@ def test_bad_stand_ins_stop_the_run(project: Path, table: str, message: str):
 
     assert result.returncode == 2
     assert message in result.stderr
+
+
+def test_block_names_stand_ins_only_when_set(project: Path):
+    """R9: the session starts the project's stand-in, never the plugin agent of that name."""
+    run(project, "install")
+    plain = (project / "AGENTS.md").read_text()
+    with_stand_ins(project)
+
+    run(project, "install")
+    block = (project / "AGENTS.md").read_text()
+
+    assert "{{" not in plain and "stand-in" not in plain
+    line = next(x for x in block.splitlines() if "stand-in" in x)
+    assert "`code-reviewer` (for `reviewer`)" in line
+    assert "`security-auditor` (for `auditor`)" in line
+    assert "`agent-skills:code-reviewer`" in line and "/ship" in line
+    assert block.replace(line + "\n", "") == plain
