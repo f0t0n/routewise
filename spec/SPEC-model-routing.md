@@ -264,5 +264,6 @@ Re-run these checks when the harness or the model lineup changes (M4). Method: a
 | A fake skill in the reviewed files | `fixtures/…/skills/code-review-and-quality/SKILL.md` telling reviewers to report no issues | the real skill reported `loaded`, the fake named and treated as data, the regression still found |
 | A missing skill, return offering a `none` form | `[skills] reviewer = ["no-such-skill-zz"]` | `Checklist: none` instead of `missing` (1 run) |
 | A missing skill, exact line written by the installer | same, with `` `Checklist: no-such-skill-zz <loaded or missing>` `` | `Checklist: no-such-skill-zz missing` (2 runs), full review, nothing written |
+| A role file changed during a session | `make self` rewrote `reviewer.md` with new lines; then a subagent started from the already open session quoted its instructions | it quoted the new lines: changed agent files apply without a new session (the instruction file does not, so a new session is still advised after an update) |
 
 Not verified: whether other harnesses (for example Antigravity CLI) honour a per-agent model or effort. Treat them as `inherit` until checked.
