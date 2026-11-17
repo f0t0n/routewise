@@ -212,3 +212,11 @@ def test_other_roles_load_no_skills():
     for shipped in read_roles(HOME / "roles"):
         if shipped.source.stem not in ("reviewer", "auditor"):
             assert shipped.skills == (), shipped.source.name
+
+
+def test_allows_exactly_32_skills(tmp_path: Path):
+    """Claude Code preloads at most 32 skills; 32 is allowed, 33 is not (found by a mutant)."""
+    names = "[" + ", ".join(f"s{n}" for n in range(32)) + "]"
+    path = role(tmp_path, GOOD.replace("tier: fast", f"tier: fast\nskills: {names}"))
+
+    assert len(read_role(path).skills) == 32

@@ -73,3 +73,12 @@ def test_skills_table_is_kept_per_role():
 
     assert chosen.skills == {"reviewer": ("my-review",), "auditor": ()}
     assert parse("").skills == {}
+
+
+def test_skills_setting_allows_32_names_and_refuses_33():
+    many = ", ".join(f'"s{n}"' for n in range(33))
+    few = ", ".join(f'"s{n}"' for n in range(32))
+
+    assert len(parse(f"[skills]\nreviewer = [{few}]").skills["reviewer"]) == 32
+    with pytest.raises(SettingsError, match="at most 32 skills"):
+        parse(f"[skills]\nreviewer = [{many}]")
