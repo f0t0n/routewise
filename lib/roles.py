@@ -27,7 +27,7 @@ ALLOWED_TOOLS = {
     ),
 }
 # A model name or alias: letters, digits and . _ - : [ ] only, so it cannot add a line.
-MODEL = re.compile(r"^[A-Za-z0-9._:\[\]-]{1,80}$")
+MODEL = re.compile(r"[A-Za-z0-9._:\[\]-]{1,80}")  # fullmatch (spec R11)
 # A skill name: `name` or `plugin:name`, lower-case letters, digits and -, so it cannot carry a
 # path, a space or another frontmatter line (spec R8, S6). Claude Code preloads at most 32.
 SKILL = re.compile(r"[a-z0-9][a-z0-9-]{0,63}(:[a-z0-9][a-z0-9-]{0,63})?")  # fullmatch
@@ -177,7 +177,7 @@ def model_lines(role: Role, harness: Harness) -> list[str]:
     if not harness.tiers:
         return []
     model = harness.tiers.get(role.tier, "")
-    if not MODEL.match(model):
+    if not MODEL.fullmatch(model):
         raise RoleError(f"harness.toml: {harness.key} tier {role.tier} must be a model name")
     lines = [f"model: {model}"]
     if role.effort != "default":

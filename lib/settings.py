@@ -66,7 +66,7 @@ def tiers(data: dict[str, Any]) -> dict[str, str]:
     for tier, model in value.items():
         if tier not in TIERS:
             raise SettingsError(f"{NAME}: [tiers] {tier!r} is not one of {', '.join(TIERS)}")
-        if not isinstance(model, str) or not MODEL.match(model):
+        if not isinstance(model, str) or not MODEL.fullmatch(model):
             raise SettingsError(f"{NAME}: [tiers] {tier} must be a model name, such as haiku")
     return dict(value)
 

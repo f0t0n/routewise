@@ -151,8 +151,8 @@ Run headless with the agent files as fixed in Verify. Stopping rule: ended after
 **Description:** `lib/roles.py` checks model names with `MODEL.fullmatch`, in `model_lines` and in `settings.tiers`.
 
 **Acceptance criteria:**
-- [ ] `[tiers] fast = "haiku\n"` and a harness tier `"haiku\n"` are refused with the existing message; red on HEAD.
-- [ ] Every model name accepted before still passes (`haiku`, `claude-haiku-5-5`, `fable`, names with `.`, `:`, `[1m]`).
+- [x] `[tiers] fast = "haiku\n"` and a harness tier `"haiku\n"` are refused with the existing message; red on HEAD.
+- [x] Every model name accepted before still passes (`haiku`, `claude-haiku-5-5`, `fable`, names with `.`, `:`, `[1m]`).
 
 **Verification:** `uv run pytest tests/test_roles.py tests/test_settings.py`; `make check`.
 

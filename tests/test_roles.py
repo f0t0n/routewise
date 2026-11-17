@@ -303,3 +303,11 @@ def test_renders_the_exact_checklist_line(tmp_path: Path):
     )
     assert "none" not in text.split("---\n", 2)[2]
     assert "- First line: `Checklist: none`.\n" in render(read_role(role(tmp_path, body)), CC, "x")
+
+
+def test_refuses_a_harness_tier_with_a_trailing_line_break(tmp_path: Path):
+    """R11: `$` also matched before a final newline, which left a blank frontmatter line."""
+    harness = Harness("cc", ".claude/agents", CC.tools, {**CC.tiers, "fast": "haiku\n"}, CC.efforts)
+
+    with pytest.raises(RoleError, match="must be a model name"):
+        render(read_role(role(tmp_path, GOOD)), harness, "x")

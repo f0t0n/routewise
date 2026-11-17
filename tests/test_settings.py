@@ -31,6 +31,7 @@ def test_claude_md_values(value: str):
         ("claude_md = true", "claude_md must be a string"),
         ('[tiers]\nfats = "haiku"', "'fats' is not one of"),
         ('[tiers]\nfast = "haiku\\ntools: Write"', "must be a model name"),
+        ('[tiers]\nfast = "haiku\\n"', "must be a model name"),
         ("cap = [", "routewise.toml"),
         ('skills = ["x"]', r"\[skills\] must be a table"),
         ('[skills]\nreviewer = "my-review"', "reviewer must be a list of skill names"),
@@ -95,3 +96,11 @@ def test_stand_ins_are_off_by_default_and_kept_per_role():
     assert parse("").stand_ins == {}
     chosen = parse('[stand_ins]\nreviewer = ["code-reviewer"]\nauditor = ["security-auditor"]')
     assert chosen.stand_ins == {"reviewer": ("code-reviewer",), "auditor": ("security-auditor",)}
+
+
+@pytest.mark.parametrize(
+    "model", ["haiku", "claude-haiku-5-5", "fable", "sonnet[1m]", "us.anthropic.claude-opus-5-5:0"]
+)
+def test_model_names_accepted_before_still_pass(model: str):
+    """R11 changes only the trailing line break; every name 0.1.2 accepted still passes."""
+    assert parse(f'[tiers]\nfast = "{model}"').tiers == {"fast": model}
