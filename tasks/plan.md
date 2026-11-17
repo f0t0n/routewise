@@ -44,7 +44,7 @@ routewise keeps owning how a review runs (tier, effort, read-only tools, return 
 ### Phase 3: rules spec and docs
 
 - [x] Task 8: rules spec version 3 (R-A6, returns, section 13 records of the 2026-11-17 probes)
-- [ ] Task 9: README section on checklists and preference; ADOPT.md and template notes
+- [x] Task 9: README section on checklists and preference; ADOPT.md and template notes
 
 ### Then (workflow phases, not tasks)
 

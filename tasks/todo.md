@@ -117,8 +117,8 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R8, R9. `make check` gree
 **Description:** `README.md` gets a section: `reviewer` and `auditor` load agent-skills' `code-review-and-quality` and `security-and-hardening` by default (credit, link, MIT); a matter of preference; how to change it (`[skills]` with another installed skill, `[]` for routewise's own method, then re-run the install); a missing skill shows as `Checklist: none`; Antigravity ignores `skills:` for now; `[stand_ins]` for projects that use agent-skills' `/ship`. `ADOPT.md` mentions the choice in its review-settings step.
 
 **Acceptance criteria:**
-- [ ] README section covers each point above with a copy-paste `routewise.toml` example for each choice; ADOPT.md points to it.
-- [ ] `reviewer` checks the doc diff against the code.
+- [x] README section covers each point above with a copy-paste `routewise.toml` example for each choice; ADOPT.md points to it.
+- [x] `reviewer` checks the doc diff against the code (2026-11-17, the generated `reviewer` with its skill loaded: approve, no Critical or Required; Optional 1-2 and Nits 3-4 applied, Nit 5 needs no change).
 
 **Verification:** read the rendered README; `make check`.
 

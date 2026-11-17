@@ -7,6 +7,7 @@ The person asked you to adopt routewise in this project. Follow these steps in o
    - Which harnesses: Claude Code, Antigravity CLI, or both?
    - Is this agent a developer of the project (`dev`) or a user-facing assistant (`assistant`, which may delegate only web-page reading)?
    - Is the parallel cap of 5 subagents at once fine?
+   - Review checklists: `reviewer` and `auditor` load agent-skills' checklists by default. Keep them, name other installed skills, or use routewise's own method only? And is agent-skills' `/ship` used here (then turn on `[stand_ins]`)? See "Review checklists" in `routewise/README.md`.
 
    The delegation block goes into `AGENTS.md`. `claude_md = "auto"` (the default) adds an `@AGENTS.md` import to an existing `CLAUDE.md` so Claude Code still reads it. Set `claude_md = "import"` if `claude --version` is older than 2.1.277 or the installer warns about a `CLAUDE.md` above the project, and pass on any note it prints about `CLAUDE.local.md`.
 3. **Run `routewise/install`.** On the first run it writes `routewise.toml`. Edit `routewise.toml` to match the answers, then run `routewise/install` again. Show the person its output. If it exits with code 2, nothing was written: show the error and stop. For example, an agent file it did not write is in the way, or the delegation markers in an instruction file are broken; the person decides how to fix it.
