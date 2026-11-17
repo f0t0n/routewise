@@ -29,7 +29,7 @@ Spec: [SPEC.md](../SPEC.md), R12, S9 and success criterion 17 (approved 2026-11-
 
 ### Phase 2: Ship 0.2.1
 
-- [ ] Task 3: version 0.2.1, dated changelog, release notes, archive check, local tag when asked
+- [x] Task 3: version 0.2.1, dated changelog, release notes, archive check, local tag when asked
 
 ## Risks and mitigations
 

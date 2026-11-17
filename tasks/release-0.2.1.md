@@ -23,6 +23,6 @@ v=0.2.1
 mkdir routewise.new && curl -fsSL "https://github.com/f0t0n/routewise/archive/refs/tags/v$v.tar.gz" | tar -xz --strip-components=1 -C routewise.new && rm -rf routewise && mv routewise.new routewise && routewise/install
 ```
 
-Roles, templates and `harness.toml` are unchanged since 0.2.0, so the install prints `routewise: nothing to change` and there is nothing to commit apart from the `routewise/` folder itself. No new session is needed.
+Roles, templates and `harness.toml` are unchanged since 0.2.0, so the install rewrites none of your generated files (in a project in step with 0.2.0 it prints `routewise: nothing to change`), and there is nothing to commit apart from the `routewise/` folder itself. No new session is needed: the agents and the delegation block stay the same.
 
 Full list: [CHANGELOG](https://github.com/f0t0n/routewise/blob/v0.2.1/CHANGELOG.md).

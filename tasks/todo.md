@@ -56,9 +56,11 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R12, S9, criterion 17. `m
 **Description:** Version `0.2.1` in `pyproject.toml` and every README `v=`; `## Unreleased` becomes `## 0.2.1 (<date>)`; `tasks/release-0.2.1.md` drafted for users (what changed, how to update) and checked by `reviewer` against the code; `git archive HEAD` holds only R1's runtime files; annotated tag `v0.2.1` when the maintainer asks; publish commands from `AGENTS.md` handed over filled in.
 
 **Acceptance criteria:**
-- [ ] `make check` green (R4's version test passes with `0.2.1`).
-- [ ] Release notes reviewed; archive contents checked.
-- [ ] Tag created only on request; publish steps given.
+- [x] `make check` green (R4's version test passes with `0.2.1`).
+- [x] Release notes reviewed; archive contents checked.
+- [x] Tag created only on request; publish steps given.
+
+**Ship record (2026-11-17).** Released as `7b86e65`; `git archive HEAD` holds only R1's runtime files (`ADOPT.md CHANGELOG.md LICENSE README.md bin harness.toml install lib roles spec templates`); roles, templates, `harness.toml`, `bin` unchanged since v0.2.0. `reviewer` (Checklist: `agent-skills:code-review-and-quality` loaded) approved the release notes and changelog against the code, no Critical or Required. Optional 1 ("prints nothing to change" only when in step) fixed; Optional 3 (changelog lacks "since 0.1.0") fixed; Optional 2 ("no new session needed" unbacked) kept with its reason (agents and block unchanged); Nit (non-maintainers can ignore) answered by the opening paragraph. Tag `v0.2.1` on request.
 
 **Verification:** `make check`; `git archive HEAD | tar -t`.
 
