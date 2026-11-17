@@ -39,11 +39,11 @@ routewise keeps owning how a review runs (tier, effort, read-only tools, return 
 
 ### Checkpoint B (after Task 7)
 
-- [ ] `make check` green; install, `--check` and `--uninstall` on a temporary project with stand-ins behave as criterion 14's tests say
+- [x] `make check` green; install, `--check` and `--uninstall` on a temporary project with stand-ins behave as criterion 14's tests say
 
 ### Phase 3: rules spec and docs
 
-- [ ] Task 8: rules spec version 3 (R-A6, returns, section 13 records of the 2026-11-17 probes)
+- [x] Task 8: rules spec version 3 (R-A6, returns, section 13 records of the 2026-11-17 probes)
 - [ ] Task 9: README section on checklists and preference; ADOPT.md and template notes
 
 ### Then (workflow phases, not tasks)

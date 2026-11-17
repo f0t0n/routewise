@@ -8,6 +8,7 @@
 - The development delegation block tells the main session to run `reviewer`'s mutation suggestions (one the tests miss is a Required finding) and to tell the person once per session when a review role replies `Checklist: none` (spec R8). The assistant block is unchanged.
 - `routewise.toml` may set `[stand_ins]` to render a role under another agent's name as well (`reviewer = ["code-reviewer"]`, `auditor = ["security-auditor"]`), so agent-skills' `/ship`, which starts those names, gets routewise's read-only roles with the same skills (spec R9). Off by default. A stand-in is a generated file like the roles (`--check`, `--uninstall`), its marker names its own file (`… from roles/reviewer.md as code-reviewer.md; …`), and a user's own agent of that name stops the run.
 - With stand-ins set, the development delegation block names them and tells the session to start the project agent for those names, also inside `/ship`, never the plugin agent of the same name (such as `agent-skills:code-reviewer`), which Claude Code still lists (spec R9).
+- Rules spec version 3: rule R-A6 (a role may load skills for what to check; its body still fixes behaviour, tools and return shape), the `Checklist` line and mutation suggestions in the review returns and in the section 10 fragment, and section 13 records of the 2026-11-17 live probes on Claude Code 2.1.326 and Antigravity CLI 1.5.9.
 
 ## 0.1.2 (2026-11-14)
 

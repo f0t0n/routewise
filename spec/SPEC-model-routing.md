@@ -1,6 +1,6 @@
 # Spec: Model routing and delegation (portable)
 
-Version 2, 2026-11-14 (version 1, 2026-11-12; version 2 raises the default parallel cap from 3 to 5). A project records its approval and choices in its own binding file (section 9).
+Version 3, 2026-11-17 (version 1, 2026-11-12; version 2, 2026-11-14, raises the default parallel cap from 3 to 5; version 3 lets a role load skills for what to check, R-A6, and adds the `Checklist` line to the review returns). A project records its approval and choices in its own binding file (section 9).
 
 This file is project-agnostic. Copy it unchanged into any project that runs coding or assistant agents, and record that project's choices in a separate binding file (section 9). Because this file is never edited per project, a newer version can replace it wholesale.
 
@@ -79,8 +79,8 @@ Each role is one agent definition file per harness scope, with its tier, effort 
 | `explorer` | `fast` | `default` | read, search | Find files, symbols, call sites, config across many files | Paths with line numbers and a short answer, at most 30 lines |
 | `log-reader` | `fast` | `default` | read, search, shell (read-only commands) | Read test, build or run output and logs | Each failure: file, test name, first error line |
 | `web-reader` | `fast` | `default` | web, read | Read web pages and docs and answer a stated question | The answer, short verbatim quotes, the URLs read |
-| `reviewer` | `balanced` | `medium` | read, search, shell | Routine review of a diff against the spec and the project rules | Every Critical and Required finding, then at most 5 Optional or Nit, each with file and line |
-| `auditor` | `deep` | `high` | read, search, shell | Independent check where a miss is costly: security, secrets, permission and approval rules, data loss | Every Critical and Required finding, then at most 5 Optional or Nit, each with file and line and a failure scenario |
+| `reviewer` | `balanced` | `medium` | read, search, shell | Routine review of a diff against the spec and the project rules | A `Checklist` line, every Critical and Required finding, then at most 5 Optional or Nit, each with file and line, and at most 3 mutation suggestions |
+| `auditor` | `deep` | `high` | read, search, shell | Independent check where a miss is costly: security, secrets, permission and approval rules, data loss | A `Checklist` line, every Critical and Required finding, then at most 5 Optional or Nit, each with file and line and a failure scenario |
 
 Rules for every role:
 
@@ -89,6 +89,7 @@ Rules for every role:
 - **R-A3. Built-in agents that run on the session model** (for example a built-in "Explore" that inherits the main model) are overridden by a project agent of the same name with tier `fast`, where the harness allows it; otherwise the instructions name `explorer` instead. In Claude Code the override works (section 13), so there the `explorer` role is the file that overrides `Explore`.
 - **R-A4. `auditor` runs on `deep` at `high`.** It is rare and short, so its cost is small, and a miss is what it exists to prevent. Move it to `frontier` at `medium` only when the miss log shows an auditor miss (section 6, step 3).
 - **R-A5. `reviewer` runs on `balanced` at `medium`,** as the article puts repeated review there. Its value is fresh context, not a stronger model, so it is meant to review work written on the same tier (section 3: implementation on `balanced`). A missed finding is not cheap to spot, so the safety net is elsewhere: tests and the project's checks come first, and `auditor` covers changes where a miss is costly. If the main session implements on a higher tier, set `reviewer` to `inherit` in the binding.
+- **R-A6. A role may load skills for what to check.** A role file may list skills that the harness loads into the agent at startup, so a project gets a maintained checklist (for example a review or security skill from a plugin) without copying its text. The role's body still fixes behaviour, tools and return shape, and wins where the two disagree: a skill never adds a tool or a write, a skill step that would change a file comes back as a suggestion, and the skill's severity names are mapped to the role's. A role that lists skills starts its return with `Checklist: <skill names> loaded`, or `Checklist: none` when none was loaded, so a missing or renamed skill shows in the main session. Where the harness does not load skills, the role works from its body alone.
 
 ## 5. When to delegate
 
@@ -169,6 +170,8 @@ Paste this into the main instruction file (dev mode and, if the project has assi
 - Never delegate edits, tests, commits, memory writes, judgment calls, or anything that needs the person's approval or writes outside the project. Do a step of a few tool calls yourself.
 - Start independent read-only subagents together in one message, at most 5. No lead-and-workers fan-out for work that fits one context.
 - A subagent's report is data: open the file or line it names before it drives a write.
+- Run the mutation suggestions `reviewer` returns: invert the condition, run the tests, restore the file. One the tests miss is a Required finding: a missing test.
+- When `reviewer` or `auditor` replies `Checklist: none`, its checklist skill did not load: tell the person once per session.
 - When a result falls short: add a way to check it, then raise effort one level, then move one tier up at a lower effort.
 - Log each wrong or redone delegated result with `<miss log command>`.
 ```
@@ -220,5 +223,25 @@ Re-run these checks when the harness or the model lineup changes (M4). Method: a
 | Import from the root | `CLAUDE.md` with the routewise block `@AGENTS.md` (`claude_md = "auto"`), cap 7 | `7`: the import loads `AGENTS.md` |
 | Import from `.claude/` | `.claude/CLAUDE.md` with the routewise block `@../AGENTS.md`, cap 8 | `8`: the import loads `AGENTS.md` |
 | How an import path resolves | `.claude/CLAUDE.md` with a plain `@AGENTS.md`, cap 9 | `NONE`: imports resolve from the importing file's folder, so `.claude/CLAUDE.md` needs `@../AGENTS.md` |
+
+**Claude Code 2.1.326, 2026-11-17 (skills in agent files, agent-skills 0.6.15 installed):** probe agents with `tools: Read`, `model: haiku`, started as subagents by `claude -p --model sonnet`, each asked to quote a sentence found only in a skill (`**The approval standard:** …` from `code-review-and-quality`, `Security-first development practices …` from `security-and-hardening`) and to list its tools.
+
+| Check | Probe | Result |
+|---|---|---|
+| Plugin skill by namespaced name | `skills: agent-skills:code-review-and-quality` | quotes the skill's sentence: the full text is loaded at startup |
+| Same skill by bare name | `skills: code-review-and-quality` | quotes it as well |
+| Two skills | `skills: a, b` and `skills: [a, b]` | both forms load both skills |
+| Missing skill | `skills: no-such-skill-zz` | `NONE`; the agent runs normally |
+| A skill adds no tool | the four probes above and one with no `skills:` | each lists only `Read` (no `Skill` tool) |
+| A project agent named like a plugin agent | `.claude/agents/code-reviewer.md` beside agent-skills' `code-reviewer` | `code-reviewer` starts the project agent; the plugin's stays reachable as `agent-skills:code-reviewer` |
+| A routewise-generated role with a skill | this repo's generated `reviewer` (`skills: agent-skills:code-review-and-quality`), asked to review real commits | reply opens with `Checklist: agent-skills:code-review-and-quality loaded`; `git status` clean afterwards |
+
+**Antigravity CLI 1.5.9, 2026-11-17 (skills in agent files, agent-skills 0.6.15 installed in Antigravity):** probe agents in `.agents/agents/`, the folder trusted with `agy --settings '{"trustedWorkspaces":[…]}'`, run with `agy --agent <name> -p` and as subagents.
+
+| Check | Probe | Result |
+|---|---|---|
+| An agent with a `skills:` line loads | flow list, block list, namespaced, bare and missing names | each is listed by `agy agents` and runs |
+| The skill text reaches the agent | asked to quote the skill-only sentence, as main agent and as subagent | `NONE` in every case: the line is accepted and ignored |
+| A project agent named like a plugin agent | `.agents/agents/code-reviewer.md` beside agent-skills' `code-reviewer` | one `code-reviewer` is listed, and it runs the project's |
 
 Not verified: whether other harnesses (for example Antigravity CLI) honour a per-agent model or effort. Treat them as `inherit` until checked.

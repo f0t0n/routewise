@@ -106,7 +106,7 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R8, R9. `make check` gree
 **Description:** `spec/SPEC-model-routing.md`: version line 3 (2026-11-17, R-A6 and the review returns); rule R-A6 in section 4 (a role may load skills for what to check; its body fixes behaviour, tools and return shape; a skill never adds a tool or a write); the `Checklist` line in the `reviewer` and `auditor` returns; section 13 records of the 2026-11-17 probes (Claude Code 2.1.326: namespaced and bare skills injected, missing skipped, no tool added, same-name project agent wins but `agent-skills:` stays reachable; Antigravity 1.5.9: `skills:` accepted and ignored, project agent hides the plugin's).
 
 **Acceptance criteria:**
-- [ ] Version line, R-A6, table cells and two section 13 records present; nothing else in the rules spec changes (diff reviewed).
+- [x] Version line, R-A6, table cells and two section 13 records present; nothing else in the rules spec changes (diff reviewed), except section 10's fragment, which gains the two R8 lines of the dev template (mutation suggestions, `Checklist: none`) so the portable block stays in step.
 
 **Verification:** `git diff spec/`; `make check`.
 
