@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.1 (2026-11-17)
 
 - `routewise/install` run inside a routewise repo (a clone, a fork or an older checkout: it holds `install`, `lib/install.py`, `roles/` and `harness.toml`) stops with exit code 2 and writes nothing, in every mode; before, it treated the repo as a project holding routewise and rewrote its agents and delegation block with `routewise/…` commands (spec R12, found by running the README's update command in this repo). The repo installs on itself with `./install --project .`. A refused update leaves the unpacked `routewise/` folder behind: delete it. Ordinary projects and `bin/miss-log` are not affected.
 
