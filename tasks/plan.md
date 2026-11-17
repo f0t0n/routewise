@@ -49,7 +49,7 @@ routewise keeps owning how a review runs (tier, effort, read-only tools, return 
 ### Then (workflow phases, not tasks)
 
 - **Verify (done 2026-11-17; record in rules spec section 13; two role fixes, `2598770` and `df5bc8a`, with misses logged):** `make check` on the whole change; live runs for criteria 13 and 14 (missing skill, write step, fixture comparison against `agent-skills:code-reviewer`, `/ship` with stand-ins), recorded in rules spec section 13.
-- **Review:** `reviewer` on the whole change; `auditor` for S3 (marker), S6 (`skills` key) and the settings that reach frontmatter.
+- **Review (done 2026-11-17, three rounds; record in todo.md):** `reviewer` on the whole change; `auditor` for S3 (marker), S6 (`skills` key) and the settings that reach frontmatter.
 - **Ship:** 0.2.0: version, `CHANGELOG.md`, archive check, `tasks/release-0.2.0.md`.
 
 ## Risks and mitigations

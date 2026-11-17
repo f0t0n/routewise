@@ -124,6 +124,15 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R8, R9. `make check` gree
 
 **Dependencies:** Tasks 2, 6. **Files:** `README.md`, `ADOPT.md`, `CHANGELOG.md`. **Scope:** S.
 
+## Review record (2026-11-17)
+
+Run headless with the agent files as fixed in Verify. Stopping rule: ended after round 3 (no open Critical or Required).
+
+- **Round 1, `ec46ea3..778d1b9`:** `reviewer` approve, `auditor` no Critical or Required. Fixed: a fake `SKILL.md` in a reviewed diff could pass as loaded (`d0e4485`); the stand-in line names no particular plugin (`ca4e847`); a skill listed twice is refused, and a refused `[stand_ins]` is tested to write nothing (`65131ff`); README notes on stand-ins with the dev block and a skill's `allowed-tools` (`37e26c1`). Mutation suggestions: 1 of 3 survived (a stand-in taking a role's agent name), test added (`8e31ca3`). Answered: single-line description test (no such role ships), case-only renames on macOS (true for roles before this change), `git status` refreshing `.git/index` (benign).
+- **Round 2, scoped to the round-1 fixes:** both approve, but `reviewer` replied `Checklist: none` with its skill loaded: the wording made the agent judge where the skill text sat (3 wrong of 7 live runs; Required). R8 amended with the maintainer's approval: the installer writes the skill names and the exact `Checklist` line (`eeba5e7`, `8b861f6`, live-checked: `loaded`, `missing`, fake skill as data); small items (`cd3f381`). Mutation suggestions: 3 of 3 killed. Answered: a skill's own reference files read with a tool are data (safe trade-off); the role-text test covers `roles/*.md`, and the generated copies are covered by the self-install drift check.
+- **Round 3, scoped to the amendment (`8e31ca3..8b861f6`):** both approve. Fixed: "Skills listed for you", end-to-end tests of the `none` form and of leftover placeholders (`4d69b79`). Mutation suggestions: 3 of 3 killed. Answered: a mid-task message or skill text the main session pastes into the brief could count as loaded (the main session is trusted, and the body still wins); the multi-skill reply form has no example (unambiguous, tested in `test_roles.py`); `str.replace` fills every placeholder (each used once).
+- **Misses logged:** 4 for `reviewer`, all found by these live runs (a probe script and bytecode written; three wrong `Checklist` lines), each fixed above.
+
 ## Separate fix (not part of R8/R9): `MODEL` accepts a trailing line break
 
 **Found:** 2026-11-17, while testing Task 5. `MODEL` in `lib/roles.py` is used with `.match` and ends in `$`, which also matches just before a final newline, so `[tiers] fast = "haiku\n"` (or a `harness.toml` tier with one) passes the check and renders `model: haiku` plus a blank frontmatter line. A line break followed by more text is still refused, so no key can be injected; the effect is a malformed but harmless line. 0.1.x has the same behaviour.

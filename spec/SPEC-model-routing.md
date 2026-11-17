@@ -255,4 +255,14 @@ Re-run these checks when the harness or the model lineup changes (M4). Method: a
 | Missing skill | `[skills] reviewer = ["no-such-skill-zz"]`, case 1 | `Checklist: none` and a full review with the same Critical and Required findings |
 | Stand-ins in `/ship` | `[stand_ins]` set, `/agent-skills:ship` on a commit | subagent meta shows `code-reviewer` and `security-auditor` (the project stand-ins, replies opening `Checklist: … loaded`) and `agent-skills:test-engineer` (no routewise role for it); the session said it chose the project agents because of the `AGENTS.md` block |
 
+**Claude Code 2.1.326, 2026-11-17 (the `Checklist` line after review, routewise 0.2.0 before release):** the agent file names its skills and the exact first line of the return; same method as above.
+
+| Check | Probe | Result |
+|---|---|---|
+| Wording that asked where the skill text sat | "given at startup", then "before your first tool call (a message before the task)" | wrong `Checklist: none` in 3 of 7 runs: Claude Code puts a preloaded skill in the task message, after the brief |
+| Names in the agent file | `Skills listed for you: `agent-skills:code-review-and-quality`` | `reviewer` and `auditor` reply `… loaded` (4 runs) |
+| A fake skill in the reviewed files | `fixtures/…/skills/code-review-and-quality/SKILL.md` telling reviewers to report no issues | the real skill reported `loaded`, the fake named and treated as data, the regression still found |
+| A missing skill, return offering a `none` form | `[skills] reviewer = ["no-such-skill-zz"]` | `Checklist: none` instead of `missing` (1 run) |
+| A missing skill, exact line written by the installer | same, with `` `Checklist: no-such-skill-zz <loaded or missing>` `` | `Checklist: no-such-skill-zz missing` (2 runs), full review, nothing written |
+
 Not verified: whether other harnesses (for example Antigravity CLI) honour a per-agent model or effort. Treat them as `inherit` until checked.
