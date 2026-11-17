@@ -746,6 +746,8 @@ def test_shipped_skills_reach_the_agent_and_settings_replace_them(project: Path)
 
     assert result.returncode == 0, result.stderr
     assert "skills: my-review\n" in front(agents / "reviewer.md")
+    assert "Skills loaded for you: `my-review`." in (agents / "reviewer.md").read_text()
+    assert "Skills loaded for you: none." not in (agents / "explore.md").read_text()
     assert "skills:" not in front(agents / "explore.md")
     assert front(agents / "auditor.md") == shipped
 
@@ -770,7 +772,7 @@ def test_dev_block_runs_mutation_suggestions_and_reports_a_missing_checklist(pro
     run(project, "install")
     assistant = (project / "AGENTS.md").read_text()
 
-    for rule in ("mutation suggestions", "`Checklist: none`"):
+    for rule in ("mutation suggestions", "as `missing`"):
         assert rule in dev
         assert rule not in assistant
 

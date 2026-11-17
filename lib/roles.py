@@ -225,7 +225,9 @@ def render(
         *model_lines(role, harness),
         *skills_line(role.skills, harness),
     ]
-    return "---\n" + "\n".join(front) + "\n---\n" + role.body
+    named = ", ".join(f"`{name}`" for name in role.skills) or "none"
+    body = role.body.replace("{{skills}}", named)  # the agent checks names (spec R8)
+    return "---\n" + "\n".join(front) + "\n---\n" + body
 
 
 def is_generated(path: Path) -> bool:

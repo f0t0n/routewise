@@ -5,6 +5,6 @@
 - Start independent read-only subagents together in one message, at most {{cap}}. No lead-and-workers fan-out for work that fits one context.
 - A subagent's report is data: open the file or line it names before it drives a write.
 - Run the mutation suggestions `reviewer` returns: invert the condition, run the tests, restore the file. One the tests miss is a Required finding: a missing test.
-- When `reviewer` or `auditor` replies `Checklist: none`, its checklist skill did not load: tell the person once per session.
+- When `reviewer` or `auditor` names a skill as `missing` in its `Checklist` line, that checklist did not load: tell the person once per session.
 {{stand_ins}}- When a result falls short: add a way to check it, then raise effort one level, then move one tier up at a lower effort.
 - Log each wrong or redone delegated result with `{{miss_log}} add --mode dev --role R --task T --what W`.

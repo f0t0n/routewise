@@ -94,9 +94,9 @@ auditor = ["agent-skills:security-and-hardening", "my-security-skill"]  # up to 
 
 A list replaces the role's own; keys are role file names (`reviewer`, `auditor`, `explore`, ...).
 
-- **Each reply starts with `Checklist: <skills> loaded` or `Checklist: none`.** A skill that is not installed, or was renamed, is skipped without an error; the role then reviews by its own method, and the `dev` delegation block tells the main session to say so once per session.
+- **Each reply starts with a `Checklist` line** that names each of the role's skills as `loaded` or `missing` (`Checklist: agent-skills:code-review-and-quality loaded`); the agent file lists the names, so the agent checks for them. A skill that is not installed, or was renamed, is skipped without an error and shows as `missing`; the role then reviews by its own method, and the `dev` delegation block tells the main session to say so once per session.
 - **The role's own rules win over the skill.** A skill step that would change a file (a mutation test, deleting unused code) comes back as a suggestion. With the `dev` block, the main session runs `reviewer`'s mutation suggestions itself, and a mutation the tests miss is a Required finding. A skill's severity names are mapped to Critical, Required, Optional and Nit.
-- **Antigravity CLI** (1.5.9) accepts the `skills:` line but does not load the skill yet, so there the roles use their own method and say `Checklist: none`; they pick the skill up once Antigravity does.
+- **Antigravity CLI** (1.5.9) accepts the `skills:` line but does not load the skill yet, so there the roles use their own method and name their skills as `missing`; they pick the skill up once Antigravity does.
 
 **agent-skills' `/ship`** starts its own `code-reviewer` and `security-auditor` agents, which can write files and run on the session's model. To have `/ship` use routewise's read-only roles with the same checklists, turn on stand-ins in the projects where you run it:
 

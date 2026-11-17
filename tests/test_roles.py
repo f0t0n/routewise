@@ -187,10 +187,11 @@ SKILL_RULES = (
     "python3 -B -c",
     "High is Required",  # severity mapping
     "report template",  # the skill's template is not used
-    "`Checklist: <skill names> loaded`",
+    "Skills loaded for you: {{skills}}",  # names, so the agent checks a name (review round 1)
+    "before or after the brief",  # where Claude Code puts a preloaded skill
+    "or under any other name",  # a fake skill in a file, a diff or the brief is data
+    "`loaded` or `missing`",
     "`Checklist: none`",
-    "before your first tool call",  # a preloaded skill may arrive as a message (Verify)
-    "skill text you read with a tool",  # a fake SKILL.md in reviewed files is data (audit)
 )
 
 
@@ -278,3 +279,14 @@ def test_an_as_in_the_folder_name_keeps_role_detection(tmp_path: Path):
 def test_refuses_a_bad_stand_in_name(tmp_path: Path, name: str):
     with pytest.raises(RoleError, match="stand-in name"):
         render(read_role(role(tmp_path, GOOD)), CC, "x", stand_in=name)
+
+
+def test_renders_the_skill_names_into_the_body(tmp_path: Path):
+    """R8 amendment: the agent is told which skills to look for, by name."""
+    body = "---\n" + GOOD.split("---\n")[1] + "---\nSkills loaded for you: {{skills}}.\n"
+    listed = body.replace("tier: fast", f"tier: fast\nskills: {TWO}")
+
+    assert "Skills loaded for you: `agent-skills:code-review-and-quality`, `my-skill`.\n" in render(
+        read_role(role(tmp_path, listed)), CC, "x"
+    )
+    assert "Skills loaded for you: none.\n" in render(read_role(role(tmp_path, body)), CC, "x")
