@@ -13,7 +13,7 @@ Follow the [agent-skills](https://github.com/addyosmani/agent-skills) lifecycle 
 3. **Build** (`/build`, `incremental-implementation` + `test-driven-development`): one task at a time, failing test first, `make check` green, one commit per task.
 4. **Verify** (`/test`): `make check` on the whole change; harness facts by a live run recorded in `spec/SPEC-model-routing.md` section 13.
 5. **Review** (`/review`, `code-review-and-quality`): delegate to the `reviewer` subagent, and to `auditor` for anything touching safety rules S1–S9; fix or answer every finding. Stop when a round leaves no open Critical or Required finding in scope: Optional findings, Nits and gaps the last release also had are answered in the review record; for the miss-log privacy filter they are known limits, not follow-up work, unless the maintainer asks (SPEC.md, stopping rule).
-6. **Ship** (`/ship`, `shipping-and-launch`): version, `CHANGELOG.md`, release archive contents checked; tag locally when asked; the maintainer pushes commits and tags and publishes the release from the host. **No version ships without its changelog:** releases are published openly on GitHub, so every release has a dated `CHANGELOG.md` section and release notes drafted in `tasks/release-<version>.md` (for users: what changed and how to update), checked by `reviewer` against the code.
+6. **Ship** (`/ship`, `shipping-and-launch`): version, `CHANGELOG.md`, release archive contents checked; tag locally when asked; the maintainer pushes commits and tags and publishes the release from the host. **No version ships without its changelog:** releases are published openly on GitHub, so every release has a dated `CHANGELOG.md` section and release notes drafted in `tasks/release-<version>.md` (for users: what changed and how to update), checked by `reviewer` against the code. **Every release ends with the publish steps:** after the local tag, give the maintainer the commands in "Publishing a release" below, filled in for that version, ready to paste.
 
 ## Commands
 
@@ -27,6 +27,19 @@ make self        # re-install routewise on this repo after changing roles/, temp
 ```
 
 Never run a bare `./install` here: its default project is the folder above this repo. `make self` runs `./install --project .`.
+
+## Publishing a release
+
+The agent never pushes (no credentials in the sandbox). After Ship it hands the maintainer these steps, with `<v>` filled in; the maintainer runs them on the host from the repo root:
+
+```sh
+git push origin main          # the release commits
+git push origin v<v>          # the annotated tag; GitHub then serves the archive the README installs
+gh release create v<v> --verify-tag --title "routewise <v>" --notes-file tasks/release-<v>.md
+gh release view v<v> --web    # check the page and its "Source code" downloads
+```
+
+Without `gh`: GitHub, Releases, "Draft a new release", choose tag `v<v>`, title `routewise <v>`, paste `tasks/release-<v>.md` as the description, publish. Then check that the README's install command fetches the new version: `curl -fsSI https://github.com/f0t0n/routewise/archive/refs/tags/v<v>.tar.gz` answers 302 or 200.
 
 ## Where things are
 

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (2026-11-17)
 
 - routewise's own repo: the miss-log command in its delegation block and a new `ROUTING-BINDING.md` is `bin/miss-log --project .`; plain `bin/miss-log` wrote to the folder above the repo (spec R10, a bug since 0.1.0). Projects that hold `routewise/` are not affected.
 - A model name with a trailing line break (`[tiers] fast = "haiku\n"`, or a tier in `harness.toml`) is refused with the usual message; it passed before and left a blank line in the agent's frontmatter (spec R11, a bug since 0.1.0; no key could be added).
