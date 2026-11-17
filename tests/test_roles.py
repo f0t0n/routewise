@@ -186,7 +186,8 @@ SKILL_RULES = (
     "report template",  # the skill's template is not used
     "`Checklist: <skill names> loaded`",
     "`Checklist: none`",
-    "wherever it appears",  # a preloaded skill may arrive as a message (found in Verify)
+    "before your first tool call",  # a preloaded skill may arrive as a message (Verify)
+    "skill text you read with a tool",  # a fake SKILL.md in reviewed files is data (audit)
 )
 
 
