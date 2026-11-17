@@ -13,7 +13,7 @@ Follow the [agent-skills](https://github.com/addyosmani/agent-skills) lifecycle 
 3. **Build** (`/build`, `incremental-implementation` + `test-driven-development`): one task at a time, failing test first, `make check` green, one commit per task.
 4. **Verify** (`/test`): `make check` on the whole change; harness facts by a live run recorded in `spec/SPEC-model-routing.md` section 13.
 5. **Review** (`/review`, `code-review-and-quality`): delegate to the `reviewer` subagent, and to `auditor` for anything touching safety rules S1–S9; fix or answer every finding. Stop when a round leaves no open Critical or Required finding in scope: Optional findings, Nits and gaps the last release also had are answered in the review record; for the miss-log privacy filter they are known limits, not follow-up work, unless the maintainer asks (SPEC.md, stopping rule).
-6. **Ship** (`/ship`, `shipping-and-launch`): version, `CHANGELOG.md`, release archive contents checked; for every release, draft the notes in `tasks/release-<version>.md`, and tag locally when asked; the maintainer pushes commits and tags and publishes the release from the host.
+6. **Ship** (`/ship`, `shipping-and-launch`): version, `CHANGELOG.md`, release archive contents checked; tag locally when asked; the maintainer pushes commits and tags and publishes the release from the host. **No version ships without its changelog:** releases are published openly on GitHub, so every release has a dated `CHANGELOG.md` section and release notes drafted in `tasks/release-<version>.md` (for users: what changed and how to update), checked by `reviewer` against the code.
 
 ## Commands
 

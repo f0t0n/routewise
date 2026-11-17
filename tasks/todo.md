@@ -123,3 +123,9 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R8, R9. `make check` gree
 **Verification:** read the rendered README; `make check`.
 
 **Dependencies:** Tasks 2, 6. **Files:** `README.md`, `ADOPT.md`, `CHANGELOG.md`. **Scope:** S.
+
+## Separate fix (not part of R8/R9): `MODEL` accepts a trailing line break
+
+**Found:** 2026-11-17, while testing Task 5. `MODEL` in `lib/roles.py` is used with `.match` and ends in `$`, which also matches just before a final newline, so `[tiers] fast = "haiku\n"` (or a `harness.toml` tier with one) passes the check and renders `model: haiku` plus a blank frontmatter line. A line break followed by more text is still refused, so no key can be injected; the effect is a malformed but harmless line. 0.1.x has the same behaviour.
+
+**Fix:** use `fullmatch` for `MODEL` (as R8 does for skill and stand-in names); a test with a trailing `\n` in `[tiers]` and in a harness tier. Goes through its own Define step (a one-line spec note) after 0.2.0, or into 0.2.0 if the maintainer asks.
