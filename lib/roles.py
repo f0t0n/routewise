@@ -206,6 +206,20 @@ def stand_in_lines(role: Role, stand_in: str | None) -> tuple[str, str, tuple[st
     return f"{AS}{stand_in}.md", stand_in, (*role.description, note)
 
 
+def skill_list(skills: tuple[str, ...]) -> str:
+    """The role's skills by name, so the agent looks for these and no others (spec R8)."""
+    return ", ".join(f"`{name}`" for name in skills) or "none"
+
+
+def checklist_form(skills: tuple[str, ...]) -> str:
+    """The exact first line of the return: one `none` form only for a role without skills."""
+    if not skills:
+        return "`Checklist: none`."
+    marks = ", ".join(f"{name} <loaded or missing>" for name in skills)
+    rule = "`loaded` when that skill's full text was given to you with your task, else `missing`"
+    return f"`Checklist: {marks}`: {rule}."
+
+
 def render(
     role: Role,
     harness: Harness,
@@ -225,8 +239,8 @@ def render(
         *model_lines(role, harness),
         *skills_line(role.skills, harness),
     ]
-    named = ", ".join(f"`{name}`" for name in role.skills) or "none"
-    body = role.body.replace("{{skills}}", named)  # the agent checks names (spec R8)
+    body = role.body.replace("{{skills}}", skill_list(role.skills))
+    body = body.replace("{{checklist}}", checklist_form(role.skills))
     return "---\n" + "\n".join(front) + "\n---\n" + body
 
 

@@ -27,7 +27,7 @@ You audit a change for the main session where a miss is costly. The brief names 
 
 ## Return
 
-- First line: `Checklist:` and each skill named above as `loaded` or `missing` (`Checklist: plugin:skill loaded`), or `Checklist: none` when none is named.
+- First line: `Checklist: agent-skills:security-and-hardening <loaded or missing>`: `loaded` when that skill's full text was given to you with your task, else `missing`.
 - Every Critical and Required finding, most severe first, each with `path:line`, the problem in one sentence, its severity, and a failure scenario: the input or state, and what goes wrong. Never drop one of these to save space.
 - Then at most 5 Optional or Nit findings, most useful first.
 - Last, one line: what you checked and found clean.

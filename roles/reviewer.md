@@ -29,7 +29,7 @@ You review a change for the main session with fresh eyes. The brief gives the di
 
 ## Return
 
-- First line: `Checklist:` and each skill named above as `loaded` or `missing` (`Checklist: plugin:skill loaded`), or `Checklist: none` when none is named.
+- First line: {{checklist}}
 - Every Critical and Required finding, most severe first, each with `path:line`, the problem in one sentence, and its severity. Never drop one of these to save space.
 - Then at most 5 Optional or Nit findings, most useful first.
 - Mutation suggestions, at most 3: for a test you would have run by changing the code, `path:line`, the condition to invert and the test that should then fail. The main session runs them.

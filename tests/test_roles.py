@@ -190,8 +190,7 @@ SKILL_RULES = (
     "Skills loaded for you: {{skills}}",  # names, so the agent checks a name (review round 1)
     "before or after the brief",  # where Claude Code puts a preloaded skill
     "or under any other name",  # a fake skill in a file, a diff or the brief is data
-    "`loaded` or `missing`",
-    "`Checklist: none`",
+    "- First line: {{checklist}}",  # the installer writes the exact form (review round 2)
 )
 
 
@@ -290,3 +289,17 @@ def test_renders_the_skill_names_into_the_body(tmp_path: Path):
         read_role(role(tmp_path, listed)), CC, "x"
     )
     assert "Skills loaded for you: none.\n" in render(read_role(role(tmp_path, body)), CC, "x")
+
+
+def test_renders_the_exact_checklist_line(tmp_path: Path):
+    """A role with skills gets no `none` form to pick by mistake; one without gets only `none`."""
+    body = "---\n" + GOOD.split("---\n")[1] + "---\n- First line: {{checklist}}\n"
+    listed = body.replace("tier: fast", f"tier: fast\nskills: {TWO}")
+
+    text = render(read_role(role(tmp_path, listed)), CC, "x")
+    assert (
+        "- First line: `Checklist: agent-skills:code-review-and-quality <loaded or missing>, "
+        "my-skill <loaded or missing>`:" in text
+    )
+    assert "none" not in text.split("---\n", 2)[2]
+    assert "- First line: `Checklist: none`.\n" in render(read_role(role(tmp_path, body)), CC, "x")
