@@ -874,3 +874,17 @@ def test_block_names_stand_ins_only_when_set(project: Path):
     assert "`<plugin>:code-reviewer`" in line and "/ship" in line
     assert "agent-skills" not in line  # the setting is not tied to one plugin
     assert block.replace(line + "\n", "") == plain
+
+
+def test_a_stand_in_cannot_take_a_roles_agent_name(project: Path):
+    """R9: a role whose agent name differs from its file name keeps that name to itself."""
+    roles = project / "routewise" / "roles"
+    text = (roles / "reviewer.md").read_text().replace("name: reviewer", "name: Deep-Check")
+    (roles / "deep.md").write_text(text)
+    run(project, "install")
+    set_config(project, "[stand_ins]\n", '[stand_ins]\nreviewer = ["deep-check"]\n')
+
+    result = run(project, "install")
+
+    assert result.returncode == 2
+    assert "stand-in name 'deep-check' is a role" in result.stderr
