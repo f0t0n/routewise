@@ -93,6 +93,9 @@ def skill_names(label: str, names: list[str]) -> tuple[str, ...]:
     for name in names:
         if not SKILL.fullmatch(name):
             raise RoleError(f"{label}: skill name {name!r} must be name or plugin:name in a-z0-9-")
+    for name in names:
+        if names.count(name) > 1:
+            raise RoleError(f"{label}: skill name {name!r} is listed twice")
     if len(names) > MAX_SKILLS:
         raise RoleError(f"{label}: at most {MAX_SKILLS} skills; list fewer")
     return tuple(names)

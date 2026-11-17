@@ -159,6 +159,7 @@ def test_no_skills_line_without_skills(tmp_path: Path, value: str):
         "[..]",
         "[a..b]",
         "code-review",
+        "[a, a]",
         "[" + ", ".join(f"s{n}" for n in range(33)) + "]",
     ],
 )
@@ -166,7 +167,9 @@ def test_refuses_a_bad_skills_value(tmp_path: Path, value: str):
     """R8, S6: a skill name cannot carry a path, a space or another frontmatter key."""
     path = role(tmp_path, GOOD.replace("tier: fast", f"tier: fast\nskills: {value}"))
 
-    with pytest.raises(RoleError, match="skills must be a list|skill name|at most 32 skills"):
+    with pytest.raises(
+        RoleError, match="skills must be a list|skill name|at most 32 skills|listed twice"
+    ):
         read_role(path)
 
 
