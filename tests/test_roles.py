@@ -116,3 +116,62 @@ def test_marker_with_a_space_in_the_path(tmp_path: Path):
     text = render(read_role(role(tmp_path, GOOD)), CC, "my tools/roles/reviewer.md")
 
     assert is_generated(role(tmp_path, text, "reviewer.md"))
+
+
+AGY = Harness(
+    key="agy",
+    dir=".agents/agents",
+    tools={"read": ["view_file"]},
+    tiers={},
+    efforts=(),
+)
+TWO = "[agent-skills:code-review-and-quality, my-skill]"
+
+
+def test_renders_skills_for_each_harness(tmp_path: Path):
+    """R8: a role's skills reach the agent; cc reads a comma string, agy a YAML list."""
+    shipped = read_role(role(tmp_path, GOOD.replace("tier: fast", f"tier: fast\nskills: {TWO}")))
+
+    assert "\nskills: agent-skills:code-review-and-quality, my-skill\n" in render(shipped, CC, "x")
+    assert f"\nskills: {TWO}\n" in render(shipped, AGY, "x")
+
+
+@pytest.mark.parametrize("value", ["[]", "[ , ]"])
+def test_no_skills_line_without_skills(tmp_path: Path, value: str):
+    plain = read_role(role(tmp_path, GOOD))
+    empty = read_role(role(tmp_path, GOOD.replace("tier: fast", f"tier: fast\nskills: {value}")))
+
+    for each in (plain, empty):
+        assert each.skills == ()
+        assert "skills:" not in render(each, CC, "x")
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "[Code-Review]",
+        "[code review]",
+        "[a:b:c]",
+        "[:a]",
+        "[a:]",
+        "[-a]",
+        "[a/b]",
+        "[..]",
+        "[a..b]",
+        "code-review",
+        "[" + ", ".join(f"s{n}" for n in range(33)) + "]",
+    ],
+)
+def test_refuses_a_bad_skills_value(tmp_path: Path, value: str):
+    """R8, S6: a skill name cannot carry a path, a space or another frontmatter key."""
+    path = role(tmp_path, GOOD.replace("tier: fast", f"tier: fast\nskills: {value}"))
+
+    with pytest.raises(RoleError, match="skills must be a list|skill name|at most 32 skills"):
+        read_role(path)
+
+
+def test_a_line_break_cannot_smuggle_a_key_through_skills(tmp_path: Path):
+    path = role(tmp_path, GOOD.replace("tier: fast", "tier: fast\nskills: [a,\n  b]"))
+
+    with pytest.raises(RoleError):
+        read_role(path)

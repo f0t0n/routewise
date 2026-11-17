@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- A role file may list skills (`skills: [plugin:skill, other-skill]`); the generated agent gets a `skills:` line, which Claude Code uses to load each skill's full text into the subagent at startup (spec R8). Names are checked strictly (lower-case letters, digits, `-`, one optional `plugin:` part, at most 32), so a skill name cannot add frontmatter. Antigravity CLI 1.5.9 accepts the line and ignores it.
+
 ## 0.1.2 (2026-11-14)
 
 - The miss-log filter catches a leak touched by a letter or digit of another script with no space between: `服务器在10.0.0.12上`, `key AKIA…が漏れた`, `见www.example.com`, `ב10.0.0.12`, an ID or token right after Chinese or Japanese text (spec R7). Word edges are now ASCII only, so text 0.1.1 refused after a space is also refused right after such a letter or digit (`版本1.2.3.4`, as `version 1.2.3.4` was; `运行www.py`; `café10.0.0.12`); an ASCII letter or digit still joins the word (`xAKIA…`, `v10.0.0.12` pass as before). Card numbers are still looked for with 0.1.1's edges too, so a stray digit group next to such a letter cannot hide one (`card 4111 1111 1111 1111 2次`).
