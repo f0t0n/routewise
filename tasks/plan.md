@@ -53,7 +53,7 @@ routewise keeps owning how a review runs (tier, effort, read-only tools, return 
 
 ### Checkpoint C (after Task 11)
 
-- [ ] `make check` green; `reviewer` on the two fixes (and `auditor` for R11, which guards frontmatter, S6)
+- [x] `make check` green; `reviewer` on the two fixes (and `auditor` for R11, which guards frontmatter, S6)
 
 ### Then (workflow phases, not tasks)
 

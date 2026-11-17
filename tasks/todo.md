@@ -160,7 +160,7 @@ Run headless with the agent files as fixed in Verify. Stopping rule: ended after
 
 ## Checkpoint C
 
-- [ ] `make check` green; `reviewer` on Tasks 10 and 11, `auditor` on Task 11.
+- [x] `make check` green; `reviewer` on Tasks 10 and 11, `auditor` on Task 11 (2026-11-17, `f7da767..b1a98a6`): both approve, no Critical or Required. Mutation suggestions: 3 of 3 killed. Answered: a self-install reached through a symlinked parent folder refuses `bin/miss-log --project .` (fails closed, exit 2; `./install --project .` has the same gap, both since 0.1.0); a model value in brackets (`[haiku]`) renders as a YAML list but adds no key or line (as before); a non-string tier in routewise's own `harness.toml` gives a traceback instead of a message (routewise's file, not a project setting, as before); the binding text is asserted by two tests (harmless).
 
 ## Found 2026-11-17, now Task 11 (R11): `MODEL` accepts a trailing line break
 
