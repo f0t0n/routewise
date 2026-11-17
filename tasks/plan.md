@@ -46,6 +46,15 @@ routewise keeps owning how a review runs (tier, effort, read-only tools, return 
 - [x] Task 8: rules spec version 3 (R-A6, returns, section 13 records of the 2026-11-17 probes)
 - [x] Task 9: README section on checklists and preference; ADOPT.md and template notes
 
+### Phase 4: two 0.1.x bugs for 0.2.0 (R10, R11, approved 2026-11-17)
+
+- [ ] Task 10: the self-install's miss-log command works (`bin/miss-log --project .`)
+- [ ] Task 11: `MODEL` uses `fullmatch`
+
+### Checkpoint C (after Task 11)
+
+- [ ] `make check` green; `reviewer` on the two fixes (and `auditor` for R11, which guards frontmatter, S6)
+
 ### Then (workflow phases, not tasks)
 
 - **Verify (done 2026-11-17; record in rules spec section 13; two role fixes, `2598770` and `df5bc8a`, with misses logged):** `make check` on the whole change; live runs for criteria 13 and 14 (missing skill, write step, fixture comparison against `agent-skills:code-reviewer`, `/ship` with stand-ins), recorded in rules spec section 13.

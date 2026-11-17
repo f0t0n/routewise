@@ -133,13 +133,42 @@ Run headless with the agent files as fixed in Verify. Stopping rule: ended after
 - **Round 3, scoped to the amendment (`8e31ca3..8b861f6`):** both approve. Fixed: "Skills listed for you", end-to-end tests of the `none` form and of leftover placeholders (`4d69b79`). Mutation suggestions: 3 of 3 killed. Answered: a mid-task message or skill text the main session pastes into the brief could count as loaded (the main session is trusted, and the body still wins); the multi-skill reply form has no example (unambiguous, tested in `test_roles.py`); `str.replace` fills every placeholder (each used once).
 - **Misses logged:** 4 for `reviewer`, all found by these live runs (a probe script and bytecode written; three wrong `Checklist` lines), each fixed above.
 
-## Separate fix (not part of R8/R9): `MODEL` accepts a trailing line break
+## Task 10: the self-install's miss-log command works (R10)
+
+**Description:** in a self-install, `{{miss_log}}` in the dev and assistant fragments and in a new `ROUTING-BINDING.md` becomes `bin/miss-log --project .`; vendored installs keep `routewise/bin/miss-log`. This repo's hand-edited `ROUTING-BINDING.md` is corrected by hand.
+
+**Acceptance criteria:**
+- [ ] On a temporary self-install copy, the block and a new binding name `bin/miss-log --project . add` and `report`, and running the block's command from the repo root appends to the repo's own log.
+- [ ] A vendored install still names `routewise/bin/miss-log` (existing tests unchanged).
+- [ ] `make self` updates this repo's block; `ROUTING-BINDING.md` fixed by hand; `--check` clean.
+
+**Verification:** `uv run pytest tests/test_install.py -k self`; `make self`; `make check`.
+
+**Files:** `lib/install.py`, `tests/test_install.py`, `AGENTS.md` (generated block), `ROUTING-BINDING.md`, `CHANGELOG.md`. **Scope:** S.
+
+## Task 11: `MODEL` uses `fullmatch` (R11)
+
+**Description:** `lib/roles.py` checks model names with `MODEL.fullmatch`, in `model_lines` and in `settings.tiers`.
+
+**Acceptance criteria:**
+- [ ] `[tiers] fast = "haiku\n"` and a harness tier `"haiku\n"` are refused with the existing message; red on HEAD.
+- [ ] Every model name accepted before still passes (`haiku`, `claude-haiku-5-5`, `fable`, names with `.`, `:`, `[1m]`).
+
+**Verification:** `uv run pytest tests/test_roles.py tests/test_settings.py`; `make check`.
+
+**Files:** `lib/roles.py`, `lib/settings.py`, `tests/test_roles.py`, `tests/test_settings.py`, `CHANGELOG.md`. **Scope:** XS.
+
+## Checkpoint C
+
+- [ ] `make check` green; `reviewer` on Tasks 10 and 11, `auditor` on Task 11.
+
+## Found 2026-11-17, now Task 11 (R11): `MODEL` accepts a trailing line break
 
 **Found:** 2026-11-17, while testing Task 5. `MODEL` in `lib/roles.py` is used with `.match` and ends in `$`, which also matches just before a final newline, so `[tiers] fast = "haiku\n"` (or a `harness.toml` tier with one) passes the check and renders `model: haiku` plus a blank frontmatter line. A line break followed by more text is still refused, so no key can be injected; the effect is a malformed but harmless line. 0.1.x has the same behaviour.
 
 **Fix:** use `fullmatch` for `MODEL` (as R8 does for skill and stand-in names); a test with a trailing `\n` in `[tiers]` and in a harness tier. Goes through its own Define step (a one-line spec note) after 0.2.0, or into 0.2.0 if the maintainer asks.
 
-## Separate fix (not part of R8/R9): the self-install's miss-log command needs `--project .`
+## Found 2026-11-17, now Task 10 (R10): the self-install's miss-log command needs `--project .`
 
 **Found:** 2026-11-17, logging the Verify miss. In routewise's own repo the delegation block says `bin/miss-log add …` (R3 spelling for a self-install), but `bin/miss-log` defaults to the folder that holds the routewise folder, which here is the folder above the repo, so the command fails (`Permission denied` on `../logs`). It works with `bin/miss-log --project . add …`. Vendored projects are not affected (`routewise/bin/miss-log` finds the project). Breaks success criterion 7 for the self-install only; present since 0.1.0.
 
