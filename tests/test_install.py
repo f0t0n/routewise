@@ -863,5 +863,6 @@ def test_block_names_stand_ins_only_when_set(project: Path):
     line = next(x for x in block.splitlines() if "stand-in" in x)
     assert "`code-reviewer` (for `reviewer`)" in line
     assert "`security-auditor` (for `auditor`)" in line
-    assert "`agent-skills:code-reviewer`" in line and "/ship" in line
+    assert "`<plugin>:code-reviewer`" in line and "/ship" in line
+    assert "agent-skills" not in line  # the setting is not tied to one plugin
     assert block.replace(line + "\n", "") == plain

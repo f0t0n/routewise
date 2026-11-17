@@ -145,10 +145,11 @@ def stand_ins_line(stand_ins: dict[str, tuple[str, ...]]) -> str:
     if not pairs:
         return ""
     named = ", ".join(f"`{name}` (for `{role}`)" for name, role in pairs)
-    example = f"`agent-skills:{pairs[0][0]}`"
+    example = f"`<plugin>:{pairs[0][0]}`"
     return (
-        f"- This project's stand-in agents: {named}. For these names, also inside `/ship`, "
-        f"start the project agent, never a plugin agent of the same name such as {example}.\n"
+        f"- This project's stand-in agents: {named}. For these names, also inside a plugin "
+        f"command such as `/ship`, start the project agent, never a plugin agent of the same "
+        f"name (listed as {example}).\n"
     )
 
 
