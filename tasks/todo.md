@@ -173,3 +173,12 @@ Run headless with the agent files as fixed in Verify. Stopping rule: ended after
 **Found:** 2026-11-17, logging the Verify miss. In routewise's own repo the delegation block says `bin/miss-log add …` (R3 spelling for a self-install), but `bin/miss-log` defaults to the folder that holds the routewise folder, which here is the folder above the repo, so the command fails (`Permission denied` on `../logs`). It works with `bin/miss-log --project . add …`. Vendored projects are not affected (`routewise/bin/miss-log` finds the project). Breaks success criterion 7 for the self-install only; present since 0.1.0.
 
 **Fix:** spell the self-install's miss-log command with `--project .` (as `./install --project .`), with a test on the self-install block and `ROUTING-BINDING.md`; or make `bin/miss-log` default to the repo itself when run from inside the routewise folder. Own Define step.
+
+## Ship check of 0.2.0 (2026-11-17)
+
+- [x] Version 0.2.0 in `pyproject.toml`, `uv.lock` and both README install blocks; `make check` green (1174 tests, version test included).
+- [x] `CHANGELOG.md`: `## 0.2.0 (2026-11-17)`.
+- [x] Release archive of the release commit: exactly the R1 runtime files (`install`, `bin/`, `lib/` 8 files, `roles/` 5, `harness.toml`, `templates/` 4, `spec/`, `README.md`, `ADOPT.md`, `LICENSE`, `CHANGELOG.md`); no development file.
+- [x] `tasks/release-0.2.0.md` checked by `reviewer` against the code: request changes for one Required item (the notes claimed agent files reload mid-session, unsupported in the repo), fixed by advising a new session and recording the live check in rules spec section 13; Optional items applied (developer references cut, what an update rewrites with the `dev` block, own roles and `[skills]` errors, stand-ins with `--check` and `--uninstall`, clearer R11 wording); SPEC R8's Antigravity sentence corrected. Answered: the release commit also changed `README.md` and `uv.lock`, which the version bump requires (its message names the version).
+- [x] AGENTS.md: every release ends with the publish steps ("Publishing a release").
+- [x] Annotated tag `v0.2.0` (`routewise 0.2.0`) on the commit that records this check, as for 0.1.2. The maintainer pushes `main` and the tag and publishes the release from the host.
