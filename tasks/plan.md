@@ -21,7 +21,7 @@ routewise keeps owning how a review runs (tier, effort, read-only tools, return 
 ### Phase 1: R8, skills in roles
 
 - [x] Task 1: `skills` key in role files, rendered for both harnesses
-- [ ] Task 2: `[skills]` setting overrides a role's list
+- [x] Task 2: `[skills]` setting overrides a role's list
 - [ ] Task 3: `reviewer` and `auditor` load the agent-skills checklists; body rules
 - [ ] Task 4: delegation block: mutation suggestions and `Checklist: none`
 

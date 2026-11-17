@@ -3,6 +3,7 @@
 ## Unreleased
 
 - A role file may list skills (`skills: [plugin:skill, other-skill]`); the generated agent gets a `skills:` line, which Claude Code uses to load each skill's full text into the subagent at startup (spec R8). Names are checked strictly (lower-case letters, digits, `-`, one optional `plugin:` part, at most 32), so a skill name cannot add frontmatter. Antigravity CLI 1.5.9 accepts the line and ignores it.
+- `routewise.toml` may set `[skills]` per role (`reviewer = ["my-review"]`), replacing the role's own list; `[]` turns a role's skills off; an unknown role or a bad skill name stops the run (spec R8). New installs show the table commented out.
 
 ## 0.1.2 (2026-11-14)
 

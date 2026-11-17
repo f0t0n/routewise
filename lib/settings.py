@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from paths import relative
-from roles import MODEL, TIERS
+from roles import MODEL, TIERS, RoleError, skill_names
 
 NAME = "routewise.toml"
 HARNESSES = ("cc", "agy")
@@ -28,6 +28,7 @@ class Settings:
     cap: int = 5
     miss_log: str = DEFAULT_LOG
     tiers: dict[str, str] = field(default_factory=dict)
+    skills: dict[str, tuple[str, ...]] = field(default_factory=dict)  # role -> its skills (R8)
 
 
 def strings(data: dict[str, Any], key: str, default: list[str]) -> list[str]:
@@ -69,6 +70,23 @@ def tiers(data: dict[str, Any]) -> dict[str, str]:
     return dict(value)
 
 
+def skills(data: dict[str, Any]) -> dict[str, tuple[str, ...]]:
+    """[skills]: role -> skill names, replacing the role's own list; roles are checked later."""
+    value = data.get("skills", {})
+    if not isinstance(value, dict):
+        raise SettingsError(f"{NAME}: [skills] must be a table")
+    chosen: dict[str, tuple[str, ...]] = {}
+    for role, names in value.items():
+        if not isinstance(names, list) or not all(isinstance(n, str) for n in names):
+            example = '["plugin:skill"]'
+            raise SettingsError(f"{NAME}: [skills] {role} must be a list of skill names, {example}")
+        try:
+            chosen[role] = skill_names(f"{NAME}: [skills] {role}", names)
+        except RoleError as err:
+            raise SettingsError(str(err)) from err
+    return chosen
+
+
 def parse(source: str) -> Settings:
     try:
         data = tomllib.loads(source)
@@ -82,6 +100,7 @@ def parse(source: str) -> Settings:
         cap=cap(data),
         miss_log=text(data, "miss_log", DEFAULT_LOG),
         tiers=tiers(data),
+        skills=skills(data),
     )
     choose("harness", settings.harnesses, HARNESSES)
     choose("fragment", [settings.fragment], FRAGMENTS)

@@ -33,3 +33,10 @@ miss_log = "logs/delegation-misses.jsonl"
 # Optional: override a tier's model for Claude Code, e.g. to pin a version.
 [tiers]
 # fast = "claude-haiku-5-5"
+
+# Optional: the skills a role loads for what to check (Claude Code; spec R8). reviewer and
+# auditor load agent-skills' checklists by default; a missing skill is skipped and the role
+# says `Checklist: none`. A list here replaces the role's own; [] means the role's own method.
+[skills]
+# reviewer = ["agent-skills:code-review-and-quality"]
+# auditor = ["agent-skills:security-and-hardening"]

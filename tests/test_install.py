@@ -733,3 +733,30 @@ def test_a_routewise_folder_name_that_breaks_markers_is_refused(
     assert result.returncode == 2
     assert "cannot be written into the markers" in result.stderr
     assert sorted(p.name for p in host.iterdir()) == [name]
+
+
+def test_shipped_skills_reach_the_agent_and_settings_replace_them(project: Path):
+    """R8: [skills] replaces a role's own list; [] removes the line; other roles keep theirs."""
+    run(project, "install")
+    agents = project / ".claude" / "agents"
+    shipped = front(agents / "auditor.md")
+    set_config(project, "[skills]\n", '[skills]\nreviewer = ["my-review"]\nexplore = []\n')
+
+    result = run(project, "install")
+
+    assert result.returncode == 0, result.stderr
+    assert "skills: my-review\n" in front(agents / "reviewer.md")
+    assert "skills:" not in front(agents / "explore.md")
+    assert front(agents / "auditor.md") == shipped
+
+
+def test_skills_for_an_unknown_role_stop_the_run(project: Path):
+    run(project, "install")
+    before = (project / ".claude" / "agents" / "reviewer.md").read_text()
+    set_config(project, "[skills]\n", '[skills]\nreveiwer = ["my-review"]\n')
+
+    result = run(project, "install")
+
+    assert result.returncode == 2
+    assert "routewise: routewise.toml: [skills] reveiwer is not a role" in result.stderr
+    assert (project / ".claude" / "agents" / "reviewer.md").read_text() == before

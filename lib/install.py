@@ -15,7 +15,7 @@ import argparse
 import os
 import sys
 import tomllib
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from pathlib import Path
 
@@ -319,9 +319,22 @@ def plan_first_run(plan: Plan, chosen: Settings, harnesses: list[Harness]) -> No
         plan.write(log, "")
 
 
+def chosen_roles(chosen: Settings) -> list[Role]:
+    """The shipped roles, with each role's skills replaced by [skills] where it sets them."""
+    roles = read_roles(HOME / "roles")
+    known = {role.source.stem for role in roles}
+    for key in chosen.skills:
+        if key not in known:
+            roles_list = ", ".join(sorted(known))
+            raise Fail(f"{settings.NAME}: [skills] {key} is not a role; use one of {roles_list}")
+    return [
+        replace(role, skills=chosen.skills.get(role.source.stem, role.skills)) for role in roles
+    ]
+
+
 def plan_install(plan: Plan, chosen: Settings) -> None:
     harnesses = all_harnesses(chosen.tiers)
-    roles = read_roles(HOME / "roles")
+    roles = chosen_roles(chosen)
     active = [harnesses[key] for key in chosen.harnesses]
     for harness in active:
         plan_agents(plan, roles, harness)

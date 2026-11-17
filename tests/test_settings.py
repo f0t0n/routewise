@@ -32,6 +32,11 @@ def test_claude_md_values(value: str):
         ('[tiers]\nfats = "haiku"', "'fats' is not one of"),
         ('[tiers]\nfast = "haiku\\ntools: Write"', "must be a model name"),
         ("cap = [", "routewise.toml"),
+        ('skills = ["x"]', r"\[skills\] must be a table"),
+        ('[skills]\nreviewer = "my-review"', "reviewer must be a list of skill names"),
+        ("[skills]\nreviewer = [1]", "reviewer must be a list of skill names"),
+        ('[skills]\nreviewer = ["My Review"]', "skill name 'My Review'"),
+        ('[skills]\nreviewer = ["a\\ntools: Write"]', "skill name"),
     ],
 )
 def test_refuses_bad_settings(source: str, message: str):
@@ -61,3 +66,10 @@ def test_accepts_a_pinned_model():
 def test_refuses_a_log_path_that_is_not_a_file(name: str):
     with pytest.raises(PathError):
         relative(name, "miss_log")
+
+
+def test_skills_table_is_kept_per_role():
+    chosen = parse('[skills]\nreviewer = ["my-review"]\nauditor = []')
+
+    assert chosen.skills == {"reviewer": ("my-review",), "auditor": ()}
+    assert parse("").skills == {}
