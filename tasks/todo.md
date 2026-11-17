@@ -35,8 +35,21 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R12, S9, criterion 17. `m
 
 ## Checkpoint A: review (after Task 2)
 
-- [ ] `make check` green on the whole change.
-- [ ] `reviewer` on the R12 commits, `auditor` on S9 and the check; Critical and Required fixed (one more round scoped to a fix), Optional and Nit answered in this file; mutation suggestions run and recorded.
+- [x] `make check` green on the whole change.
+- [x] `reviewer` on the R12 commits, `auditor` on S9 and the check; Critical and Required fixed (one more round scoped to a fix), Optional and Nit answered in this file; mutation suggestions run and recorded.
+
+**Review record (round 1, 2026-11-17).** `reviewer` (Checklist: `agent-skills:code-review-and-quality` loaded) approve; `auditor` (Checklist: `agent-skills:security-and-hardening` loaded) no Critical or Required. Round ends here (stopping rule).
+
+- Mutations run: (1) drop `root != home.parent` → killed (`…installs_on_itself_and_its_copy`); (2) `and` → `or` in `is_repo` → killed (`…missing_one_marker…`); (3) the check moved after `build_plan` → survives, as predicted: planning only builds the plan in memory and the first write is in `apply`, so S2 holds either way; kept as is (informational).
+- auditor Optional 1 (no test for a symlinked root or other `--project` spellings): fixed, tests for `<repo>/`, `<repo>/routewise/..`, relative `routewise/..` and a root reached through a symlink.
+- auditor Optional 2 (only copies from 0.2.1 on carry the check; a pinned `v=0.2.0` still does the damage): answered in the 0.2.1 release notes (Task 3).
+- auditor Nit 3 (message tells an unrelated project with all four files to run its `./install`): kept; the wording is R12's, and SPEC.md names the one known match.
+- auditor Nit 4 (folder name printed before `plain_name`): kept; `holds` already prints it, and the user names the folder.
+- auditor Nit 5 (a fresh clone's nested `miss-log` creates the default log): kept; it stays inside the project, as R12's miss-log decision says.
+- reviewer Nit 1 (README line 125 too long): fixed, the repo case is its own bullet.
+- reviewer Nit 2 (snapshot ignores empty folders): kept; nothing is created before planning, and the first-run test checks `logs` by name.
+- reviewer Nit 3 (no `s9_` test name): kept; the section header names S9 / R12, as the other S9 tests are grouped.
+- reviewer Nit 4 (`not_a_repo` naming): kept; it reads as the rule it enforces, like `holds`.
 
 ## Task 3: Ship 0.2.1
 

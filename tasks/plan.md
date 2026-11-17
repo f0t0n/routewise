@@ -24,8 +24,8 @@ Spec: [SPEC.md](../SPEC.md), R12, S9 and success criterion 17 (approved 2026-11-
 
 ### Checkpoint A (after Task 2)
 
-- [ ] `make check` green; `make self` leaves no drift
-- [ ] Review: `reviewer` on the R12 commits, `auditor` (S9 changed); every finding fixed or answered; mutation suggestions run
+- [x] `make check` green; `make self` leaves no drift
+- [x] Review: `reviewer` on the R12 commits, `auditor` (S9 changed); every finding fixed or answered; mutation suggestions run
 
 ### Phase 2: Ship 0.2.1
 

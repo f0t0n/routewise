@@ -718,6 +718,31 @@ def test_a_symlinked_copy_is_refused_in_a_routewise_repo(project: Path, tmp_path
     assert snapshot(repo) == before
 
 
+@pytest.mark.parametrize("spelling", ["{repo}/", "{repo}/routewise/..", "routewise/.."])
+def test_other_spellings_of_the_repo_are_refused(project: Path, spelling: str):
+    repo = make_repo(project)
+    before = snapshot(repo)
+
+    result = run(repo, "install", "--project", spelling.format(repo=repo))
+
+    assert result.returncode == 2
+    assert REFUSED.format(name="routewise") in result.stderr
+    assert snapshot(repo) == before
+
+
+def test_a_repo_reached_through_a_symlink_is_refused(project: Path, tmp_path: Path):
+    repo = make_repo(project)
+    link = tmp_path / "link"
+    link.symlink_to(repo)
+    before = snapshot(repo)
+
+    result = run(link, "install")
+
+    assert result.returncode == 2
+    assert REFUSED.format(name="routewise") in result.stderr
+    assert snapshot(repo) == before
+
+
 def test_the_message_names_the_copy_as_it_is_called(project: Path):
     repo = make_repo(project)
     (repo / "routewise").rename(repo / "rw-0.2.1")
