@@ -57,16 +57,16 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R8, R9. `make check` gree
 
 - [x] `make check` green, `make self` no drift.
 - [x] One live `reviewer` call in this repo: reply opens with `Checklist: agent-skills:code-review-and-quality loaded` (2026-11-17, review of `ec46ea3..470711c`: approve, no Critical or Required; `git status` clean). Its 3 mutation suggestions were run: 2 killed, 1 survived (`len(names) >= MAX_SKILLS`), fixed by `a3ce128` (32 allowed, 33 refused, also in `[skills]`). Other findings answered: `[skills]` is keyed by role file name on purpose (the error lists them; README says so in Task 9); the repeated agy list check and duplicate names are left as they are.
-- [ ] Maintainer look before R9.
+- [x] Maintainer look before R9 (approved 2026-11-17).
 
 ## Task 5: stand-in marker and rendering under another name
 
 **Description:** `render` takes an optional agent name; the stand-in file's marker reads `… from <role source> as <name>.md; edit that file …`, and `name:` and the description say which role it stands in for. `is_generated` accepts a marker with `as <file name>`, and keeps today's rule for markers without `as`. Waits for the marker approval (plan open question 1).
 
 **Acceptance criteria:**
-- [ ] A role file's rendering is byte-identical to before (golden test on `reviewer`).
-- [ ] `code-reviewer.md` with a stand-in marker for itself counts as generated; a renamed copy (`my-reviewer.md` holding that marker) does not; an old-style marker keeps its result.
-- [ ] A name with `/`, `..`, a space, upper case or a line break is refused.
+- [x] A role file's rendering is byte-identical to before (golden test on `reviewer`). Also found while writing the tests: `SKILL.match` with `$` accepted a trailing line break (`"a\n"` in `[skills]`); both patterns now use `fullmatch`, with a test.
+- [x] `code-reviewer.md` with a stand-in marker for itself counts as generated; a renamed copy (`my-reviewer.md` holding that marker) does not; an old-style marker keeps its result.
+- [x] A name with `/`, `..`, a space, upper case or a line break is refused.
 
 **Verification:** `uv run pytest tests/test_roles.py`; `make check`.
 

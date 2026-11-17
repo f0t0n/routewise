@@ -37,6 +37,7 @@ def test_claude_md_values(value: str):
         ("[skills]\nreviewer = [1]", "reviewer must be a list of skill names"),
         ('[skills]\nreviewer = ["My Review"]', "skill name 'My Review'"),
         ('[skills]\nreviewer = ["a\\ntools: Write"]', "skill name"),
+        ('[skills]\nreviewer = ["a\\n"]', "skill name"),
     ],
 )
 def test_refuses_bad_settings(source: str, message: str):
