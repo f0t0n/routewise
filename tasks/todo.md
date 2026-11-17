@@ -1,182 +1,125 @@
-# Tasks: miss-log gaps, release 0.1.2 (R7)
+# Tasks: review roles load checklist skills, stand-ins for /ship (R8, R9), release 0.2.0
 
-Shipped 2026-11-14: the maintainer pushed `main` and the tag `v0.1.2` (on `0327b67`) from the host and published the GitHub release.
+Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R8, R9. `make check` green before each commit (the pre-commit hook enforces it). Each task: failing test first, shown red; then the code; a `CHANGELOG.md` line under `## Unreleased` for each user-visible change; `make self` when roles, templates or `harness.toml` change; one Conventional Commit.
 
-Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R7. `make check` green before each commit (the pre-commit hook enforces it). For each fix task: red shown against HEAD before the change, the whole `tests/test_privacy.py` green after, a CHANGELOG line under `## Unreleased`.
+## Task 1: `skills` key in role files, rendered for both harnesses
 
-## Task 1: G1, ASCII word boundaries
-
-**Description:** Test first: the G1 leaks (`服务器在10.0.0.12上`, `key AKIA…が漏れた`, `见www.example.com`, `见https://example.com`, `ב10.0.0.12`, `令牌eyJ…`, `id <uuid>を使った`, `主机2001:db8::1`, and a chat ID and a card number touched by a CJK letter) fail on HEAD. Then `WORD_START` and `WORD_END` replace `\b` in the token, key, scheme, `www.`, IPv4, IPv6, UUID, chat-ID and card patterns.
+**Description:** `lib/roles.py` reads an optional `skills: [a, b]` line, checks each name, and renders `skills:` for Claude Code (comma-separated) and Antigravity (YAML list) when the list is not empty. S6 allows the key.
 
 **Acceptance criteria:**
-- [x] Each G1 leak red on HEAD, green after; `xAKIA…` and `v10.0.0.12` keep their 0.1.1 result.
-- [x] Every other case in `tests/test_privacy.py` keeps its result; any text 0.1.1 allowed and now refused (accented Latin before a number, for example) is listed here and named in the CHANGELOG.
-- [x] Mutations: each boundary in each changed pattern, with a control equal to the repo and each mutant checked to import; survivors named.
+- [ ] A role with `skills: [agent-skills:code-review-and-quality, my-skill]` renders `skills: agent-skills:code-review-and-quality, my-skill` (cc) and `skills: [agent-skills:code-review-and-quality, my-skill]` (agy); a role with none or `[]` renders no line.
+- [ ] Refused with `routewise: <file>: …` and exit 2, nothing written: upper case, a space, a line break, two `:`, a leading `:` or `-`, `/`, `..`, an empty name, 33 names, a value that is not a list.
+- [ ] Before the format is fixed: a live probe shows a Claude Code subagent with a two-skill line gets both skills (scratch folder, as on 2026-11-17).
 
-**Verification:** `uv run pytest tests/test_privacy.py` red, then green; `make check` green.
+**Verification:** `uv run pytest tests/test_roles.py`; `make check`.
 
-**Dependencies:** None. **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: catch a leak touched by a letter of another script (R7 G1)`
+**Dependencies:** none. **Files:** `lib/roles.py`, `tests/test_roles.py`, `CHANGELOG.md`. **Scope:** S.
 
-**Result (2026-11-14):**
+## Task 2: `[skills]` setting overrides a role's list
 
-- **Red on HEAD (`630bac2`):** the 12 G1 leaks (IPv4, AKIA, `www.`, a scheme link, Hebrew before an IP, `eyJ`, a UUID, shortened and full IPv6, a chat ID, a card number, `ghp_`) and their 36 invisible-character guard copies. `xAKIA…` and `v10.0.0.12` pass on HEAD and after, as R7 says.
-- **Green:** `WORD_START` and `WORD_END` replace `\b` in the token, AKIA, `eyJ`, scheme, `www.`, IPv4, full IPv6, UUID, chat-ID and card patterns; the shortened-IPv6 lookarounds use `[A-Za-z0-9_:]` instead of `[\w:]` (not in the `\b` list, found while reading). `/root\b` in the home-folder rule is not in R7 and is unchanged. All 0.1.1 cases keep their result.
-- **Newly refused, beyond the tests:** 0.1.1 (`daa469d`) against HEAD on 30 probe phrases in several scripts: 10 differences, all the G1 effect (what 0.1.1 refused after a space is refused right after a non-ASCII letter): `café10.0.0.12`, `版本1.2.3.4`, `第3版1.2.3.4发布`, `Ошибка в версии1.2.3.4`, `运行www.py失败`, `共4111 1111 1111 1111字节`, `名前はUSER12345678です`, `值为::1`, `α10.0.0.12β`, `ﾃｽﾄ10.0.0.12`. Named in the CHANGELOG.
-- **Mutations:** each use of `WORD_START` or `WORD_END` back to `\b`, one at a time, and each shortened-IPv6 lookaround back to `\w`, with control 875 = repo 875 and each mutant checked to import. Three survived because my tests touched only one side (AKIA start, UUID start, shortened-IPv6 end); with `密钥AKIA…`, `编号<uuid>` and `服务器2001:db8::1上` added, all killed (control 887).
-
-## Task 2: G2, URL-encoded scheme
-
-**Description:** Test first: `next=https%3A%2F%2Fjira.corp.net%2F…` and the lower-case form fail on HEAD. Then the scheme rule also takes `%3A%2F%2F` (any case).
+**Description:** `routewise.toml` may hold `[skills]` with `role = ["name", …]`; it replaces that role's list, `[]` removes the line. Types and names are checked in `lib/settings.py`, unknown roles in `lib/install.py`. The template shows the table commented out.
 
 **Acceptance criteria:**
-- [x] Both red on HEAD, green after; `100%3A` or `a%3Ab` alone stays allowed (an allowed test).
-- [x] Mutations on the new alternative and its case flag; survivors named.
+- [ ] `[skills] reviewer = ["my-review"]` renders `skills: my-review` for `reviewer` only; `reviewer = []` renders no line; no `[skills]` keeps the role's list.
+- [ ] An unknown role, a non-list, a bad name stop the run with a message naming `routewise.toml` and the fix; nothing written.
+- [ ] `templates/routewise.toml` documents `[skills]` (commented example); a new install still writes the same files as before apart from that comment.
 
-**Verification:** as Task 1. **Dependencies:** Task 1. **Files:** as Task 1. **Scope:** XS. Commit: `fix: catch a URL-encoded link (R7 G2)`
+**Verification:** `uv run pytest tests/test_settings.py tests/test_install.py -k skills`; `make check`.
 
-**Result (2026-11-14):** red on HEAD (`a6c27d6`): both encoded links and their guard copies (8). Green: the scheme rule takes `(?:://|%3A%2F%2F)` under its existing `re.IGNORECASE`. Allowed pins: `100%3A`, `a%3Ab`, `50%2F%2F`, `C%3A%2Ftemp`. Mutations (control 899, then 903): no encoded alternative, `%3A` only, upper case only all killed; `%3A%2F` only survived until `C%3A%2Ftemp` was added, then killed.
+**Dependencies:** Task 1. **Files:** `lib/settings.py`, `lib/install.py`, `templates/routewise.toml`, `tests/test_settings.py`, `tests/test_install.py`. **Scope:** M.
 
-## Task 3: G3, a backslash before a dotless `@`
+## Task 3: `reviewer` and `auditor` load the agent-skills checklists; body rules
 
-**Description:** Test first: `me\@localhost` fails on HEAD. Then the dotless rule allows one backslash before the `@`.
-
-**Acceptance criteria:**
-- [x] Red on HEAD, green after; `"x"@property`, `used @property` and `jane \@ example.com` (spaces stay a kept gap, pinned in `KEPT_GAPS`) keep their 0.1.1 result.
-- [x] Mutations; survivors named.
-
-**Verification:** as Task 1. **Dependencies:** Task 2. **Files:** as Task 1. **Scope:** XS. Commit: `fix: catch an escaped @ without a dot in the domain (R7 G3)`
-
-**Result (2026-11-14):** red on HEAD (`15d6a1f`): `mailed me\@localhost` and its guard copies (4). Green: the dotless rule takes `\\?` before the `@`. Pinned: `jane \@ localhost` in `KEPT_GAPS`; `escaped \@ in a Perl string, and "x"@property` allowed. Mutations (control 912): no backslash, backslash or quote, backslash or Markdown, backslash and spaces all killed. **Survivor, named:** any number of backslashes (`\\*`): two backslashes before the `@` (`me\\@localhost`) pass, since R7 allows one; not in R7, recorded for the next release list.
-
-## Task 4: a JWT written with `。`
-
-**Description:** Test first: `eyJ…。eyJ…。_Qx9` and `eyJ…。eyJ…。` (no signature) fail on HEAD. Then the JWT rule reads `[.。]` as its dots.
+**Description:** `roles/reviewer.md` gets `skills: [agent-skills:code-review-and-quality]`, `roles/auditor.md` `skills: [agent-skills:security-and-hardening]`. Both bodies add: a skill says what to check, the body how to behave and what to return; the body wins where they disagree; a skill step that would change a file is reported as a suggestion with `path:line`; severity names mapped to Critical, Required, Optional, Nit; the skill's report template is not used; the reply starts with `Checklist: <names> loaded` or `Checklist: none`. The existing method stays.
 
 **Acceptance criteria:**
-- [x] Both red on HEAD, green after; the existing JWT cases keep their result.
-- [x] Mutations; survivors named.
+- [ ] A test reads the shipped roles and finds each rule (one phrase each), the `Checklist:` line in the return, the skill names; the read-only test still passes.
+- [ ] Other roles list no skills.
+- [ ] `make self` regenerates `.claude/agents/` and `.agents/agents/`; `--check` clean.
 
-**Verification:** as Task 1. **Dependencies:** Task 3. **Files:** as Task 1. **Scope:** XS. Commit: `fix: catch a JWT written with 。 (R7)`
+**Verification:** `uv run pytest tests/test_roles.py`; `make self`; `make check`.
 
-**Result (2026-11-14):** red on HEAD (`9faf983`): the three `。` JWTs (signature starting with `_`, with `-`, none) and their guard copies (12). Green: the JWT rule reads `[.\u3002]` for both dots. Mutations (control 924, then 928): second dot back to `.` killed; first dot back to `.` survived because `DOT_STOP` already turns that `。` into a dot when the header ends in a letter or digit, which every real header does (`J9`, `In0`, `fQ`); a synthetic header ending in `_` pins R7's "wherever it sits", then killed. Existing JWT cases keep their result.
+**Dependencies:** Task 1. **Files:** `roles/reviewer.md`, `roles/auditor.md`, `tests/test_roles.py`, generated agents, `CHANGELOG.md`. **Scope:** M.
 
-## Task 5: link ends `$`, `!/`, `:~:`, ASCII after `?` and `#`
+## Task 4: delegation block: mutation suggestions and `Checklist: none`
 
-**Description:** Test first: `api.corp.net?$top=5`, `app.corp.io#!/users/1`, `docs.corp.io#:~:text=x` fail on HEAD as leaks; `为什么用foo.bar？因为快`, `foo.bar?为什么`, `한국어 foo.bar?그래서` fail on HEAD as allowed (moved from `REFUSED_CODE_WORDS`). Then `LINK_END` takes `?` or `#` before an ASCII URL character, `$`, `!/` or `:~:`.
-
-**Acceptance criteria:**
-- [x] All six red on HEAD, green after; `foo.bar?:x` allowed; `wiki.corp.io#Раздел` pinned in `KEPT_GAPS`; each character of the class still has its own case (from 0.1.1).
-- [x] Mutations on each new alternative and on the ASCII class; survivors named.
-
-**Verification:** as Task 1. **Dependencies:** Task 4. **Files:** as Task 1. **Scope:** XS. Commit: `fix: read more link ends and stop reading CJK after ? as a query (R7)`
-
-**Result (2026-11-14):** red on HEAD (`d454d69`): `?$top=5`, `#!/users/1`, `#:~:text=salary` as leaks; the three `？`/`?` CJK and Korean questions as allowed (they were documented as a trade-off in 0.1.1 but not pinned, so they are added, not moved); `wiki.corp.io#Раздел` in `KEPT_GAPS`; guard copies (25 in all). `foo.bar?:x` passed on HEAD and after (guard). Green: `LINK_END` is `[?#](?:[A-Za-z0-9_%=&/~+$-]|!/|:~:)`. Mutations (control 957): dropping `$`, `!/`, `:~:`, `!` alone, `:` alone, the class back to `\w`, and each of `_ % = & / ~ + -` and the digits all killed.
-
-## Checkpoint: verified
-- [x] `make check` green.
-- [x] Differential check: `daa469d` (the commit tagged `v0.1.1`)'s `lib/privacy.py` and HEAD's on every input of `tests/test_privacy.py`; every difference is an R7 item; listed here.
-- [x] Worst-case time at the CLI limits measured.
-
-**Result (2026-11-14):** `make check` 1077 passed. Differential check, `daa469d` against `bfee316`, on 427 inputs (every constant list of `tests/test_privacy.py` plus the generated source-type, invisible-character and encoded-`@` forms): 29 differ, all R7 items: G1 15 (IPv4, IPv6 short and full, AKIA both sides, `eyJ`, `ghp_`, UUID both sides, scheme, `www.`, Hebrew, chat ID, card), G2 2, G3 1, JWT with `。` 4, link ends 3, the `？` and `?` CJK and Korean questions now allowed 3, the new kept gap `wiki.corp.io#Раздел` 1. Worst case (best of 5): 200 × U+3316 44.5 ms, 200 × U+FDFA 3.1 ms, normal text under 0.1 ms.
-
-## Task 6: Docs and release notes for 0.1.2
-
-**Description:** CHANGELOG `## Unreleased` holds one line per R7 item (from Tasks 1–5) and names any new refusal of Task 1; README Safety bullet still true; `tasks/release-0.1.2.md` drafted for users, with the update block from the README.
+**Description:** `templates/fragment-dev.md` says: try the mutation suggestions `reviewer` returns (invert, run the tests, restore); one that stays green is a Required finding; when a role that lists a skill returns `Checklist: none`, tell the person once per session. The assistant fragment is unchanged.
 
 **Acceptance criteria:**
-- [x] Every example in the CHANGELOG and the notes probed against `finding()`; every behaviour claim in the notes is in the CHANGELOG; R5's "for 0.1.2" list in SPEC.md marked as done by R7 where it is.
+- [ ] A test finds both rules in a dev install's block and neither in an assistant install's block.
+- [ ] `make self` updates this repo's `AGENTS.md` block; `--check` clean.
 
-**Verification:** `make check` green. **Dependencies:** checkpoint. **Files:** `CHANGELOG.md`, `README.md`, `SPEC.md` (the R5 list only), `tasks/release-0.1.2.md`, `tasks/todo.md`. **Scope:** XS. Commit: `docs: describe 0.1.2 and draft its release notes`
+**Verification:** `uv run pytest tests/test_install.py -k fragment`; `make self`; `make check`.
 
-**Result (2026-11-14):** CHANGELOG `## Unreleased` has one line per R7 item (written in Tasks 1–5). README Safety bullet: URL-encoded links and leaks next to text in another script added. `tasks/release-0.1.2.md` drafted; 21 examples probed against `finding()`, none wrong; a project installed from `daa469d` (0.1.1) and updated to HEAD prints `routewise: nothing to change`. SPEC.md R5's "for 0.1.2" list marked done by R7, with two notes: `foo.@bar` was already refused in 0.1.1, and **`see example。中国/x` is not covered by R7** (a `。` next to CJK ends a sentence by R5's rule); it stays with the `。` trade-offs, to be raised with the maintainer at the review checkpoint. An automated security check on `bfee316` raised the `wiki.corp.io#Раздел` kept gap (proposing to exclude only CJK after `?`/`#`, which would refuse `Почему foo.bar?Потому`); also for the checkpoint.
+**Dependencies:** Task 3. **Files:** `templates/fragment-dev.md`, `tests/test_install.py`, `AGENTS.md` (generated block), `CHANGELOG.md`. **Scope:** S.
 
-## Task 7: Release bump to 0.1.2
+## Checkpoint A
 
-**Description:** `pyproject.toml`, `uv.lock`, both README `v=` lines to `0.1.2`; CHANGELOG `## Unreleased` becomes `## 0.1.2 (<date>)`.
+- [ ] `make check` green, `make self` no drift.
+- [ ] One live `reviewer` call in this repo: reply opens with `Checklist: agent-skills:code-review-and-quality loaded`.
+- [ ] Maintainer look before R9.
 
-**Acceptance criteria:**
-- [x] The R4 version test passes; `make check` green.
+## Task 5: stand-in marker and rendering under another name
 
-**Dependencies:** Task 6. **Files:** `pyproject.toml`, `uv.lock`, `README.md`, `CHANGELOG.md`. **Scope:** XS. Commit: `build: release 0.1.2`
-
-**Result (2026-11-14):** `pyproject.toml`, `uv.lock` and both README `v=` lines say `0.1.2`; CHANGELOG `## 0.1.2 (2026-11-14)`; the R4 version test passes; the notes' update block now equals README "Updating".
-
-## Task 8: Review, one round under the stopping rule
-
-**Description:** Fresh `reviewer` and `auditor` together on `daa469d..HEAD` (`v0.1.1` is tagged on the host only), briefed with R7 and its bar: nothing 0.1.1 refuses passes, nothing it allows is refused except what R7 names; code, tests and docs match R7. The reviewer reports its control count next to the repo's. Findings are fixed (one more round scoped to the fix, if Critical or Required) or recorded for the next release.
+**Description:** `render` takes an optional agent name; the stand-in file's marker reads `… from <role source> as <name>.md; edit that file …`, and `name:` and the description say which role it stands in for. `is_generated` accepts a marker with `as <file name>`, and keeps today's rule for markers without `as`. Waits for the marker approval (plan open question 1).
 
 **Acceptance criteria:**
-- [x] Every finding fixed, answered or recorded, and listed here; no open Critical or Required in scope.
+- [ ] A role file's rendering is byte-identical to before (golden test on `reviewer`).
+- [ ] `code-reviewer.md` with a stand-in marker for itself counts as generated; a renamed copy (`my-reviewer.md` holding that marker) does not; an old-style marker keeps its result.
+- [ ] A name with `/`, `..`, a space, upper case or a line break is refused.
 
-**Dependencies:** Task 7. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS–S. Commit: `docs(tasks): record the review of R7`
+**Verification:** `uv run pytest tests/test_roles.py`; `make check`.
 
-**Round (2026-11-14):** fresh `reviewer` and `auditor` on `daa469d..HEAD`. `reviewer`: request changes (one Required); its control matched the repo; 39 mutants, all import, 33 killed. `auditor`: not ready (one Required); 9.4M inputs against 0.1.1; every other difference is a kind R7 names. Both Required findings are regressions against R7's bar from my changes, reproduced. The maintainer approved the calls below; R7 amended (`docs(spec): amend R7 after its review…`).
+**Dependencies:** Task 3, marker approval. **Files:** `lib/roles.py`, `tests/test_roles.py`. **Scope:** S.
 
-| # | From | Finding | Answer |
-|---|---|---|---|
-| A | reviewer, Required | G3 refuses Windows scoped-package paths 0.1.1 allowed: `node_modules\@types\node`, `src\@angular\core`, `C:\proj\@scope\pkg` | An escaped `@` counts only when no `\` or `/` follows the name (Task 8b) |
-| B | auditor, Required | Cards 0.1.1 refused pass: `card 4111 1111 1111 1111 2次`, `第1 4111 1111 1111 1111`, `card 5500-0000-0000-0004-1é` (a stray digit group joins the ASCII-edged match and fails Luhn) | Look for cards with both edge styles (Task 8b) |
-| C | reviewer, Optional | `WORD_END`'s ASCII side and an ASCII letter before `eyJ` untested | Next release (stopping rule) |
-| D | reviewer, Nits | "Passes again" for `foo.bar?!` and `?:x` (they passed in 0.1.1); G1 also after a non-ASCII digit | Wording fixed (Task 8b; R7 says "letter or digit") |
-| E | auditor, Nit | `foo.bar?İstanbul` refused (`İ` folds to ASCII; 0.1.1 too) | Next release |
-| 1 | build | `see example。中国/x` passes | Stays with R5's `。` trade-offs |
-| 2 | security check | `wiki.corp.io#Раздел` passes; suggestion to exclude only CJK | R7's kept gap stays (the suggestion refuses `Почему foo.bar?Потому`) |
-| 3 | build | `me\\@localhost` (two backslashes) passes | Next release |
+## Task 6: `[stand_ins]` setting, install, check and uninstall
 
-## Task 8b: Fix the review findings A, B and D
-
-**Description:** One `fix:` commit, test first. A: the dotless rule takes `\@` only when the name is not followed by `\` or `/`. B: `has_card` looks for cards with the ASCII edges and with 0.1.1's `\b` edges. D: CHANGELOG and notes wording.
+**Description:** `routewise.toml` `[stand_ins]` maps a role to extra agent names; `install.py` plans one stand-in file per name and active harness, keeps it in the wanted set (so it is not removed as stale), and removes it when the setting drops it, on `--uninstall`, or when its harness is dropped. Off by default; the template shows `reviewer = ["code-reviewer"]` and `auditor = ["security-auditor"]` commented out.
 
 **Acceptance criteria:**
-- [x] Red on HEAD: the three Windows paths as allowed; the three cards as leaks; green after. `me\@localhost` still refused; `卡号4111 1111 1111 1111了` still refused.
-- [x] Differential check against `daa469d` on every test input: every difference is an R7 item (as amended).
-- [x] Mutations on the new lookahead and each card edge style, with a control equal to the repo, each mutant checked to import; survivors named.
-- [x] CHANGELOG 0.1.2 and the notes: the path exception, the card line, "still pass" for `foo.bar?!` and `?:x`, "letter or digit".
+- [ ] With both stand-ins set, install writes `code-reviewer.md` and `security-auditor.md` in each harness folder, equal to the role's file but for the marker, `name` and description; a second run prints `routewise: nothing to change`; `--check` reports a hand-edited stand-in as drift.
+- [ ] Removing a stand-in from the setting removes its file; `--uninstall` removes all; a user's own `code-reviewer.md` stops the run (S3) with nothing written.
+- [ ] Refused: unknown role, a name equal to a role, the same name twice, a bad name.
 
-**Verification:** `uv run pytest tests/test_privacy.py` red, then green; `make check` green.
+**Verification:** `uv run pytest tests/test_install.py -k stand_in tests/test_settings.py`; `make check`.
 
-**Dependencies:** Task 8 round, R7 amended. **Files:** `lib/privacy.py`, `tests/test_privacy.py`, `CHANGELOG.md`, `tasks/release-0.1.2.md`, `tasks/todo.md`. **Scope:** S. Commit: `fix: let Windows paths with \@ pass and keep every 0.1.1 card catch (R7)`
+**Dependencies:** Tasks 2 and 5. **Files:** `lib/settings.py`, `lib/install.py`, `templates/routewise.toml`, `tests/test_settings.py`, `tests/test_install.py`. **Scope:** M.
 
-**Result (2026-11-14):** red on HEAD (`4995b83`): the three cards as leaks, the three Windows paths as allowed, and their guard copies (24). Green: the dotless rule is `(?:@|\\@(?![\w-]*[\\/]))`, the lookahead right after the `@` so it sees the whole name (a lookahead after the name would backtrack to a shorter one); `has_card` looks with `CARD` (ASCII edges) and `CARD_WORD` (`\b`, as 0.1.1). Added `web\@scope/pkg` so the `/` half is pinned. Differential against `daa469d` on 340 inputs: the same 29 R7 differences as at the checkpoint; the new cards and paths give 0.1.1's result. Mutations (control 985 = repo): no lookahead, `\` only, `/` only, lookahead at the end, cards with one edge style only: all killed. Docs: CHANGELOG and notes have the path exception, the card line, "still pass" for `foo.bar?!` and `?:x`, and "letter or digit"; examples probed. `make check`: 1105 passed.
+## Task 7: delegation block line for stand-ins
 
-## Task 8c: One more round, scoped to the Task 8b fix
-
-**Description:** Stopping rule: a fix for a Required finding gets one round scoped to it. Fresh `reviewer` and `auditor` on the Task 8b commit only: A and B do what R7 says, open nothing, and break nothing 0.1.1 allowed or refused (differential against `daa469d` on the touched rules); the doc wording matches. Findings outside that scope go to the next release.
+**Description:** `{{stand_ins}}` in `templates/fragment-dev.md` becomes one line when stand-ins are set: for those names, also inside `/ship`, start the project agent, never the `agent-skills:` one (named per stand-in). Nothing when none are set.
 
 **Acceptance criteria:**
-- [x] No open Critical or Required finding in scope; findings listed here.
+- [ ] With stand-ins, the block has the line naming each stand-in; without, the block equals Task 4's output.
+- [ ] This repo's `AGENTS.md` (no stand-ins) is unchanged by `make self`.
 
-**Dependencies:** Task 8b. **Files:** `tasks/todo.md` (and fixes). **Scope:** XS. Commit: `docs(tasks): record the review of R7`
+**Verification:** `uv run pytest tests/test_install.py -k stand_in`; `make self`; `make check`.
 
-**Result (2026-11-14):** fresh `reviewer` and `auditor` on `8a40290` only. Both: no Critical or Required; approve / OK to ship. `auditor`: 818,880 escaped-`@` inputs and 70,602 card inputs over `daa469d`, `8a40290^` and HEAD: nothing 0.1.1 refused passes; everything newly passed is R7's path exception (including `＼` `／` `﹨`, which NFKC maps to `\` `/`); cards cannot regress by construction (both edge styles run); the second card pattern costs at most about 0.09 ms. `reviewer`: about 22k inputs, nothing 0.1.1 refused passes; its five mutants killed; its control count was cut off (my Task 8b control: 985 = repo). An automated security check raised the same escape issue as the Optional below.
+**Dependencies:** Tasks 4 and 6. **Files:** `templates/fragment-dev.md`, `lib/install.py`, `tests/test_install.py`, `CHANGELOG.md`. **Scope:** S.
 
-**Known limits (no follow-up)** (stopping rule; not fixed in 0.1.2, not planned):
-- An escape after `\@` reads as a path and hides the address: `print "root\@buildhost\n";` (plausible in Perl), `anna\@corp\.com`, `anna\@corp\_prod`, `me\@localhost/`, `me\@corp\` (all passed in 0.1.1 too). Suggested: a path part of 2 or more characters after the separator.
-- Pin the exception's narrow side: `me\@localhost:22`, `me\@localhost)`, `me\@localhost,` (refused now, untested).
-- `a\@b\@c\d` passes.
-- With the R7 list: two backslashes before a dotless `@`; `x 1 4111 1111 1111 1111` and a long digit run with a card inside; `foo.bar?İstanbul`; tests for the ASCII side of `WORD_END` and an ASCII letter before `eyJ`.
+## Checkpoint B
 
-## Checkpoint: reviewed
-- [x] No open Critical or Required finding; maintainer has seen the findings (Task 8 round, Task 8c round).
+- [ ] `make check` green; criterion 14's tests pass.
 
-## Task 9: Ship checks and the tag commands
+## Task 8: rules spec version 3
 
-**Description:** On the final commit: versions, CHANGELOG, archive (11 R1 entries; `lib/privacy.py` equal to the working tree), notes match the CHANGELOG, update and rollback on a project installed from `daa469d` (`v0.1.1`); then the maintainer gets the tag, push and `gh release create` commands.
+**Description:** `spec/SPEC-model-routing.md`: version line 3 (2026-11-17, R-A6 and the review returns); rule R-A6 in section 4 (a role may load skills for what to check; its body fixes behaviour, tools and return shape; a skill never adds a tool or a write); the `Checklist` line in the `reviewer` and `auditor` returns; section 13 records of the 2026-11-17 probes (Claude Code 2.1.326: namespaced and bare skills injected, missing skipped, no tool added, same-name project agent wins but `agent-skills:` stays reachable; Antigravity 1.5.9: `skills:` accepted and ignored, project agent hides the plugin's).
 
 **Acceptance criteria:**
-- [x] All of the above checked and recorded here.
+- [ ] Version line, R-A6, table cells and two section 13 records present; nothing else in the rules spec changes (diff reviewed).
 
-**Dependencies:** Task 8. **Files:** `tasks/todo.md`. **Scope:** XS. Commit: `docs(tasks): record the ship check of 0.1.2`
+**Verification:** `git diff spec/`; `make check`.
 
-**Result (2026-11-14):** on `8616c0c` (this commit adds only this record, under `tasks/`, which is `export-ignore`):
+**Dependencies:** none (approved with R8); done after Task 7 so the records match what was built. **Files:** `spec/SPEC-model-routing.md`, `CHANGELOG.md`. **Scope:** S.
 
-- Versions: `pyproject.toml`, `uv.lock` and both README `v=` lines say `0.1.2`; CHANGELOG opens with `## 0.1.2 (2026-11-14)`; no `Unreleased`.
-- Archive: `git archive --prefix=routewise-0.1.2/ HEAD` holds exactly the 11 R1 entries; its `lib/privacy.py` and `lib/miss_log.py` are byte-identical to the working tree. `roles/`, `templates/`, `harness.toml`, `spec/`, `install`, `bin/` unchanged since `daa469d`.
-- Notes: the update block equals README "Updating"; the doc lines were checked in Task 8c.
-- End to end on the archive: a project installed from `daa469d` (0.1.1), updated to HEAD, prints `routewise: nothing to change`; `miss-log add` refuses `服务器在10.0.0.12上`, `next=https%3A%2F%2Fjira.corp.net%2Fx`, `mailed me\@localhost` and `card 4111 1111 1111 1111 2次` with `routewise: …` and exit 2, and accepts `cannot find node_modules\@types\node` (stored with single backslashes) and `为什么用foo.bar？因为快`; the log holds those two lines. Rolling back to 0.1.1 the same way prints `nothing to change`.
-- `make check`: 1105 passed, lint and types clean, gitleaks no leaks, self-install current.
+## Task 9: README section on checklists and preference; ADOPT.md and template notes
 
-## Ship (maintainer, from the host)
-- [x] `git tag -a v0.1.2 -m "routewise 0.1.2" <final commit>`
-- [x] `git push origin main v0.1.2`
-- [x] `gh release create v0.1.2 --title "routewise 0.1.2" --notes-file tasks/release-0.1.2.md`
+**Description:** `README.md` gets a section: `reviewer` and `auditor` load agent-skills' `code-review-and-quality` and `security-and-hardening` by default (credit, link, MIT); a matter of preference; how to change it (`[skills]` with another installed skill, `[]` for routewise's own method, then re-run the install); a missing skill shows as `Checklist: none`; Antigravity ignores `skills:` for now; `[stand_ins]` for projects that use agent-skills' `/ship`. `ADOPT.md` mentions the choice in its review-settings step.
+
+**Acceptance criteria:**
+- [ ] README section covers each point above with a copy-paste `routewise.toml` example for each choice; ADOPT.md points to it.
+- [ ] `reviewer` checks the doc diff against the code.
+
+**Verification:** read the rendered README; `make check`.
+
+**Dependencies:** Tasks 2, 6. **Files:** `README.md`, `ADOPT.md`, `CHANGELOG.md`. **Scope:** S.
