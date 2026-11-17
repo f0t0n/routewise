@@ -11,7 +11,7 @@ Installed 2026-11-14. Approved by: f0t0n (maintainer), 2026-11-14.
 | Harnesses that cannot set a model per agent | agy: agents inherit the session model. |
 | Built-in explorer to override (R-A3) | Claude Code `Explore`: the spec's `explorer` role ships as `roles/explore.md` with `name: Explore`, so it replaces the built-in agent. |
 | Parallel cap (PA1) | `cap` in `routewise.toml` (default 5, the spec default). Raising it needs approval. |
-| Miss log and command (M1) | `miss_log` in `routewise.toml`, written only by `bin/miss-log add`; `bin/miss-log report` prints the summary. |
+| Miss log and command (M1) | `miss_log` in `routewise.toml`, written only by `bin/miss-log --project . add`; `bin/miss-log --project . report` prints the summary. |
 | Where the instructions include the fragment | `instructions` in `routewise.toml` (default `AGENTS.md`), between the `routewise:start` and `routewise:end` markers. Claude Code reaches it through an `@AGENTS.md` import block in CLAUDE.md when needed (`claude_md`). |
 | Assistant-mode reader delegation (A2) | None. |
 | Assistant model and effort pins (A3) | Not an assistant project. |

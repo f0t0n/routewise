@@ -48,7 +48,7 @@ routewise keeps owning how a review runs (tier, effort, read-only tools, return 
 
 ### Phase 4: two 0.1.x bugs for 0.2.0 (R10, R11, approved 2026-11-17)
 
-- [ ] Task 10: the self-install's miss-log command works (`bin/miss-log --project .`)
+- [x] Task 10: the self-install's miss-log command works (`bin/miss-log --project .`)
 - [ ] Task 11: `MODEL` uses `fullmatch`
 
 ### Checkpoint C (after Task 11)

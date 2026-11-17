@@ -138,9 +138,9 @@ Run headless with the agent files as fixed in Verify. Stopping rule: ended after
 **Description:** in a self-install, `{{miss_log}}` in the dev and assistant fragments and in a new `ROUTING-BINDING.md` becomes `bin/miss-log --project .`; vendored installs keep `routewise/bin/miss-log`. This repo's hand-edited `ROUTING-BINDING.md` is corrected by hand.
 
 **Acceptance criteria:**
-- [ ] On a temporary self-install copy, the block and a new binding name `bin/miss-log --project . add` and `report`, and running the block's command from the repo root appends to the repo's own log.
-- [ ] A vendored install still names `routewise/bin/miss-log` (existing tests unchanged).
-- [ ] `make self` updates this repo's block; `ROUTING-BINDING.md` fixed by hand; `--check` clean.
+- [x] On a temporary self-install copy, the block and a new binding name `bin/miss-log --project . add` and `report`, and running the block's command from the repo root appends to the repo's own log.
+- [x] A vendored install still names `routewise/bin/miss-log` (existing tests unchanged).
+- [x] `make self` updates this repo's block; `ROUTING-BINDING.md` fixed by hand; `--check` clean.
 
 **Verification:** `uv run pytest tests/test_install.py -k self`; `make self`; `make check`.
 

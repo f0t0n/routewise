@@ -63,5 +63,5 @@ Give a role a write, edit, send or commit tool; write outside the project or thr
 - Run the mutation suggestions `reviewer` returns: invert the condition, run the tests, restore the file. One the tests miss is a Required finding: a missing test.
 - When `reviewer` or `auditor` names a skill as `missing` in its `Checklist` line, that checklist did not load: tell the person once per session.
 - When a result falls short: add a way to check it, then raise effort one level, then move one tier up at a lower effort.
-- Log each wrong or redone delegated result with `bin/miss-log add --mode dev --role R --task T --what W`.
+- Log each wrong or redone delegated result with `bin/miss-log --project . add --mode dev --role R --task T --what W`.
 <!-- routewise:end -->

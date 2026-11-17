@@ -85,6 +85,16 @@ def rerun(root: Path) -> str:
     return label(HOME / "install", root)
 
 
+def miss_log_command(root: Path) -> str:
+    """The miss-log command as typed from the project root (spec R3, R10).
+
+    In routewise's own repo `bin/miss-log` alone would use the folder above the repo.
+    """
+    if root == HOME:
+        return "bin/miss-log --project ."
+    return label(HOME / "bin" / "miss-log", root)
+
+
 def toml_list(items: list[str]) -> str:
     return "[" + ", ".join(f'"{item}"' for item in items) + "]"
 
@@ -157,7 +167,7 @@ def fragment_text(root: Path, chosen: Settings) -> str:
     text = (HOME / "templates" / f"fragment-{chosen.fragment}.md").read_text(encoding="utf-8")
     text = text.replace("{{cap}}", str(chosen.cap))
     text = text.replace("{{stand_ins}}", stand_ins_line(chosen.stand_ins))
-    return text.replace("{{miss_log}}", label(HOME / "bin" / "miss-log", root))
+    return text.replace("{{miss_log}}", miss_log_command(root))
 
 
 @dataclass(frozen=True)
@@ -335,7 +345,7 @@ def plan_first_run(plan: Plan, chosen: Settings, harnesses: list[Harness]) -> No
             "{{install}}": rerun(plan.root),
             "{{roles}}": label(HOME / "roles", plan.root) + "/",
             "{{harness}}": label(HOME / "harness.toml", plan.root),
-            "{{miss_log}}": label(HOME / "bin" / "miss-log", plan.root),
+            "{{miss_log}}": miss_log_command(plan.root),
             "{{date}}": date.today().isoformat(),
             "{{agent_dirs}}": dirs,
         }
