@@ -7,9 +7,9 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R8, R9. `make check` gree
 **Description:** `lib/roles.py` reads an optional `skills: [a, b]` line, checks each name, and renders `skills:` for Claude Code (comma-separated) and Antigravity (YAML list) when the list is not empty. S6 allows the key.
 
 **Acceptance criteria:**
-- [ ] A role with `skills: [agent-skills:code-review-and-quality, my-skill]` renders `skills: agent-skills:code-review-and-quality, my-skill` (cc) and `skills: [agent-skills:code-review-and-quality, my-skill]` (agy); a role with none or `[]` renders no line.
-- [ ] Refused with `routewise: <file>: …` and exit 2, nothing written: upper case, a space, a line break, two `:`, a leading `:` or `-`, `/`, `..`, an empty name, 33 names, a value that is not a list.
-- [ ] Before the format is fixed: a live probe shows a Claude Code subagent with a two-skill line gets both skills (scratch folder, as on 2026-11-17).
+- [x] A role with `skills: [agent-skills:code-review-and-quality, my-skill]` renders `skills: agent-skills:code-review-and-quality, my-skill` (cc) and `skills: [agent-skills:code-review-and-quality, my-skill]` (agy); a role with none or `[]` renders no line.
+- [x] Refused with `routewise: <file>: …` and exit 2, nothing written: upper case, a space, a line break, two `:`, a leading `:` or `-`, `/`, `..`, an empty name, 33 names, a value that is not a list. (Unit tests on `RoleError`; the exit-2 path is the one every role error already takes.)
+- [x] Before the format is fixed: a live probe shows a Claude Code subagent with a two-skill line gets both skills (scratch folder, as on 2026-11-17).
 
 **Verification:** `uv run pytest tests/test_roles.py`; `make check`.
 
@@ -20,9 +20,9 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R8, R9. `make check` gree
 **Description:** `routewise.toml` may hold `[skills]` with `role = ["name", …]`; it replaces that role's list, `[]` removes the line. Types and names are checked in `lib/settings.py`, unknown roles in `lib/install.py`. The template shows the table commented out.
 
 **Acceptance criteria:**
-- [ ] `[skills] reviewer = ["my-review"]` renders `skills: my-review` for `reviewer` only; `reviewer = []` renders no line; no `[skills]` keeps the role's list.
-- [ ] An unknown role, a non-list, a bad name stop the run with a message naming `routewise.toml` and the fix; nothing written.
-- [ ] `templates/routewise.toml` documents `[skills]` (commented example); a new install still writes the same files as before apart from that comment.
+- [x] `[skills] reviewer = ["my-review"]` renders `skills: my-review` for `reviewer` only; `reviewer = []` renders no line; no `[skills]` keeps the role's list.
+- [x] An unknown role, a non-list, a bad name stop the run with a message naming `routewise.toml` and the fix; nothing written.
+- [x] `templates/routewise.toml` documents `[skills]` (commented example); a new install still writes the same files as before apart from that comment.
 
 **Verification:** `uv run pytest tests/test_settings.py tests/test_install.py -k skills`; `make check`.
 
@@ -33,9 +33,9 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R8, R9. `make check` gree
 **Description:** `roles/reviewer.md` gets `skills: [agent-skills:code-review-and-quality]`, `roles/auditor.md` `skills: [agent-skills:security-and-hardening]`. Both bodies add: a skill says what to check, the body how to behave and what to return; the body wins where they disagree; a skill step that would change a file is reported as a suggestion with `path:line`; severity names mapped to Critical, Required, Optional, Nit; the skill's report template is not used; the reply starts with `Checklist: <names> loaded` or `Checklist: none`. The existing method stays.
 
 **Acceptance criteria:**
-- [ ] A test reads the shipped roles and finds each rule (one phrase each), the `Checklist:` line in the return, the skill names; the read-only test still passes.
-- [ ] Other roles list no skills.
-- [ ] `make self` regenerates `.claude/agents/` and `.agents/agents/`; `--check` clean.
+- [x] A test reads the shipped roles and finds each rule (one phrase each), the `Checklist:` line in the return, the skill names; the read-only test still passes.
+- [x] Other roles list no skills.
+- [x] `make self` regenerates `.claude/agents/` and `.agents/agents/`; `--check` clean.
 
 **Verification:** `uv run pytest tests/test_roles.py`; `make self`; `make check`.
 
@@ -46,8 +46,8 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R8, R9. `make check` gree
 **Description:** `templates/fragment-dev.md` says: try the mutation suggestions `reviewer` returns (invert, run the tests, restore); one that stays green is a Required finding; when a role that lists a skill returns `Checklist: none`, tell the person once per session. The assistant fragment is unchanged.
 
 **Acceptance criteria:**
-- [ ] A test finds both rules in a dev install's block and neither in an assistant install's block.
-- [ ] `make self` updates this repo's `AGENTS.md` block; `--check` clean.
+- [x] A test finds both rules in a dev install's block and neither in an assistant install's block.
+- [x] `make self` updates this repo's `AGENTS.md` block; `--check` clean.
 
 **Verification:** `uv run pytest tests/test_install.py -k fragment`; `make self`; `make check`.
 
@@ -55,8 +55,8 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R8, R9. `make check` gree
 
 ## Checkpoint A
 
-- [ ] `make check` green, `make self` no drift.
-- [ ] One live `reviewer` call in this repo: reply opens with `Checklist: agent-skills:code-review-and-quality loaded`.
+- [x] `make check` green, `make self` no drift.
+- [x] One live `reviewer` call in this repo: reply opens with `Checklist: agent-skills:code-review-and-quality loaded` (2026-11-17, review of `ec46ea3..470711c`: approve, no Critical or Required; `git status` clean). Its 3 mutation suggestions were run: 2 killed, 1 survived (`len(names) >= MAX_SKILLS`), fixed by `a3ce128` (32 allowed, 33 refused, also in `[skills]`). Other findings answered: `[skills]` is keyed by role file name on purpose (the error lists them; README says so in Task 9); the repeated agy list check and duplicate names are left as they are.
 - [ ] Maintainer look before R9.
 
 ## Task 5: stand-in marker and rendering under another name
