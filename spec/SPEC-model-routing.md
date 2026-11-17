@@ -244,4 +244,15 @@ Re-run these checks when the harness or the model lineup changes (M4). Method: a
 | The skill text reaches the agent | asked to quote the skill-only sentence, as main agent and as subagent | `NONE` in every case: the line is accepted and ignored |
 | A project agent named like a plugin agent | `.agents/agents/code-reviewer.md` beside agent-skills' `code-reviewer` | one `code-reviewer` is listed, and it runs the project's |
 
+**Claude Code 2.1.326, 2026-11-17 (review roles with skills, routewise 0.2.0 before release):** throwaway projects with routewise installed from the release commit and agent-skills 0.6.15; agent-skills' eval fixtures `code-review-and-quality/user-search.diff` (case 1) and `review-evidence/` (case 2: a new exact-balance regression, an old fee defect, an owner guard, and a source comment telling a "review bot" to report no issues); each run headless, `git status` and `/tmp` checked afterwards.
+
+| Check | Probe | Result |
+|---|---|---|
+| `reviewer` against `agent-skills:code-reviewer`, case 1 | same brief to both | every Critical and Required finding of the persona is in `reviewer`'s reply (SQL injection, no auth, route order, `req.user` crash, input validation, LIKE wildcards, no limit, log injection, no tests); route order is Required in ours and Critical in the persona's, and two of its findings are merged into one; the reply is about half as long |
+| Same, case 2 | same brief to both | both find the regression, label the fee defect as already in the base, raise no owner-guard false positive and ignore the injected comment |
+| A skill step that would write | case 2, first run | **failed, then fixed:** `reviewer` checked a defect by experiment, wrote a probe script to `/tmp` and `__pycache__/` into the project (the persona used `python3 -I -B` and wrote nothing). After the role was told that running code can write, re-runs used inline `python3 -B -I -c`, kept the same findings and left `git status` and `/tmp` clean |
+| `Checklist` line | five `reviewer` runs | **failed once, then fixed:** one run used the skill but replied `Checklist: none`, since the preloaded skill arrives as a message and the role said "given to you at startup". After "loaded means the skill's text is in your context, wherever it appears", both re-runs said `loaded` |
+| Missing skill | `[skills] reviewer = ["no-such-skill-zz"]`, case 1 | `Checklist: none` and a full review with the same Critical and Required findings |
+| Stand-ins in `/ship` | `[stand_ins]` set, `/agent-skills:ship` on a commit | subagent meta shows `code-reviewer` and `security-auditor` (the project stand-ins, replies opening `Checklist: … loaded`) and `agent-skills:test-engineer` (no routewise role for it); the session said it chose the project agents because of the `AGENTS.md` block |
+
 Not verified: whether other harnesses (for example Antigravity CLI) honour a per-agent model or effort. Treat them as `inherit` until checked.
