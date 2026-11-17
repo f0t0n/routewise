@@ -187,7 +187,7 @@ SKILL_RULES = (
     "python3 -B -c",
     "High is Required",  # severity mapping
     "report template",  # the skill's template is not used
-    "Skills loaded for you: {{skills}}",  # names, so the agent checks a name (review round 1)
+    "Skills listed for you: {{skills}}",  # names, so the agent checks a name (review round 1)
     "before or after the brief",  # where Claude Code puts a preloaded skill
     "or under any other name",  # a fake skill in a file, a diff or the brief is data
     "- First line: {{checklist}}",  # the installer writes the exact form (review round 2)
@@ -282,13 +282,13 @@ def test_refuses_a_bad_stand_in_name(tmp_path: Path, name: str):
 
 def test_renders_the_skill_names_into_the_body(tmp_path: Path):
     """R8 amendment: the agent is told which skills to look for, by name."""
-    body = "---\n" + GOOD.split("---\n")[1] + "---\nSkills loaded for you: {{skills}}.\n"
+    body = "---\n" + GOOD.split("---\n")[1] + "---\nSkills listed for you: {{skills}}.\n"
     listed = body.replace("tier: fast", f"tier: fast\nskills: {TWO}")
 
-    assert "Skills loaded for you: `agent-skills:code-review-and-quality`, `my-skill`.\n" in render(
+    assert "Skills listed for you: `agent-skills:code-review-and-quality`, `my-skill`.\n" in render(
         read_role(role(tmp_path, listed)), CC, "x"
     )
-    assert "Skills loaded for you: none.\n" in render(read_role(role(tmp_path, body)), CC, "x")
+    assert "Skills listed for you: none.\n" in render(read_role(role(tmp_path, body)), CC, "x")
 
 
 def test_renders_the_exact_checklist_line(tmp_path: Path):

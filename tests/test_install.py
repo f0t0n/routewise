@@ -746,8 +746,11 @@ def test_shipped_skills_reach_the_agent_and_settings_replace_them(project: Path)
 
     assert result.returncode == 0, result.stderr
     assert "skills: my-review\n" in front(agents / "reviewer.md")
-    assert "Skills loaded for you: `my-review`." in (agents / "reviewer.md").read_text()
-    assert "Skills loaded for you: none." not in (agents / "explore.md").read_text()
+    assert "Skills listed for you: `my-review`." in (agents / "reviewer.md").read_text()
+    assert "`Checklist: my-review <loaded or missing>`" in (agents / "reviewer.md").read_text()
+    set_config(project, 'reviewer = ["my-review"]', "reviewer = []")
+    run(project, "install")
+    assert "- First line: `Checklist: none`." in (agents / "reviewer.md").read_text()
     assert "skills:" not in front(agents / "explore.md")
     assert front(agents / "auditor.md") == shipped
 
@@ -894,3 +897,15 @@ def test_a_stand_in_cannot_take_a_roles_agent_name(project: Path):
 
     assert result.returncode == 2
     assert "stand-in name 'deep-check' is a role" in result.stderr
+
+
+def test_no_placeholder_is_left_in_any_agent(project: Path):
+    """A misspelled placeholder in a role would ship as literal text; drift checks cannot see it."""
+    run(project, "install")
+    set_config(project, "[stand_ins]\n", '[stand_ins]\nreviewer = ["code-reviewer"]\n')
+    set_config(project, 'harnesses = ["cc"]', 'harnesses = ["cc", "agy"]')
+    run(project, "install")
+
+    folders = (project / ".claude" / "agents", project / ".agents" / "agents")
+    for agent in [path for folder in folders for path in folder.iterdir()]:
+        assert "{{" not in agent.read_text(), agent.name
