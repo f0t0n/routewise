@@ -129,3 +129,9 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R8, R9. `make check` gree
 **Found:** 2026-11-17, while testing Task 5. `MODEL` in `lib/roles.py` is used with `.match` and ends in `$`, which also matches just before a final newline, so `[tiers] fast = "haiku\n"` (or a `harness.toml` tier with one) passes the check and renders `model: haiku` plus a blank frontmatter line. A line break followed by more text is still refused, so no key can be injected; the effect is a malformed but harmless line. 0.1.x has the same behaviour.
 
 **Fix:** use `fullmatch` for `MODEL` (as R8 does for skill and stand-in names); a test with a trailing `\n` in `[tiers]` and in a harness tier. Goes through its own Define step (a one-line spec note) after 0.2.0, or into 0.2.0 if the maintainer asks.
+
+## Separate fix (not part of R8/R9): the self-install's miss-log command needs `--project .`
+
+**Found:** 2026-11-17, logging the Verify miss. In routewise's own repo the delegation block says `bin/miss-log add …` (R3 spelling for a self-install), but `bin/miss-log` defaults to the folder that holds the routewise folder, which here is the folder above the repo, so the command fails (`Permission denied` on `../logs`). It works with `bin/miss-log --project . add …`. Vendored projects are not affected (`routewise/bin/miss-log` finds the project). Breaks success criterion 7 for the self-install only; present since 0.1.0.
+
+**Fix:** spell the self-install's miss-log command with `--project .` (as `./install --project .`), with a test on the self-install block and `ROUTING-BINDING.md`; or make `bin/miss-log` default to the repo itself when run from inside the routewise folder. Own Define step.

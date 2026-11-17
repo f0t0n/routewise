@@ -180,6 +180,8 @@ def test_a_line_break_cannot_smuggle_a_key_through_skills(tmp_path: Path):
 SKILL_RULES = (
     "this file wins",  # a skill and the body disagree
     "report it as a suggestion",  # a skill step that would change a file
+    "temporary ones included",  # running code can write (found in Verify)
+    "python3 -B -c",
     "High is Required",  # severity mapping
     "report template",  # the skill's template is not used
     "`Checklist: <skill names> loaded`",

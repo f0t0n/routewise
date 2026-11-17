@@ -1,0 +1,1 @@
+{"at": "2026-11-17T13:30:15Z", "mode": "dev", "role": "reviewer", "tier": "balanced", "effort": "medium", "task": "review", "what": "with the review skill loaded it ran code to check a defect: wrote a temp script outside the project and Python bytecode inside it; role text did not say running code writes"}
