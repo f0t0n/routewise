@@ -40,3 +40,10 @@ miss_log = "logs/delegation-misses.jsonl"
 [skills]
 # reviewer = ["agent-skills:code-review-and-quality"]
 # auditor = ["agent-skills:security-and-hardening"]
+
+# Optional: also render a role under another agent's name (spec R9), so a plugin command
+# that starts that agent gets routewise's read-only role instead; for example agent-skills'
+# /ship starts code-reviewer and security-auditor. Off by default.
+[stand_ins]
+# reviewer = ["code-reviewer"]
+# auditor = ["security-auditor"]

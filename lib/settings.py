@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from paths import relative
-from roles import MODEL, TIERS, RoleError, skill_names
+from roles import MODEL, STAND_IN, TIERS, RoleError, skill_names
 
 NAME = "routewise.toml"
 HARNESSES = ("cc", "agy")
@@ -29,6 +29,7 @@ class Settings:
     miss_log: str = DEFAULT_LOG
     tiers: dict[str, str] = field(default_factory=dict)
     skills: dict[str, tuple[str, ...]] = field(default_factory=dict)  # role -> its skills (R8)
+    stand_ins: dict[str, tuple[str, ...]] = field(default_factory=dict)  # role -> names (R9)
 
 
 def strings(data: dict[str, Any], key: str, default: list[str]) -> list[str]:
@@ -87,6 +88,30 @@ def skills(data: dict[str, Any]) -> dict[str, tuple[str, ...]]:
     return chosen
 
 
+def stand_ins(data: dict[str, Any]) -> dict[str, tuple[str, ...]]:
+    """[stand_ins]: role -> extra agent names; each name once, a plain file name."""
+    value = data.get("stand_ins", {})
+    if not isinstance(value, dict):
+        raise SettingsError(f"{NAME}: [stand_ins] must be a table")
+    chosen: dict[str, tuple[str, ...]] = {}
+    seen: set[str] = set()
+    for role, names in value.items():
+        if not isinstance(names, list) or not all(isinstance(n, str) for n in names):
+            example = '["code-reviewer"]'
+            raise SettingsError(
+                f"{NAME}: [stand_ins] {role} must be a list of agent names, {example}"
+            )
+        for name in names:
+            if not STAND_IN.fullmatch(name):
+                rule = "lower-case letters, digits and -"
+                raise SettingsError(f"{NAME}: [stand_ins] stand-in name {name!r} must be {rule}")
+            if name in seen:
+                raise SettingsError(f"{NAME}: [stand_ins] stand-in name {name!r} is listed twice")
+            seen.add(name)
+        chosen[role] = tuple(names)
+    return chosen
+
+
 def parse(source: str) -> Settings:
     try:
         data = tomllib.loads(source)
@@ -101,6 +126,7 @@ def parse(source: str) -> Settings:
         miss_log=text(data, "miss_log", DEFAULT_LOG),
         tiers=tiers(data),
         skills=skills(data),
+        stand_ins=stand_ins(data),
     )
     choose("harness", settings.harnesses, HARNESSES)
     choose("fragment", [settings.fragment], FRAGMENTS)

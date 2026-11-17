@@ -111,15 +111,28 @@ def generated_files(folder: Path) -> list[Path]:
     return [p for p in sorted(folder.glob("*.md")) if p.is_file() and is_generated(p)]
 
 
-def plan_agents(plan: Plan, roles: list[Role], harness: Harness) -> None:
+def agent_files(
+    roles: list[Role], stand_ins: dict[str, tuple[str, ...]]
+) -> list[tuple[str, Role, str | None]]:
+    """(file name, role, stand-in name or None) for each agent to write: roles, then stand-ins."""
+    files: list[tuple[str, Role, str | None]] = [(role.source.name, role, None) for role in roles]
+    for role in roles:
+        files += [(f"{name}.md", role, name) for name in stand_ins.get(role.source.stem, ())]
+    return files
+
+
+def plan_agents(
+    plan: Plan, roles: list[Role], harness: Harness, stand_ins: dict[str, tuple[str, ...]]
+) -> None:
     folder = plan.root / harness.dir
     wanted = set()
-    for role in roles:
-        target = folder / role.source.name
+    for file_name, role, stand_in in agent_files(roles, stand_ins):
+        target = folder / file_name
         if (target.exists() or target.is_symlink()) and not is_generated(target):
             name = label(target, plan.root)
             raise Fail(f"{name} exists and was not written by routewise; move it")
-        plan.write(target, render(role, harness, label(role.source, plan.root), rerun(plan.root)))
+        source = label(role.source, plan.root)
+        plan.write(target, render(role, harness, source, rerun(plan.root), stand_in))
         wanted.add(target)
     for stale in generated_files(folder):
         if stale not in wanted:
@@ -323,10 +336,18 @@ def chosen_roles(chosen: Settings) -> list[Role]:
     """The shipped roles, with each role's skills replaced by [skills] where it sets them."""
     roles = read_roles(HOME / "roles")
     known = {role.source.stem for role in roles}
-    for key in chosen.skills:
-        if key not in known:
-            roles_list = ", ".join(sorted(known))
-            raise Fail(f"{settings.NAME}: [skills] {key} is not a role; use one of {roles_list}")
+    roles_list = ", ".join(sorted(known))
+    for table, keys in (("skills", chosen.skills), ("stand_ins", chosen.stand_ins)):
+        for key in keys:
+            if key not in known:
+                raise Fail(
+                    f"{settings.NAME}: [{table}] {key} is not a role; use one of {roles_list}"
+                )
+    taken = known | {role.name.lower() for role in roles}
+    for names in chosen.stand_ins.values():
+        for name in names:
+            if name in taken:
+                raise Fail(f"{settings.NAME}: [stand_ins] stand-in name {name!r} is a role")
     return [
         replace(role, skills=chosen.skills.get(role.source.stem, role.skills)) for role in roles
     ]
@@ -337,7 +358,7 @@ def plan_install(plan: Plan, chosen: Settings) -> None:
     roles = chosen_roles(chosen)
     active = [harnesses[key] for key in chosen.harnesses]
     for harness in active:
-        plan_agents(plan, roles, harness)
+        plan_agents(plan, roles, harness, chosen.stand_ins)
     for key, harness in harnesses.items():
         if key not in chosen.harnesses:
             for stale in generated_files(plan.root / harness.dir):

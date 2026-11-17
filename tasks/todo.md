@@ -77,9 +77,9 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R8, R9. `make check` gree
 **Description:** `routewise.toml` `[stand_ins]` maps a role to extra agent names; `install.py` plans one stand-in file per name and active harness, keeps it in the wanted set (so it is not removed as stale), and removes it when the setting drops it, on `--uninstall`, or when its harness is dropped. Off by default; the template shows `reviewer = ["code-reviewer"]` and `auditor = ["security-auditor"]` commented out.
 
 **Acceptance criteria:**
-- [ ] With both stand-ins set, install writes `code-reviewer.md` and `security-auditor.md` in each harness folder, equal to the role's file but for the marker, `name` and description; a second run prints `routewise: nothing to change`; `--check` reports a hand-edited stand-in as drift.
-- [ ] Removing a stand-in from the setting removes its file; `--uninstall` removes all; a user's own `code-reviewer.md` stops the run (S3) with nothing written.
-- [ ] Refused: unknown role, a name equal to a role, the same name twice, a bad name.
+- [x] With both stand-ins set, install writes `code-reviewer.md` and `security-auditor.md` in each harness folder, equal to the role's file but for the marker, `name` and description; a second run prints `routewise: nothing to change`; `--check` reports a hand-edited stand-in as drift.
+- [x] Removing a stand-in from the setting removes its file; `--uninstall` removes all; a user's own `code-reviewer.md` stops the run (S3) with nothing written.
+- [x] Refused: unknown role, a name equal to a role, the same name twice, a bad name.
 
 **Verification:** `uv run pytest tests/test_install.py -k stand_in tests/test_settings.py`; `make check`.
 

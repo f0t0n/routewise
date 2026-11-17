@@ -773,3 +773,78 @@ def test_dev_block_runs_mutation_suggestions_and_reports_a_missing_checklist(pro
     for rule in ("mutation suggestions", "`Checklist: none`"):
         assert rule in dev
         assert rule not in assistant
+
+
+STAND_INS = '[stand_ins]\nreviewer = ["code-reviewer"]\nauditor = ["security-auditor"]\n'
+
+
+def with_stand_ins(project: Path, harnesses: str = '["cc"]') -> None:
+    run(project, "install")
+    set_config(project, "[stand_ins]\n", STAND_INS)
+    set_config(project, 'harnesses = ["cc"]', f"harnesses = {harnesses}")
+
+
+def test_stand_ins_render_the_role_under_the_plugin_name(project: Path):
+    """R9: a stand-in equals its role's agent but for marker, name and description."""
+    with_stand_ins(project, '["cc", "agy"]')
+
+    result = run(project, "install")
+
+    assert result.returncode == 0, result.stderr
+    for folder in (project / ".claude" / "agents", project / ".agents" / "agents"):
+        names = sorted(p.name for p in folder.iterdir())
+        assert names == sorted([*ROLES, "code-reviewer.md", "security-auditor.md"])
+        own, stand_in = (
+            (folder / "reviewer.md").read_text(),
+            (folder / "code-reviewer.md").read_text(),
+        )
+        assert stand_in.split("---\n", 2)[2] == own.split("---\n", 2)[2]
+        assert "name: code-reviewer" in front(folder / "code-reviewer.md")
+    assert run(project, "install").stdout.strip() == "routewise: nothing to change"
+
+
+def test_stand_ins_drift_removal_and_uninstall(project: Path):
+    with_stand_ins(project)
+    run(project, "install")
+    agents = project / ".claude" / "agents"
+    (agents / "code-reviewer.md").write_text((agents / "code-reviewer.md").read_text() + "x\n")
+
+    assert run(project, "install", "--check").returncode == 1
+    set_config(project, 'auditor = ["security-auditor"]\n', "")
+    run(project, "install")
+    assert not (agents / "security-auditor.md").exists()
+    assert (agents / "code-reviewer.md").read_text().endswith("approve or request changes.\n")
+
+    run(project, "install", "--uninstall")
+    assert not (agents / "code-reviewer.md").exists()
+
+
+def test_a_users_own_agent_of_that_name_stops_the_run(project: Path):
+    with_stand_ins(project)
+    mine = project / ".claude" / "agents" / "code-reviewer.md"
+    mine.write_text("---\nname: code-reviewer\n---\nMine\n")
+
+    result = run(project, "install")
+
+    assert result.returncode == 2
+    assert "code-reviewer.md exists and was not written by routewise" in result.stderr
+    assert mine.read_text() == "---\nname: code-reviewer\n---\nMine\n"
+    assert not (project / ".claude" / "agents" / "security-auditor.md").exists()
+
+
+@pytest.mark.parametrize(
+    ("table", "message"),
+    [
+        ('reveiwer = ["code-reviewer"]', "[stand_ins] reveiwer is not a role"),
+        ('reviewer = ["auditor"]', "stand-in name 'auditor' is a role"),
+        ('reviewer = ["explore"]', "stand-in name 'explore' is a role"),
+    ],
+)
+def test_bad_stand_ins_stop_the_run(project: Path, table: str, message: str):
+    run(project, "install")
+    set_config(project, "[stand_ins]\n", f"[stand_ins]\n{table}\n")
+
+    result = run(project, "install")
+
+    assert result.returncode == 2
+    assert message in result.stderr

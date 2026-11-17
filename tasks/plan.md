@@ -34,7 +34,7 @@ routewise keeps owning how a review runs (tier, effort, read-only tools, return 
 ### Phase 2: R9, stand-ins
 
 - [x] Task 5: stand-in marker and rendering under another name
-- [ ] Task 6: `[stand_ins]` setting, install, check and uninstall
+- [x] Task 6: `[stand_ins]` setting, install, check and uninstall
 - [ ] Task 7: delegation block line for stand-ins
 
 ### Checkpoint B (after Task 7)

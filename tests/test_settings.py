@@ -38,6 +38,11 @@ def test_claude_md_values(value: str):
         ('[skills]\nreviewer = ["My Review"]', "skill name 'My Review'"),
         ('[skills]\nreviewer = ["a\\ntools: Write"]', "skill name"),
         ('[skills]\nreviewer = ["a\\n"]', "skill name"),
+        ('stand_ins = ["x"]', r"\[stand_ins\] must be a table"),
+        ('[stand_ins]\nreviewer = "code-reviewer"', "reviewer must be a list of agent names"),
+        ('[stand_ins]\nreviewer = ["Code-Reviewer"]', "stand-in name 'Code-Reviewer'"),
+        ('[stand_ins]\nreviewer = ["../x"]', "stand-in name"),
+        ('[stand_ins]\nreviewer = ["a"]\nauditor = ["a"]', "stand-in name 'a' is listed twice"),
     ],
 )
 def test_refuses_bad_settings(source: str, message: str):
@@ -83,3 +88,9 @@ def test_skills_setting_allows_32_names_and_refuses_33():
     assert len(parse(f"[skills]\nreviewer = [{few}]").skills["reviewer"]) == 32
     with pytest.raises(SettingsError, match="at most 32 skills"):
         parse(f"[skills]\nreviewer = [{many}]")
+
+
+def test_stand_ins_are_off_by_default_and_kept_per_role():
+    assert parse("").stand_ins == {}
+    chosen = parse('[stand_ins]\nreviewer = ["code-reviewer"]\nauditor = ["security-auditor"]')
+    assert chosen.stand_ins == {"reviewer": ("code-reviewer",), "auditor": ("security-auditor",)}
