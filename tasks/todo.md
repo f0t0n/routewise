@@ -25,9 +25,9 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R12, S9, criterion 17. `m
 **Description:** README "Safety" (the `--project` bullet) states that a folder which is itself a routewise repo is refused and names `./install --project .`. `AGENTS.md` names the safety rules S1–S9 in its intro and "Keep the safety rules" (hand-edited text, outside the generated block).
 
 **Acceptance criteria:**
-- [ ] README's `--project` bullet no longer says the holding folder is always accepted.
-- [ ] `grep -n "S1–S8" AGENTS.md README.md SPEC.md` finds nothing outside history records.
-- [ ] `make self` reports nothing to change (the generated block is untouched).
+- [x] README's `--project` bullet no longer says the holding folder is always accepted.
+- [x] `grep -n "S1–S8" AGENTS.md README.md SPEC.md` finds nothing outside history records.
+- [x] `make self` reports nothing to change (the generated block is untouched).
 
 **Verification:** `make check`.
 
