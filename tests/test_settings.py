@@ -38,6 +38,7 @@ def test_claude_md_values(value: str):
         ('[skills]\nreviewer = ["My Review"]', "skill name 'My Review'"),
         ('[skills]\nreviewer = ["a\\ntools: Write"]', "skill name"),
         ('[skills]\nreviewer = ["a\\n"]', "skill name"),
+        ('[skills]\nreviewer = ["a", "a"]', "skill name 'a' is listed twice"),
         ('stand_ins = ["x"]', r"\[stand_ins\] must be a table"),
         ('[stand_ins]\nreviewer = "code-reviewer"', "reviewer must be a list of agent names"),
         ('[stand_ins]\nreviewer = ["Code-Reviewer"]', "stand-in name 'Code-Reviewer'"),

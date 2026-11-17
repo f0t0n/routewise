@@ -847,7 +847,9 @@ def test_bad_stand_ins_stop_the_run(project: Path, table: str, message: str):
     set_config(project, "[stand_ins]\n", f"[stand_ins]\n{table}\n")
 
     before = {
-        p: p.read_bytes() for p in project.rglob("*") if p.is_file() and "routewise/" not in str(p)
+        p: p.read_bytes()
+        for p in project.rglob("*")
+        if p.is_file() and "routewise" not in p.relative_to(project).parts
     }
 
     result = run(project, "install")
@@ -855,7 +857,9 @@ def test_bad_stand_ins_stop_the_run(project: Path, table: str, message: str):
     assert result.returncode == 2
     assert message in result.stderr
     after = {
-        p: p.read_bytes() for p in project.rglob("*") if p.is_file() and "routewise/" not in str(p)
+        p: p.read_bytes()
+        for p in project.rglob("*")
+        if p.is_file() and "routewise" not in p.relative_to(project).parts
     }
     assert after == before  # S2: a refused setting writes nothing
 
