@@ -760,3 +760,16 @@ def test_skills_for_an_unknown_role_stop_the_run(project: Path):
     assert result.returncode == 2
     assert "routewise: routewise.toml: [skills] reveiwer is not a role" in result.stderr
     assert (project / ".claude" / "agents" / "reviewer.md").read_text() == before
+
+
+def test_dev_block_runs_mutation_suggestions_and_reports_a_missing_checklist(project: Path):
+    """R8: the main session runs reviewer's mutation suggestions and says when no skill loaded."""
+    run(project, "install")
+    dev = (project / "AGENTS.md").read_text()
+    set_config(project, 'fragment = "dev"', 'fragment = "assistant"')
+    run(project, "install")
+    assistant = (project / "AGENTS.md").read_text()
+
+    for rule in ("mutation suggestions", "`Checklist: none`"):
+        assert rule in dev
+        assert rule not in assistant
