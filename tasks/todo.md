@@ -7,8 +7,8 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R13, criterion 18. `make 
 **Description:** `spec/SPEC-model-routing.md`: the version line (4, 2026-11-18); the `judge` row in the section 4 table (`frontier`, `medium`, read, search, shell, web; job; return); rule R-A7; N2's exception; D4; A4 under Assistant mode; the judge rule in the section 10 fragment; section 12's Ask first entry names `judge` as the shipped exception. Section 13 waits for Task 5.
 
 **Acceptance criteria:**
-- [ ] Every item R13 lists under "Rules spec version 4" is in the file, worded as R13 says.
-- [ ] A test pins the version line and that the section 10 fragment holds the judge rule.
+- [x] Every item R13 lists under "Rules spec version 4" is in the file, worded as R13 says.
+- [x] A test pins the version line and that the section 10 fragment holds the judge rule.
 
 **Verification:** `uv run pytest tests/test_release.py`; `make check`.
 

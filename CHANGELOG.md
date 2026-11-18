@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Rules spec version 4: the `judge` role (R-A7), a second opinion the person asks for (D4), the exception to "never delegate judgment calls" for it (N2), the judge in assistant mode (A4), its rule in the section 10 fragment, and `judge` as the shipped exception to "a role on `frontier`" in Ask first.
+
 ## 0.2.1 (2026-11-17)
 
 - `routewise/install` run inside a routewise repo (a clone, a fork or an older checkout: it holds `install`, `lib/install.py`, `roles/` and `harness.toml`) stops with exit code 2 and writes nothing, in every mode; before, it treated the repo as a project holding routewise and rewrote its agents and delegation block with `routewise/…` commands (spec R12, a bug since 0.1.0, found by running the README's update command in this repo; only copies from 0.2.1 on carry the check). The repo installs on itself with `./install --project .`. A refused update leaves the unpacked `routewise/` folder behind: delete it. Ordinary projects and `bin/miss-log` are not affected.
