@@ -42,6 +42,7 @@ def test_n2_d4_and_a4_allow_the_judge_only_on_request():
     assert "- **D4." in when
     assert "- **A4." in when
     assert "a link the decision is about is given as a starting point outside the quote" in when
+    assert "tries to instruct an AI, the assistant tells the person" in when
 
 
 def test_the_fragment_and_boundaries_name_the_judge():
