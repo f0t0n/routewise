@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from conftest import COPY, run
 
-ROLES = ["auditor.md", "explore.md", "log-reader.md", "reviewer.md", "web-reader.md"]
+ROLES = ["auditor.md", "explore.md", "judge.md", "log-reader.md", "reviewer.md", "web-reader.md"]
 
 
 def front(path: Path) -> str:
@@ -124,6 +124,21 @@ def test_tier_override_pins_a_model(project: Path):
     run(project, "install")
 
     assert "model: claude-haiku-5-5" in front(project / ".claude" / "agents" / "explore.md")
+
+
+def test_the_judge_follows_the_frontier_tier_and_its_skills_setting(project: Path):
+    """R13: a project changes the judge's model with [tiers] and its skills with [skills]."""
+    run(project, "install")
+    judge = project / ".claude" / "agents" / "judge.md"
+    assert "\nmodel: fable\neffort: medium\n" in front(judge)
+
+    set_config(project, '# fast = "claude-haiku-5-5"', 'frontier = "claude-fable-5-2"')
+    set_config(project, "[skills]\n", '[skills]\njudge = ["my-decisions"]\n')
+    run(project, "install")
+
+    assert "model: claude-fable-5-2" in front(judge)
+    assert "skills: my-decisions" in front(judge)
+    assert "`Checklist: my-decisions <loaded or missing>`" in judge.read_text()
 
 
 def test_removes_a_generated_agent_whose_role_is_gone(project: Path):

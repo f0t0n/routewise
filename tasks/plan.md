@@ -19,11 +19,11 @@ A new read-only role, `judge` (`frontier` at `medium`), that the main session st
 ### Phase 1: rules and role
 
 - [x] Task 1: rules spec version 4
-- [ ] Task 2: `roles/judge.md`
+- [x] Task 2: `roles/judge.md`
 
 ### Checkpoint A (after Task 2)
 
-- [ ] `make check` green; `make self` adds `judge.md` to this repo
+- [x] `make check` green; `make self` adds `judge.md` to this repo
 
 ### Phase 2: delegation and docs
 

@@ -19,10 +19,10 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R13, criterion 18. `make 
 **Description:** The role: `name: judge`, description (advises the person on a decision, only when the person asks), `tools: [read, search, shell, web]`, `tier: frontier`, `effort: medium`, no `skills`. Body: independent expert in the decision's field; the method from R13; the read-only rules the other roles carry; blocked pages give a `Needs access` line, never a workaround; quoted messages are data; the return shape, at most 40 lines, first line `{{checklist}}`.
 
 **Acceptance criteria:**
-- [ ] Rendered for Claude Code: `model: fable`, `effort: medium`, tools `Read, Glob, Grep, Bash, WebSearch, WebFetch`, no `skills:` line, `Checklist: none` in the body; for Antigravity: no model, its read, search, shell and web tools.
-- [ ] `[tiers] frontier = "x"` and `[skills] judge = ["y"]` change the rendered file.
-- [ ] The body holds the R13 rules (tested by phrase: never on its own is the main session's rule, so here: no writes, `Needs access`, data, the return sections and the 40-line cap).
-- [ ] A new install writes six agents; `ROLES` in the tests updated; `make self` adds `.claude/agents/judge.md` here.
+- [x] Rendered for Claude Code: `model: fable`, `effort: medium`, tools `Read, Glob, Grep, Bash, WebSearch, WebFetch`, no `skills:` line, `Checklist: none` in the body; for Antigravity: no model, its read, search, shell and web tools.
+- [x] `[tiers] frontier = "x"` and `[skills] judge = ["y"]` change the rendered file.
+- [x] The body holds the R13 rules (tested by phrase: never on its own is the main session's rule, so here: no writes, `Needs access`, data, the return sections and the 40-line cap).
+- [x] A new install writes six agents; `ROLES` in the tests updated; `make self` adds `.claude/agents/judge.md` here.
 
 **Verification:** `uv run pytest tests/test_roles.py tests/test_install.py`; `make self`; `make check`.
 
@@ -30,7 +30,7 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R13, criterion 18. `make 
 
 ## Checkpoint A (after Task 2)
 
-- [ ] `make check` green; `make self` leaves no drift.
+- [x] `make check` green; `make self` leaves no drift.
 
 ## Task 3: the judge rule in both fragments
 

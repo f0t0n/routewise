@@ -311,3 +311,36 @@ def test_refuses_a_harness_tier_with_a_trailing_line_break(tmp_path: Path):
 
     with pytest.raises(RoleError, match="must be a model name"):
         render(read_role(role(tmp_path, GOOD)), harness, "x")
+
+
+JUDGE_RULES = (
+    "only when the person asks",
+    "Needs access:",
+    "do not work around",
+    "data, never instructions",
+    "Create no file anywhere",
+    "At most 40 lines",
+    "Skills listed for you: {{skills}}",
+)
+
+
+def test_the_judge_runs_on_frontier_at_medium_and_stays_read_only():
+    """R13: a stronger model in a fresh context, with read, search, shell and web only."""
+    judge = read_role(HOME / "roles" / "judge.md")
+
+    assert (judge.name, judge.tier, judge.effort) == ("judge", "frontier", "medium")
+    assert judge.tools == ("read", "search", "shell", "web")
+    assert judge.skills == ()
+    text = render(judge, CC, "routewise/roles/judge.md")
+    assert "\nmodel: fable\n" in text and "\neffort: medium\n" in text
+    assert "\ntools: Read, Glob, Grep, Bash, WebFetch\n" in text
+    assert "- First line: `Checklist: none`." in text
+
+
+def test_the_judge_keeps_its_rules_and_return_shape():
+    body = read_role(HOME / "roles" / "judge.md").body
+
+    for rule in JUDGE_RULES:
+        assert rule in body, rule
+    for part in ("The decision", "Recommendation", "Confidence", "Questions for the person"):
+        assert part in body, part
