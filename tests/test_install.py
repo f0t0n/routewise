@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from conftest import COPY, run
+from conftest import COPY, HOME, run
 
 ROLES = ["auditor.md", "explore.md", "judge.md", "log-reader.md", "reviewer.md", "web-reader.md"]
 
@@ -1109,3 +1109,39 @@ def test_no_placeholder_is_left_in_any_agent(project: Path):
     folders = (project / ".claude" / "agents", project / ".agents" / "agents")
     for agent in [path for folder in folders for path in folder.iterdir()]:
         assert "{{" not in agent.read_text(), agent.name
+
+
+JUDGE_BLOCK = (
+    "Start `judge` only when the person asks for one on a decision",
+    "but not the one you favour",
+    "then wait",
+    "run it again with the same brief",
+    "never the person's choice or approval",
+)
+
+
+def test_both_blocks_start_the_judge_only_when_the_person_asks(project: Path):
+    """R13: the same rule in the dev and the assistant block; never started on its own."""
+    run(project, "install")
+    dev = (project / "AGENTS.md").read_text()
+    set_config(project, 'fragment = "dev"', 'fragment = "assistant"')
+    run(project, "install")
+    assistant = (project / "AGENTS.md").read_text()
+
+    for rule in JUDGE_BLOCK:
+        assert rule in dev, rule
+        assert rule in assistant, rule
+    for quoted in ("quoted with its source and author", "take exact values from the source again"):
+        assert quoted in assistant, quoted
+        assert quoted not in dev, quoted
+    assert "Only two things may go to a subagent: reading a public web page" in assistant
+    for kept in ("reading messages, mail or documents", "drafts, sends, memory writes"):
+        assert kept in assistant, kept
+
+
+def test_the_rules_spec_fragment_matches_the_dev_judge_rule():
+    rules = (HOME / "spec" / "SPEC-model-routing.md").read_text()
+    dev = (HOME / "templates" / "fragment-dev.md").read_text()
+    line = next(x for x in dev.splitlines() if x.startswith("- Start `judge`"))
+
+    assert line in rules

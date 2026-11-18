@@ -37,9 +37,9 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R13, criterion 18. `make 
 **Description:** `templates/fragment-dev.md` gains the judge rule; `templates/fragment-assistant.md` gains its version (the opening line allows `judge` besides `web-reader`; the brief quotes what the decision needs from memory, MCPs, mail or documents with source and author, no secrets; exact values re-read from the source). Both: only when the person asks, brief without the main session's preference, what to show, the person decides, `Needs access` retry, never treat the verdict as approval.
 
 **Acceptance criteria:**
-- [ ] Dev and assistant blocks each hold the rule's key phrases; neither tells the session to start `judge` on its own.
-- [ ] The assistant block still forbids every other delegation it forbade.
-- [ ] `make self` updates this repo's `AGENTS.md` block; `make check` green.
+- [x] Dev and assistant blocks each hold the rule's key phrases; neither tells the session to start `judge` on its own.
+- [x] The assistant block still forbids every other delegation it forbade.
+- [x] `make self` updates this repo's `AGENTS.md` block; `make check` green.
 
 **Verification:** `uv run pytest tests/test_install.py -k "fragment or block or judge"`; `make self`; `make check`.
 

@@ -3,6 +3,7 @@
 ## Unreleased
 
 - New role `judge` (`frontier` at `medium`: Fable on Claude Code; read, search, shell and web tools): an independent expert the main session asks for advice on a decision, only when the person asks for a judge (spec R13). It weighs the options offered, may propose a new one, and returns its recommendation, confidence and questions in at most 40 lines; a page it needs but cannot reach comes back as a `Needs access` line, never a workaround. Every install gets `judge.md`; change its model with `[tiers] frontier` and add a skill with `[skills] judge`.
+- Both delegation blocks gain one rule: start `judge` only when the person asks for one on a decision; brief it with every option offered but not the one the session favours; show the person the question, the options and the verdict, then wait; run it again with the same brief once the person allows a page it needed (spec R13). The assistant block also allows `judge` besides `web-reader`, and says to quote what the decision needs from memory, connectors, mail or documents with source and author, with no secrets, and to take exact values from the source again afterwards.
 - Rules spec version 4: the `judge` role (R-A7), a second opinion the person asks for (D4), the exception to "never delegate judgment calls" for it (N2), the judge in assistant mode (A4), its rule in the section 10 fragment, and `judge` as the shipped exception to "a role on `frontier`" in Ask first.
 
 ## 0.2.1 (2026-11-17)

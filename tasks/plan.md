@@ -27,7 +27,7 @@ A new read-only role, `judge` (`frontier` at `medium`), that the main session st
 
 ### Phase 2: delegation and docs
 
-- [ ] Task 3: the judge rule in the dev and the assistant fragment
+- [x] Task 3: the judge rule in the dev and the assistant fragment
 - [ ] Task 4: binding row, README "Asking a judge", ADOPT.md, CHANGELOG
 
 ### Checkpoint B (after Task 4)
