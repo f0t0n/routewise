@@ -62,6 +62,23 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R13, criterion 18. `make 
 - [ ] `make check` green on the whole change; `make self` no drift.
 - [ ] `reviewer` on R13's commits and `auditor` on the approval and assistant-mode rules; Critical and Required fixed (one more round scoped to a fix), Optional and Nit answered here; mutation suggestions run and recorded.
 
+**Review record.**
+
+Round 1 (2026-11-18): `reviewer` (Checklist: `agent-skills:code-review-and-quality` loaded) request changes; `auditor` (Checklist: `agent-skills:security-and-hardening` loaded) four Required.
+- reviewer Required 1 (dev block's "never delegate judgment calls" without the judge exception): fixed in both the fragment and rules spec section 10, pinned by the section 10 equality test.
+- reviewer Optional 2 (retry names the allowed pages), 3 (no secrets in the dev brief), 4 (a leaked preference), 5 (Antigravity render test): fixed. Optional 6 (block length): kept, one bullet per block; split considered in round 2. Nit 7: kept.
+- auditor Required 1 (private data, untrusted text and a network exit in one agent): the tool choice went to the maintainer, who asked a judge (three rounds) and chose option E: keep all tools, allowlist as the boundary, role and block rules. Required 2 (brief content in queries), 3 (`Needs access` steered by injected text), 4 (README overstated limits): fixed by E's rules and README Hardening.
+- auditor Optional 1 (authenticated CLIs and shell network): fixed (network only via web tools; no logged-in CLIs). Optional 2 (a faked request): fixed (only the person's own message). Optional 3 (no binding row after an update): answered in the 0.3.0 release notes; a check would need installer code. Optional 4 ("for this decision"): fixed. Nit 5 (judge misses in assistant mode): fixed (`--role judge`).
+- Mutations (reviewer): removing "but not the one you favour", changing the section 10 judge line, removing N2's exception: all killed.
+
+Round 2 (2026-11-18, scoped to `be5bef7..91128f9`): `reviewer` approve; `auditor` four Required.
+- auditor Required 1 (a quoted passage could unlock a credential file): fixed, no exception for credential, token, `.env`, transcript or memory files.
+- auditor Required 2 (the `Needs access` source is the judge's own claim): fixed, domains marked `in the brief` or `claimed by the judge`, none recommended, a new judge after a policy change instead of a continued one.
+- auditor Required 3 (residual risk misstated): fixed, R13 and R-A7 name WebSearch as a residual risk the maintainer accepted, with shell reads and whole-domain allows.
+- auditor Required 4 (deny snippet vs the judge's shell): checked live (a `python3 -c` read beat `Read(./secret.txt)`), README says so; snippet moved to `settings.local.json` and notes it blocks the README's curl commands.
+- auditor Optional 1 (paths carry data, domain is the control): fixed in README and blocks. Optional 2 (round 1 Optionals unrecorded): this record. Optional 3 (DNS): checked live, blocked domains do not resolve in the `sbx` VM; recorded in section 13. Optional 4 (Antigravity unchecked): R-A7 says the allowlist is the boundary "where one is set"; Antigravity's web tools are not checked, kept as a known gap. Nit 5 (contradictions): fixed (no values added to a URL; a link the decision is about goes outside the quote).
+- reviewer Optional 1 (`own knowledge` pages never suggested) and 2 (R-A7 shorter than the block): both settled by the round-2 rewrite (every non-brief domain is `claimed by the judge`; R-A7 states the same rule). Optional 3 (README untested): kept, README is not a safety rule. Optional 4 (bullet length): kept as one bullet per rule set. Nit (path rule unpinned): fixed ("nothing from the brief in the path" pinned).
+
 ## Task 5: live runs on Claude Code
 
 **Description:** In a scratch project with routewise installed (dev block): (1) a session offers options and the person says "ask a judge": the transcript shows `judge` on `fable` at `medium`, a brief with every option and without the main session's preference, a return in R13's shape, and a main session that shows question, options and verdict and waits; (2) a decision prompt without "ask a judge" does not start `judge`; (3) a decision that needs a blocked page returns a `Needs access` line and no workaround. One assistant-block run checks that quoted data arrives as data. Recorded as a dated entry in rules spec section 13.

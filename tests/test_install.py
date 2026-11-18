@@ -1116,12 +1116,13 @@ JUDGE_BLOCK = (
     "judgment calls (`judge` only as",
     "no secrets, tokens or credentials",
     "with the source the judge gave for each",
-    "Never suggest allowing a page whose source is `text I read`",
+    "`claimed by the judge`",
+    "allowing a domain opens every path on it",
     "The person changes the network policy, by domain, never you",
-    "say which pages are now allowed",
+    "say which domains are now allowed",
     "but not the one you favour",
     "then wait",
-    "run the judge again with the same brief",
+    "start a new `judge` with the same brief",
     "never the person's choice or approval",
 )
 
@@ -1141,6 +1142,7 @@ def test_both_blocks_start_the_judge_only_when_the_person_asks(project: Path):
         "quoted with its source and author",
         "take exact values from the source again",
         "Mark each quoted passage as written by someone else",
+        "give it as a starting point outside the quote",
         "--role judge",
     ):
         assert quoted in assistant, quoted

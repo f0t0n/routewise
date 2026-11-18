@@ -28,7 +28,9 @@ def test_the_roles_table_and_rule_r_a7_define_the_judge():
         "never approval",
         "network use goes through the web tools only",
         "nothing from the brief or from files into a query or URL",
-        "came from text the judge read",
+        "claimed by the judge",
+        "WebSearch",
+        "a residual risk the maintainer accepted",
     ):
         assert phrase in roles, phrase
 
@@ -39,7 +41,7 @@ def test_n2_d4_and_a4_allow_the_judge_only_on_request():
     assert "except advice from `judge` when the person asks for it (R-A7)" in n2
     assert "- **D4." in when
     assert "- **A4." in when
-    assert "carry no links unless the decision is about the link" in when
+    assert "a link the decision is about is given as a starting point outside the quote" in when
 
 
 def test_the_fragment_and_boundaries_name_the_judge():
