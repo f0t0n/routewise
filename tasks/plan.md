@@ -20,15 +20,15 @@ Spec: [SPEC.md](../SPEC.md), R14, Objective items 4 and 5, success criteria 2, 3
 ### Phase 1: data and renderer
 
 - [x] Task 1: `[binding]` in `routewise.toml` (parsing, checks, template)
-- [ ] Task 2: `lib/binding.py` renders the binding
+- [x] Task 2: `lib/binding.py` renders the binding
 
 ### Checkpoint A (after Task 2)
 
-- [ ] `make check` green
+- [x] `make check` green
 
 ### Phase 2: installer and docs
 
-- [ ] Task 3: the installer writes the binding every run; unmarked binding stops; uninstall removes it
+- [x] Task 3: the installer writes the binding every run; unmarked binding stops; uninstall removes it
 - [ ] Task 4: this repo migrates; README, ADOPT.md, CHANGELOG
 
 ### Checkpoint B (after Task 4)

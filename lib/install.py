@@ -16,9 +16,9 @@ import os
 import sys
 import tomllib
 from dataclasses import dataclass, field, replace
-from datetime import date
 from pathlib import Path
 
+import binding
 import files
 
 import block
@@ -38,11 +38,11 @@ EXAMPLE = """\
 examples:
   routewise/install              set up, or update after editing routewise.toml
   routewise/install --check      report drift and write nothing (exit 1 on drift)
-  routewise/install --uninstall  remove generated agents and the delegation block;
-                                 keeps routewise.toml, ROUTING-BINDING.md and the miss log
+  routewise/install --uninstall  remove generated agents, the binding and the delegation
+                                 block; keeps routewise.toml and the miss log
 
-first run writes routewise.toml (settings) and ROUTING-BINDING.md (approvals); fill in the
-binding, then commit everything routewise wrote.
+first run writes routewise.toml (settings, approvals in [binding]); ROUTING-BINDING.md is
+rendered from it on every run. Fill in [binding], re-run, then commit what routewise wrote.
 """
 
 
@@ -335,23 +335,57 @@ def claude_notes(plan: Plan, chosen: Settings, covered: set[Path]) -> list[str]:
     return notes
 
 
-def plan_first_run(plan: Plan, chosen: Settings, harnesses: list[Harness]) -> None:
-    binding = plan.root / BINDING
-    if not binding.exists():
-        text = (HOME / "templates" / "binding.md").read_text(encoding="utf-8")
-        dirs = ", ".join(f"`{h.dir}/` ({h.key})" for h in harnesses)
-        paths = {
-            "{{spec}}": label(HOME / "spec" / "SPEC-model-routing.md", plan.root),
-            "{{install}}": rerun(plan.root),
-            "{{roles}}": label(HOME / "roles", plan.root) + "/",
-            "{{harness}}": label(HOME / "harness.toml", plan.root),
-            "{{miss_log}}": miss_log_command(plan.root),
-            "{{date}}": date.today().isoformat(),
-            "{{agent_dirs}}": dirs,
-        }
-        for key, value in paths.items():
-            text = text.replace(key, value)
-        plan.write(binding, text)
+def binding_values(root: Path, harnesses: list[Harness]) -> dict[str, str]:
+    """The paths and commands the binding names, spelled from the project root (R3)."""
+    return {
+        "{{template}}": label(HOME / "templates" / "binding.md", root),
+        "{{spec}}": label(HOME / "spec" / "SPEC-model-routing.md", root),
+        "{{install}}": rerun(root),
+        "{{roles}}": label(HOME / "roles", root) + "/",
+        "{{harness}}": label(HOME / "harness.toml", root),
+        "{{miss_log}}": miss_log_command(root),
+        "{{agent_dirs}}": ", ".join(f"`{h.dir}/` ({h.key})" for h in harnesses),
+    }
+
+
+def own_binding(root: Path) -> bool | None:
+    """None when there is no binding, else whether routewise generated it (spec S3, R14)."""
+    path = root / BINDING
+    if not present(path):
+        return None
+    return binding.is_generated(read_exact(inside(root, path)))
+
+
+def plan_binding(plan: Plan, chosen: Settings, harnesses: list[Harness], roles: list[Role]) -> None:
+    """Render ROUTING-BINDING.md from the roles and [binding]; never over a file of the user's."""
+    if own_binding(plan.root) is False:
+        raise Fail(
+            f"{BINDING} was not written by routewise (it was hand-filled before 0.4.0); "
+            f"move its approval, assistant pins and review date into [binding] in "
+            f"{settings.NAME}, delete {BINDING}, and re-run {rerun(plan.root)}"
+        )
+    spec = (HOME / "spec" / "SPEC-model-routing.md").read_text(encoding="utf-8")
+    try:
+        version = binding.rules_version(spec)
+        text = binding.render(
+            (HOME / "templates" / "binding.md").read_text(encoding="utf-8"),
+            binding_values(plan.root, harnesses),
+            roles,
+            chosen.binding,
+            version,
+        )
+    except binding.BindingError as err:
+        raise Fail(str(err)) from err
+    plan.write(plan.root / BINDING, text)
+    if binding.status(chosen.binding, version) == "pending":
+        plan.notes.append(
+            f"approval pending: rules spec version {version} "
+            f"(approved: {chosen.binding.approved_rules_version}); when you approve, set "
+            f"[binding] approved_rules_version = {version} in {settings.NAME} and re-run"
+        )
+
+
+def plan_first_run(plan: Plan, chosen: Settings) -> None:
     log = plan.root / chosen.miss_log
     if not log.exists():
         plan.write(log, "")
@@ -388,10 +422,11 @@ def plan_install(plan: Plan, chosen: Settings) -> None:
         if key not in chosen.harnesses:
             for stale in generated_files(plan.root / harness.dir):
                 plan.remove(stale)
-    plan_first_run(plan, chosen, active)
+    plan_first_run(plan, chosen)
+    plan_binding(plan, chosen, active, roles)
     covered = plan_instructions(plan, chosen)
     plan_import(plan, chosen, covered)
-    plan.notes = claude_notes(plan, chosen, covered)
+    plan.notes = claude_notes(plan, chosen, covered) + plan.notes
 
 
 def leads_inside(root: Path, name: str) -> bool:
@@ -413,6 +448,11 @@ def plan_uninstall(plan: Plan, chosen: Settings) -> None:
     claude = [n for n in CLAUDE_FILES if present(plan.root / n) and leads_inside(plan.root, n)]
     for item in resolve(plan.root, [*chosen.instructions, *claude]):
         plan_block(plan, in_project(plan.root, item.target), None, item.linked)
+    owned = own_binding(plan.root)
+    if owned:
+        plan.remove(plan.root / BINDING)
+    elif owned is False:
+        plan.notes.append(f"kept {BINDING}: routewise did not write it")
 
 
 def build_plan(root: Path, uninstall: bool) -> Plan:
@@ -449,7 +489,9 @@ def report(plan: Plan, writes: list[Path], removes: list[Path], verb: str) -> st
     lines = [f"{verb} {label(p, plan.root)}" for p in writes]
     lines += [f"remove {label(p, plan.root)}" for p in removes]
     if any(p.name == settings.NAME for p in writes) and verb == "write":
-        lines.append(f"first run: review {settings.NAME}, then fill in {BINDING}")
+        lines.append(
+            f"first run: review {settings.NAME}, then fill in [binding] in {settings.NAME}"
+        )
     return "\n".join((lines or ["routewise: nothing to change"]) + plan.notes)
 
 

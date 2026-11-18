@@ -33,3 +33,14 @@ miss_log = "logs/delegation-misses.jsonl"
 # Optional: override a tier's model for Claude Code, e.g. to pin a version.
 [tiers]
 # fast = "claude-haiku-5-5"
+
+# The approvals that ROUTING-BINDING.md shows (spec R14). routewise never writes this
+# table after the first run, so only the maintainer can approve.
+# Moved from the hand-written binding: approved 2026-11-14; the judge (rules spec
+# version 4, R13) approved 2026-11-18.
+[binding]
+approved_by = "f0t0n (maintainer)"
+approved_on = "2026-11-18"
+approved_rules_version = 4
+assistant_pins = "Not an assistant project."
+review_from = "2026-11-28"

@@ -20,10 +20,10 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R14, criteria 2, 3, 19. `
 **Description:** Functions: `rules_version(spec_text) -> int`; `is_generated(text) -> bool`; `render(template, roles, harness map, settings, rules version, paths) -> str`. The template gets placeholders for the marker, the approval line and the role rows; the "Installed <date>" line goes.
 
 **Acceptance criteria:**
-- [ ] The first line is the marker, spelled for the project (`routewise/templates/binding.md`, `routewise/install` vendored; `templates/binding.md`, `./install --project .` here).
-- [ ] One row per role, from its tier and effort; a new role gets a row; a changed tier changes the row.
-- [ ] Approval: no values → "approval not recorded"; values with `approved_rules_version` equal to the rules version → "Approved by … on … for rules spec version N"; lower → "approval pending: rules spec version N (approved: M)" and `frontier` rows marked pending.
-- [ ] `rules_version` reads `Version 4, …` from the shipped spec; a spec without the line is an error naming the file.
+- [x] The first line is the marker, spelled for the project (`routewise/templates/binding.md`, `routewise/install` vendored; `templates/binding.md`, `./install --project .` here).
+- [x] One row per role, from its tier and effort; a new role gets a row; a changed tier changes the row.
+- [x] Approval: no values → "approval not recorded"; values with `approved_rules_version` equal to the rules version → "Approved by … on … for rules spec version N"; lower → "approval pending: rules spec version N (approved: M)" and `frontier` rows marked pending.
+- [x] `rules_version` reads `Version 4, …` from the shipped spec; a spec without the line is an error naming the file.
 
 **Verification:** `uv run pytest tests/test_binding.py`; `make check`.
 
@@ -31,15 +31,15 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R14, criteria 2, 3, 19. `
 
 ## Checkpoint A (after Task 2)
 
-- [ ] `make check` green.
+- [x] `make check` green, after Task 3: the new template only renders through the installer, so Tasks 2 and 3 land in one commit, with this repo's own migration (its old binding stopped `make check`, as R14 intends).
 
 ## Task 3: the installer writes the binding every run
 
 **Description:** `lib/install.py` plans `ROUTING-BINDING.md` on every install run (not only the first), from `lib/binding.py`; an existing unmarked binding raises an error before planning in install and `--check`; `--uninstall` removes a marked binding and keeps an unmarked one with a note; the output prints "approval pending: …" when pending.
 
 **Acceptance criteria:**
-- [ ] Every case in success criterion 19 has an end-to-end test (`tests/test_install.py`): first install, approval values, pending (with `--check` exiting 0 when nothing else drifted), a new role file, a changed tier, an unmarked binding (install and `--check` exit 2, files byte-identical, fix in the message), `--uninstall` both ways, a hand edit as drift.
-- [ ] Success criteria 2 and 3 updated in their tests (`ROUTING-BINDING.md` generated; removed by `--uninstall`).
+- [x] Every case in success criterion 19 has an end-to-end test (`tests/test_install.py`): first install, approval values, pending (with `--check` exiting 0 when nothing else drifted), a new role file, a changed tier, an unmarked binding (install and `--check` exit 2, files byte-identical, fix in the message), `--uninstall` both ways, a hand edit as drift.
+- [x] Success criteria 2 and 3 updated in their tests (`ROUTING-BINDING.md` generated; removed by `--uninstall`).
 
 **Verification:** `uv run pytest tests/test_install.py`; `make check`.
 

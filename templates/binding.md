@@ -1,8 +1,9 @@
+{{marker}}
 # Binding: model routing in this project
 
-How this project applies [the routewise spec]({{spec}}) (section 9). The spec is never edited here; every project-specific choice is in this file and in `routewise.toml`.
+How this project applies [the routewise spec]({{spec}}) (section 9). The spec is never edited here. This file is rendered by `{{install}}` from the shipped roles and `[binding]` in `routewise.toml`; change those, not this file.
 
-Installed {{date}}. Approved by: _who, when_.
+{{approval}}
 
 | Item | Value in this project |
 |---|---|
@@ -14,9 +15,12 @@ Installed {{date}}. Approved by: _who, when_.
 | Miss log and command (M1) | `miss_log` in `routewise.toml`, written only by `{{miss_log}} add`; `{{miss_log}} report` prints the summary. |
 | Where the instructions include the fragment | `instructions` in `routewise.toml` (default `AGENTS.md`), between the `routewise:start` and `routewise:end` markers. Claude Code reaches it through an `@AGENTS.md` import block in CLAUDE.md when needed (`claude_md`). |
 | Assistant-mode reader delegation (A2) | None. |
-| Assistant model and effort pins (A3) | _Fill in, or "not an assistant project"._ |
-| `auditor` | `deep` at `high` (R-A4). |
-| `judge` | `frontier` at `medium` (R-A7): runs only when the person asks for a judge on a decision, so the most expensive tier is approved here by adopting rules spec version 4. Change its model with `[tiers] frontier` in `routewise.toml`. |
-| `reviewer` | `balanced` at `medium` (R-A5). If the main session implements on a higher tier, add a project role instead. |
-| Miss-log review (M1) | First review on _date two weeks after install_, then monthly. |
+| Assistant model and effort pins (A3) | {{assistant_pins}} |
+| Miss-log review (M1) | {{review}} |
 | Findings caps | `reviewer` and `auditor` return every Critical and Required finding; only Optional and Nit are capped, at 5 (R-A2). |
+
+Roles, as shipped (tier and effort; the spec's section 4 gives the reasons, and a role on `frontier` needs the approval above, section 12):
+
+| Role | Tier and effort |
+|---|---|
+{{role_rows}}
