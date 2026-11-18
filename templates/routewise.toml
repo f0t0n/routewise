@@ -21,7 +21,7 @@ instructions = ["AGENTS.md"]
 claude_md = "auto"
 
 # "dev" for an agent that builds the project; "assistant" for a user-facing assistant
-# (it may delegate only web-page reading).
+# (it may delegate only web-page reading, and a judge when the person asks).
 fragment = "dev"
 
 # Parallel cap (PA1): read-only subagents started together. Raising it needs approval.

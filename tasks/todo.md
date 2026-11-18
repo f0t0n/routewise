@@ -50,8 +50,8 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R14, criteria 2, 3, 19. `
 **Description:** This repo's values go into its `routewise.toml` `[binding]` (approved by f0t0n, 2026-11-14 → rules spec 4 approved 2026-11-18; review from 2026-11-28; not an assistant project); its old `ROUTING-BINDING.md` is deleted and `make self` renders the new one. README (first-run table, the binding, updating), ADOPT.md step 4 (fill `[binding]`), the `install --help` text, CHANGELOG.
 
 **Acceptance criteria:**
-- [ ] `make self` renders this repo's binding with its approval line and no pending; `make check` covers it.
-- [ ] README and ADOPT describe the generated binding and `[binding]`; no doc says to edit `ROUTING-BINDING.md` by hand.
+- [x] `make self` renders this repo's binding with its approval line and no pending; `make check` covers it.
+- [x] README and ADOPT describe the generated binding and `[binding]`; no doc says to edit `ROUTING-BINDING.md` by hand.
 
 **Verification:** `make self`; `make check`; `grep -rn "fill in ROUTING-BINDING\|fill in the binding" README.md ADOPT.md lib/` finds nothing stale.
 

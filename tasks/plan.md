@@ -29,7 +29,7 @@ Spec: [SPEC.md](../SPEC.md), R14, Objective items 4 and 5, success criteria 2, 3
 ### Phase 2: installer and docs
 
 - [x] Task 3: the installer writes the binding every run; unmarked binding stops; uninstall removes it
-- [ ] Task 4: this repo migrates; README, ADOPT.md, CHANGELOG
+- [x] Task 4: this repo migrates; README, ADOPT.md, CHANGELOG
 
 ### Checkpoint B (after Task 4)
 

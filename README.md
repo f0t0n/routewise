@@ -25,7 +25,7 @@ v=0.3.0
 mkdir routewise && curl -fsSL "https://github.com/f0t0n/routewise/archive/refs/tags/v$v.tar.gz" | tar -xz --strip-components=1 -C routewise && routewise/install
 ```
 
-If the download fails, delete the empty `routewise/` folder it leaves before you try again. The first run writes `routewise.toml`: review it and re-run `routewise/install` if you change it, fill in `ROUTING-BINDING.md`, commit, and open a new agent session. The same, in detail and with alternatives:
+If the download fails, delete the empty `routewise/` folder it leaves before you try again. The first run writes `routewise.toml`: review it, fill in its `[binding]` table (who approved and when, and the first miss-log review date), re-run `routewise/install`, commit, and open a new agent session. The same, in detail and with alternatives:
 
 1. Put a release into the project root as `routewise/`: the block above does it from the release's "Source code" archive, or unpack that archive yourself, or run `git archive` on a tag. The archive holds only what a project needs: `install`, `bin/`, `lib/`, `roles/`, `harness.toml`, `templates/`, `spec/` and the docs. A git submodule or subtree works too, but brings this repo's development files (tests, `SPEC.md`, `AGENTS.md`, its own agents); make sure your test runner and linters skip `routewise/`.
 2. From the project root, run:
@@ -39,13 +39,13 @@ If the download fails, delete the empty `routewise/` folder it leaves before you
    | Path | What |
    |---|---|
    | `routewise.toml` | Settings: harnesses, instruction files, `claude_md`, `dev` or `assistant` mode, parallel cap, miss-log path, model pins. |
-   | `ROUTING-BINDING.md` | The binding (spec section 9): fill in who approved it and the first miss-log review date. |
+   | `ROUTING-BINDING.md` | The binding (spec section 9), rendered on every run from the roles and `[binding]` in `routewise.toml`. Do not edit it; change `routewise.toml` and re-run. |
    | `.claude/agents/*.md` | The six roles for Claude Code (and `.agents/agents/` for agy). |
    | `AGENTS.md` | The delegation block, between `routewise:start` and `routewise:end` markers. Created if missing; the rest of the file is kept. |
    | `CLAUDE.md` or `.claude/CLAUDE.md` | Only when one already exists (or with `claude_md = "import"`): a routewise block holding just an `@AGENTS.md` import line. See below. |
    | `logs/delegation-misses.jsonl` | The empty miss log. |
 
-3. Review `routewise.toml`, re-run `routewise/install` if you changed it, fill in `ROUTING-BINDING.md`, and commit.
+3. Review `routewise.toml`, fill in its `[binding]` table, re-run `routewise/install`, and commit. Until `approved_rules_version` matches the shipped rules spec, the binding says "approval not recorded" or "approval pending"; nothing else stops.
 4. Open a **new** agent session: an open session keeps the instructions it loaded.
 
 ### Claude Code and AGENTS.md
@@ -67,7 +67,7 @@ Or tell your agent: *"Adopt routewise: follow routewise/ADOPT.md."* It asks the 
 ```sh
 routewise/install            # after editing routewise.toml, or after updating routewise/
 routewise/install --check    # exit 1 if generated files drifted (use in CI or a pre-commit hook)
-routewise/install --uninstall  # keeps routewise.toml, ROUTING-BINDING.md and the miss log
+routewise/install --uninstall  # keeps routewise.toml and the miss log
 routewise/bin/miss-log add --mode dev --role reviewer --task review --what "missed a None check"
 routewise/bin/miss-log report
 ```
@@ -136,7 +136,9 @@ v=0.3.0
 mkdir routewise.new && curl -fsSL "https://github.com/f0t0n/routewise/archive/refs/tags/v$v.tar.gz" | tar -xz --strip-components=1 -C routewise.new && rm -rf routewise && mv routewise.new routewise && routewise/install
 ```
 
-Set `v` to the release you want. Project choices live outside `routewise/` (`routewise.toml`, `ROUTING-BINDING.md`), so nothing is lost.
+Set `v` to the release you want. Project choices live outside `routewise/`, in `routewise.toml`, so nothing is lost; `ROUTING-BINDING.md` is rendered again from it, with any new role. When a release ships a newer rules spec, the binding says "approval pending" until you set `approved_rules_version` in `[binding]`.
+
+**From 0.3.x or older:** the first run stops, because the old `ROUTING-BINDING.md` was hand-filled. Move its "Approved by", assistant pins and review date into `[binding]` in `routewise.toml`, delete `ROUTING-BINDING.md`, and run `routewise/install` again.
 
 ## Safety
 
