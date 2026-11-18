@@ -45,7 +45,8 @@ def status(binding: Binding, version: int) -> str:
     if binding.approved_rules_version > version:
         raise BindingError(
             f"routewise.toml: [binding] approved_rules_version {binding.approved_rules_version} "
-            f"is newer than the shipped rules spec (version {version}); set it to {version}"
+            f"is newer than the shipped rules spec (version {version}); set it to the version "
+            "the person approved, or leave it out"
         )
     if binding.approved_rules_version == 0:
         return "not recorded"

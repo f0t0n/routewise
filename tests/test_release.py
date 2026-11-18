@@ -63,3 +63,12 @@ def test_the_readme_install_never_runs_an_older_copy():
     assert chain.startswith("mkdir routewise && curl -fsSL "), chain
     assert chain.endswith(" && routewise/install"), chain
     assert " mv " not in chain, chain
+
+
+def test_the_readme_never_maps_a_release_to_an_approved_version():
+    """R14 audit: the version to approve comes from the person, never from a release number."""
+    updating = readme().split("\n## Updating\n", 1)[1].split("\n## ", 1)[0]
+
+    assert "approved_rules_version" in updating
+    assert "for 0.2.x" not in updating and "for 0.3.x" not in updating
+    assert "or the person confirms it" in updating

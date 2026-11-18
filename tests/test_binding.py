@@ -85,8 +85,10 @@ def test_no_approval_is_not_recorded():
 
 
 def test_an_approval_newer_than_the_shipped_spec_is_refused():
-    with pytest.raises(BindingError, match="approved_rules_version 5 is newer"):
+    with pytest.raises(BindingError, match="approved_rules_version 5 is newer") as caught:
         text(replace(APPROVED, approved_rules_version=5))
+    assert "set it to 4" not in str(caught.value)
+    assert "the version the person approved" in str(caught.value)
 
 
 def test_rules_version_is_read_from_the_shipped_spec():

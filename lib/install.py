@@ -357,8 +357,8 @@ def own_binding(root: Path) -> bool | None:
         return None
     if path.is_symlink():
         return False
-    if path.is_dir():
-        raise Fail(f"{BINDING} is a folder; move it out of the way and re-run")
+    if not path.is_file():  # a folder, a FIFO or a device: never read it (a FIFO blocks)
+        raise Fail(f"{BINDING} is not a regular file; move it out of the way and re-run")
     try:
         return binding.is_generated(read_exact(inside(root, path)))
     except (OSError, UnicodeDecodeError) as err:

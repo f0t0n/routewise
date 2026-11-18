@@ -1,5 +1,6 @@
 """routewise/install on a throwaway project."""
 
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -1361,6 +1362,9 @@ def test_a_folder_or_unreadable_binding_stops_with_a_message(project: Path):
     assert result.stderr.startswith("routewise: ROUTING-BINDING.md")
     path.unlink()
     path.mkdir()
+    assert run(project, "install").stderr.startswith("routewise: ROUTING-BINDING.md")
+    path.rmdir()
+    os.mkfifo(path)  # a special file: refused without reading it (it would block)
     assert run(project, "install").stderr.startswith("routewise: ROUTING-BINDING.md")
 
 
