@@ -1,7 +1,9 @@
 """routewise.toml: the project's settings, checked before anything is written."""
 
+import re
 import tomllib
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +22,24 @@ class SettingsError(Exception):
 
 
 @dataclass(frozen=True)
+class Binding:
+    """[binding]: the person's entries the binding is rendered from (R14); empty when unset."""
+
+    approved_by: str = ""
+    approved_on: str = ""
+    approved_rules_version: int = 0  # 0: no approval recorded
+    assistant_pins: str = ""
+    review_from: str = ""
+
+
+BINDING_TEXT = ("approved_by", "assistant_pins")
+BINDING_DATES = ("approved_on", "review_from")
+BINDING_KEYS = (*BINDING_TEXT, *BINDING_DATES, "approved_rules_version")
+ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
+MAX_TEXT = 200
+
+
+@dataclass(frozen=True)
 class Settings:
     harnesses: list[str] = field(default_factory=lambda: ["cc"])
     instructions: list[str] = field(default_factory=lambda: ["AGENTS.md"])
@@ -30,6 +50,7 @@ class Settings:
     tiers: dict[str, str] = field(default_factory=dict)
     skills: dict[str, tuple[str, ...]] = field(default_factory=dict)  # role -> its skills (R8)
     stand_ins: dict[str, tuple[str, ...]] = field(default_factory=dict)  # role -> names (R9)
+    binding: Binding = field(default_factory=Binding)
 
 
 def strings(data: dict[str, Any], key: str, default: list[str]) -> list[str]:
@@ -112,6 +133,54 @@ def stand_ins(data: dict[str, Any]) -> dict[str, tuple[str, ...]]:
     return chosen
 
 
+def binding_text(key: str, value: Any) -> str:
+    """One line of plain text that cannot break the binding's table or end its marker."""
+    where = f"{NAME}: [binding] {key}"
+    if not isinstance(value, str):
+        raise SettingsError(f'{where} must be text, such as "Ann (maintainer)"')
+    if any(ord(char) < 32 or ord(char) == 127 for char in value):
+        raise SettingsError(f"{where} must be one line, with no tabs or control characters")
+    if "|" in value or "-->" in value:
+        raise SettingsError(f"{where} must not hold | or -->, which would break the binding")
+    if len(value) > MAX_TEXT:
+        raise SettingsError(f"{where} must be at most {MAX_TEXT} characters")
+    return value
+
+
+def binding_date(key: str, value: Any) -> str:
+    """A date as YYYY-MM-DD: a TOML date or a string in that form."""
+    if isinstance(value, date):
+        return value.isoformat()
+    if isinstance(value, str) and (value == "" or ISO_DATE.fullmatch(value)):
+        try:
+            return value and date.fromisoformat(value).isoformat()
+        except ValueError:
+            pass
+    raise SettingsError(f'{NAME}: [binding] {key} must be a date, such as "2026-11-18"')
+
+
+def binding(data: dict[str, Any]) -> Binding:
+    """[binding]: optional; every key optional; unknown keys refused (R14)."""
+    value = data.get("binding", {})
+    if not isinstance(value, dict):
+        raise SettingsError(f"{NAME}: [binding] must be a table")
+    for key in value:
+        if key not in BINDING_KEYS:
+            raise SettingsError(f"{NAME}: [binding] {key} is not one of {', '.join(BINDING_KEYS)}")
+    version = value.get("approved_rules_version", 0)
+    if isinstance(version, bool) or not isinstance(version, int) or version < 0:
+        raise SettingsError(
+            f"{NAME}: [binding] approved_rules_version must be a whole number, such as 4"
+        )
+    if "approved_rules_version" in value and version == 0:
+        raise SettingsError(
+            f"{NAME}: [binding] approved_rules_version must be a whole number of at least 1"
+        )
+    texts = {key: binding_text(key, value.get(key, "")) for key in BINDING_TEXT}
+    dates = {key: binding_date(key, value.get(key, "")) for key in BINDING_DATES}
+    return Binding(approved_rules_version=version, **texts, **dates)
+
+
 def parse(source: str) -> Settings:
     try:
         data = tomllib.loads(source)
@@ -127,6 +196,7 @@ def parse(source: str) -> Settings:
         tiers=tiers(data),
         skills=skills(data),
         stand_ins=stand_ins(data),
+        binding=binding(data),
     )
     choose("harness", settings.harnesses, HARNESSES)
     choose("fragment", [settings.fragment], FRAGMENTS)

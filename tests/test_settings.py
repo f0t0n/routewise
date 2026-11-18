@@ -104,3 +104,63 @@ def test_stand_ins_are_off_by_default_and_kept_per_role():
 def test_model_names_accepted_before_still_pass(model: str):
     """R11 changes only the trailing line break; every name 0.1.2 accepted still passes."""
     assert parse(f'[tiers]\nfast = "{model}"').tiers == {"fast": model}
+
+
+# --- R14: [binding], the person's entries that the binding is rendered from ----------------
+
+FULL = """[binding]
+approved_by = "Ann (maintainer)"
+approved_on = "2026-11-18"
+approved_rules_version = 4
+assistant_pins = "not an assistant project"
+review_from = "2026-12-02"
+"""
+
+
+def test_binding_values_are_read():
+    chosen = parse(FULL).binding
+
+    assert chosen.approved_by == "Ann (maintainer)"
+    assert (chosen.approved_on, chosen.review_from) == ("2026-11-18", "2026-12-02")
+    assert chosen.approved_rules_version == 4
+    assert chosen.assistant_pins == "not an assistant project"
+
+
+def test_binding_is_optional_and_empty_by_default():
+    for source in ("", "[binding]\n", '[binding]\napproved_by = ""\n'):
+        chosen = parse(source).binding
+        assert (chosen.approved_by, chosen.approved_on, chosen.review_from) == ("", "", "")
+        assert (chosen.approved_rules_version, chosen.assistant_pins) == (0, "")
+
+
+def test_binding_takes_a_toml_date_as_well():
+    chosen = parse("[binding]\napproved_on = 2026-11-18\nreview_from = 2026-12-02\n").binding
+
+    assert (chosen.approved_on, chosen.review_from) == ("2026-11-18", "2026-12-02")
+
+
+@pytest.mark.parametrize(
+    ("source", "message"),
+    [
+        ("binding = 1", r"\[binding\] must be a table"),
+        ("[binding]\napproved_by = 1", r"\[binding\] approved_by must be text"),
+        ('[binding]\napproved_by = "a\\nb"', r"\[binding\] approved_by must be one line"),
+        ('[binding]\napproved_by = "a\\tb"', r"\[binding\] approved_by must be one line"),
+        ('[binding]\napproved_by = "a | b"', r"\[binding\] approved_by must not hold"),
+        ('[binding]\nassistant_pins = "x --> y"', r"\[binding\] assistant_pins must not hold"),
+        (f'[binding]\napproved_by = "{"a" * 201}"', "at most 200 characters"),
+        ('[binding]\napproved_on = "18.11.2026"', r"\[binding\] approved_on must be a date"),
+        ('[binding]\nreview_from = "2026-13-01"', r"\[binding\] review_from must be a date"),
+        ('[binding]\napproved_rules_version = "4"', "approved_rules_version must be a whole"),
+        ("[binding]\napproved_rules_version = 0", "approved_rules_version must be a whole"),
+        ("[binding]\napproved_rules_version = true", "approved_rules_version must be a whole"),
+        ('[binding]\nnotes = "why"', r"\[binding\] notes is not one of"),
+    ],
+)
+def test_binding_refuses_bad_values(source: str, message: str):
+    with pytest.raises(SettingsError, match=message):
+        parse(source)
+
+
+def test_binding_allows_exactly_200_characters():
+    assert len(parse(f'[binding]\napproved_by = "{"a" * 200}"').binding.approved_by) == 200

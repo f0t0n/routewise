@@ -1,6 +1,6 @@
-# routewise settings for this project: the machine-readable half of the binding
-# (spec section 9). Edit, then re-run `{{install}}`. The human half, with the
-# approvals and reasons, is ROUTING-BINDING.md.
+# routewise settings for this project, and its approvals in [binding] (spec section 9).
+# Edit, then re-run `{{install}}`. ROUTING-BINDING.md is rendered from this file
+# and the shipped roles on every run; do not edit it.
 
 # Harnesses to render agents for: "cc" (Claude Code, .claude/agents/) and "agy"
 # (Antigravity CLI, .agents/agents/).
@@ -47,3 +47,14 @@ miss_log = "logs/delegation-misses.jsonl"
 [stand_ins]
 # reviewer = ["code-reviewer"]
 # auditor = ["security-auditor"]
+
+# The approvals that ROUTING-BINDING.md shows (spec R14). routewise never writes this
+# table after the first run, so only you (or your agent, on your word) can approve.
+# Until approved_rules_version is set to the shipped rules spec's version, the binding
+# says "approval not recorded" or "approval pending".
+[binding]
+approved_by = ""          # who approved the routing, e.g. "Ann (maintainer)"
+approved_on = ""          # when, as "YYYY-MM-DD"
+# approved_rules_version = 4   # the rules spec version approved (its first line)
+assistant_pins = ""       # assistant model and effort pins (A3), or "not an assistant project"
+review_from = ""          # first miss-log review, as "YYYY-MM-DD"; then monthly

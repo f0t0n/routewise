@@ -1170,3 +1170,15 @@ def test_a_new_binding_records_the_judge(project: Path):
     row = next(x for x in binding.splitlines() if x.startswith("| `judge` |"))
     assert "`frontier` at `medium` (R-A7)" in row
     assert "only when the person asks" in row
+
+
+def test_a_new_install_writes_an_empty_binding_table(project: Path):
+    """R14: the person's entries live in routewise.toml [binding], empty until filled in."""
+    run(project, "install")
+    text = (project / "routewise.toml").read_text()
+
+    assert "[binding]\n" in text
+    for key in ("approved_by", "approved_on", "assistant_pins", "review_from"):
+        assert f'\n{key} = "" ' in text, key
+    assert "# approved_rules_version = " in text
+    assert "rendered from this file" in text.split("\n\n")[0]

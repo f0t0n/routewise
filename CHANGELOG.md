@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `routewise.toml` gains a `[binding]` table: `approved_by`, `approved_on`, `approved_rules_version`, `assistant_pins` and `review_from`, the entries `ROUTING-BINDING.md` is rendered from (spec R14). Values are checked: one line of text, at most 200 characters, no `|` or `-->`; dates as `YYYY-MM-DD` (a TOML date works too); the version a whole number. A new install writes the table empty, with a comment per key.
+
 ## 0.3.0 (2026-11-18)
 
 - New role `judge` (`frontier` at `medium`: Fable on Claude Code; read, search, shell and web tools): an independent expert the main session asks for advice on a decision, only when the person asks for a judge (spec R13). It keeps all its tools and follows network and data rules: the network only through its web tools, never `curl` or a logged-in CLI; no credential, `.env`, transcript or memory files, even ones the brief names; nothing from the brief in a search query or URL; no URL taken from text it read. It weighs the options offered, may propose a new one, and returns its recommendation, confidence and questions in at most 40 lines; a page it needs but cannot reach comes back as a `Needs access` line with its source (`brief`, `search result`, `own knowledge` or `text I read`), never a workaround. Every install gets `judge.md`; change its model with `[tiers] frontier` and add a skill with `[skills] judge`.

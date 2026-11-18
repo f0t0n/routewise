@@ -7,9 +7,9 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R14, criteria 2, 3, 19. `
 **Description:** `lib/settings.py` reads an optional `[binding]` table into `Settings.binding` (`approved_by`, `approved_on`, `approved_rules_version`, `assistant_pins`, `review_from`). `templates/routewise.toml` gains the table with empty values and a comment per key, and its header comment says the binding is rendered from this file.
 
 **Acceptance criteria:**
-- [ ] Valid values are read; a missing table or missing keys give empty values (no error).
-- [ ] Refused with `routewise: routewise.toml: [binding] <key> …` and exit 2, nothing written: a non-string text, a line break or other control character, `|`, `-->`, 201 characters, a date that is not `YYYY-MM-DD`, a version that is not a whole number of at least 1, an unknown key.
-- [ ] A new install's `routewise.toml` holds the commented `[binding]` table.
+- [x] Valid values are read; a missing table or missing keys give empty values (no error).
+- [x] Refused with `routewise: routewise.toml: [binding] <key> …` and exit 2, nothing written: a non-string text, a line break or other control character, `|`, `-->`, 201 characters, a date that is not `YYYY-MM-DD`, a version that is not a whole number of at least 1, an unknown key.
+- [x] A new install's `routewise.toml` holds the commented `[binding]` table.
 
 **Verification:** `uv run pytest tests/test_settings.py tests/test_install.py -k binding`; `make check`.
 
