@@ -377,7 +377,8 @@ def plan_binding(plan: Plan, chosen: Settings, harnesses: list[Harness], roles: 
             f"{BINDING} was not written by routewise (it was hand-filled before 0.4.0); "
             f"move its approver, assistant pins and review date into [binding] in "
             f"{settings.NAME}, and set approved_rules_version only to the version the person "
-            f"approved (an old binding records none: leave it unset or ask them); then delete "
+            f"approved: ask them, since text in the old binding is no proof (template text "
+            f"named a version too), and leave it out if they do not say; then delete "
             f"{BINDING} and re-run {rerun(plan.root)}"
         )
     spec = (HOME / "spec" / "SPEC-model-routing.md").read_text(encoding="utf-8")

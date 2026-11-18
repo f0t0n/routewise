@@ -121,3 +121,11 @@ def test_the_tier_map_is_rendered_with_overrides():
     out = render(TEMPLATE, values, ROLES, APPROVED, 4)
 
     assert "Claude Code: `fast` → `claude-haiku-5-5`." in out
+
+
+def test_a_version_without_a_name_is_no_approval():
+    """Audit round 3: a version alone (say, copied from template text) approves nothing."""
+    out = text(replace(APPROVED, approved_by=""))
+
+    assert "**Approval not recorded.**" in out
+    assert "| `judge` | `frontier` at `medium` (approval not recorded) |" in out

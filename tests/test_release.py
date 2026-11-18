@@ -71,4 +71,5 @@ def test_the_readme_never_maps_a_release_to_an_approved_version():
 
     assert "approved_rules_version" in updating
     assert "for 0.2.x" not in updating and "for 0.3.x" not in updating
-    assert "or the person confirms it" in updating
+    assert "ask the person" in updating
+    assert "judge` row" not in updating

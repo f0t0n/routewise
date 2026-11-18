@@ -48,8 +48,8 @@ def status(binding: Binding, version: int) -> str:
             f"is newer than the shipped rules spec (version {version}); set it to the version "
             "the person approved, or leave it out"
         )
-    if binding.approved_rules_version == 0:
-        return "not recorded"
+    if binding.approved_rules_version == 0 or not binding.approved_by:
+        return "not recorded"  # a version without a name approves nothing
     return "" if binding.approved_rules_version == version else "pending"
 
 
@@ -61,7 +61,7 @@ def approval_line(binding: Binding, version: int) -> str:
             "set `approved_rules_version` only to the version the person approved "
             f"(this routewise ships rules spec version {version})."
         )
-    by = binding.approved_by or "_name not recorded_"
+    by = binding.approved_by
     on = binding.approved_on or "_date not recorded_"
     line = f"Approved by {by} on {on} for rules spec version {binding.approved_rules_version}."
     if state == "pending":

@@ -1327,6 +1327,7 @@ def test_the_migration_message_never_hands_out_the_shipped_version(project: Path
     result = run(project, "install")
 
     assert "approved_rules_version only to the version the person approved" in result.stderr
+    assert "ask them" in result.stderr and "records none" not in result.stderr
     assert "= 4" not in result.stderr
 
 
