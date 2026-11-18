@@ -50,8 +50,8 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R13, criterion 18. `make 
 **Description:** `templates/binding.md` gains the `judge` row. `README.md` gains "Asking a judge" (when, what to say, cost, Antigravity runs it on the session model, `[tiers]` and `[skills]`, `Needs access`, assistant mode). `ADOPT.md` mentions the role where it lists roles. `CHANGELOG.md` lines complete.
 
 **Acceptance criteria:**
-- [ ] A new install's `ROUTING-BINDING.md` holds the `judge` row (test).
-- [ ] README and ADOPT describe what the code does; README's role list names six roles.
+- [x] A new install's `ROUTING-BINDING.md` holds the `judge` row (test).
+- [x] README and ADOPT describe what the code does; README's role list names six roles.
 
 **Verification:** `make check`.
 

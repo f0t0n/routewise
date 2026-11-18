@@ -16,6 +16,7 @@ Installed 2026-11-14. Approved by: f0t0n (maintainer), 2026-11-14.
 | Assistant-mode reader delegation (A2) | None. |
 | Assistant model and effort pins (A3) | Not an assistant project. |
 | `auditor` | `deep` at `high` (R-A4). |
+| `judge` | `frontier` at `medium` (R-A7): runs only when the person asks for a judge on a decision. Approved by f0t0n (maintainer), 2026-11-18, with rules spec version 4 (R13). |
 | `reviewer` | `balanced` at `medium` (R-A5). If the main session implements on a higher tier, add a project role instead. |
 | Miss-log review (M1) | First review on 2026-11-28, then monthly. |
 | Findings caps | `reviewer` and `auditor` return every Critical and Required finding; only Optional and Nit are capped, at 5 (R-A2). |

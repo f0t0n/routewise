@@ -1145,3 +1145,13 @@ def test_the_rules_spec_fragment_matches_the_dev_judge_rule():
     line = next(x for x in dev.splitlines() if x.startswith("- Start `judge`"))
 
     assert line in rules
+
+
+def test_a_new_binding_records_the_judge(project: Path):
+    """R13: the judge's frontier tier is approved by adopting rules spec version 4 (section 12)."""
+    run(project, "install")
+    binding = (project / "ROUTING-BINDING.md").read_text()
+
+    row = next(x for x in binding.splitlines() if x.startswith("| `judge` |"))
+    assert "`frontier` at `medium` (R-A7)" in row
+    assert "only when the person asks" in row

@@ -4,7 +4,7 @@ Model routing and delegation for coding and assistant agents, set up by rules in
 
 routewise gives a project:
 
-- **Five subagents without write or edit tools**, each on the cheapest model that does its job well: `Explore` (file sweeps) on `haiku`, `log-reader` and `web-reader` on `haiku`, `reviewer` on `sonnet` at `medium`, `auditor` on `opus` at `high`. `reviewer` and `auditor` load a maintained checklist skill for what to check ([agent-skills](https://github.com/addyosmani/agent-skills) by default; see [Review checklists](#review-checklists)). The main session keeps the decisions and the edits. `log-reader`, `reviewer` and `auditor` keep `Bash` to run tests and read logs; their instructions allow only commands that read, but nothing sandboxes them.
+- **Six subagents without write or edit tools**, each on the cheapest model that does its job well: `Explore` (file sweeps) on `haiku`, `log-reader` and `web-reader` on `haiku`, `reviewer` on `sonnet` at `medium`, `auditor` on `opus` at `high`, and `judge` on `fable` at `medium`, which runs only when you ask for it (see [Asking a judge](#asking-a-judge)). `reviewer` and `auditor` load a maintained checklist skill for what to check ([agent-skills](https://github.com/addyosmani/agent-skills) by default; see [Review checklists](#review-checklists)). The main session keeps the decisions and the edits. `log-reader`, `reviewer` and `auditor` keep `Bash` to run tests and read logs; their instructions allow only commands that read, but nothing sandboxes them.
 - **A delegation block** in the project's `AGENTS.md`: what to delegate, what never to delegate, a parallel cap (5 by default), and an escalation ladder (add a check, then raise effort, then move one tier up).
 - **A miss log** (`routewise/bin/miss-log`) that records each delegated result that was wrong or redone, so roles change on evidence, not taste.
 
@@ -40,7 +40,7 @@ If the download fails, delete the empty `routewise/` folder it leaves before you
    |---|---|
    | `routewise.toml` | Settings: harnesses, instruction files, `claude_md`, `dev` or `assistant` mode, parallel cap, miss-log path, model pins. |
    | `ROUTING-BINDING.md` | The binding (spec section 9): fill in who approved it and the first miss-log review date. |
-   | `.claude/agents/*.md` | The five roles for Claude Code (and `.agents/agents/` for agy). |
+   | `.claude/agents/*.md` | The six roles for Claude Code (and `.agents/agents/` for agy). |
    | `AGENTS.md` | The delegation block, between `routewise:start` and `routewise:end` markers. Created if missing; the rest of the file is kept. |
    | `CLAUDE.md` or `.claude/CLAUDE.md` | Only when one already exists (or with `claude_md = "import"`): a routewise block holding just an `@AGENTS.md` import line. See below. |
    | `logs/delegation-misses.jsonl` | The empty miss log. |
@@ -97,6 +97,17 @@ A list replaces the role's own; keys are role file names (`reviewer`, `auditor`,
 - **Each reply starts with a `Checklist` line** that names each of the role's skills as `loaded` or `missing` (`Checklist: agent-skills:code-review-and-quality loaded`); the agent file lists the names, so the agent checks for them. A skill that is not installed, or was renamed, is skipped without an error and shows as `missing`; the role then reviews by its own method, and the `dev` delegation block tells the main session to say so once per session.
 - **The role's own rules win over the skill.** A skill step that would change a file (a mutation test, deleting unused code) comes back as a suggestion. With the `dev` block, the main session runs `reviewer`'s mutation suggestions itself, and a mutation the tests miss is a Required finding. A skill's severity names are mapped to Critical, Required, Optional and Nit.
 - **Antigravity CLI** (1.5.9) accepts the `skills:` line but does not load the skill yet, so there the roles use their own method and name their skills as `missing`; they pick the skill up once Antigravity does.
+
+## Asking a judge
+
+When a session offers you options (a question with choices, a list in its reply, a spec's open questions) and you cannot decide, answer **"ask a judge"** instead of choosing. The session then starts `judge`: an independent expert in the decision's field, on the strongest model (`fable` at `medium` on Claude Code), in a fresh context.
+
+- **The brief** holds the decision, its context and every option offered so far, word for word, but not the option the session favours, so the judge forms its own view.
+- **The judge** checks the facts the options rely on (files, docs, web pages), weighs each option on your goals, cost, risk and how hard it is to undo, and picks one or proposes a new one. It returns its recommendation, its confidence and up to three questions for you, in at most 40 lines. It cannot write, send or change anything.
+- **You decide.** The session shows you the question, the options with its own recommendation as before, and the judge's verdict, then waits. Follow the judge, pick another option, give your own, answer its questions, or ask for another round. The verdict is never taken as your choice or approval.
+- **Blocked pages:** if a page the judge needs is refused (a sandbox network policy, a login wall), it does not work around it. It gives its best call without the page and a `Needs access` line naming it; allow the access and the session runs the judge again with the same brief.
+- **Assistant mode** works the same way. The assistant runs on `balanced`; when you ask for a judge, it quotes what the decision needs from memory, connectors, mail or documents into the brief, with source and author and no secrets, and takes exact values from the source again afterwards.
+- **Cost:** `frontier` is the most expensive tier, which is why the session never starts a judge on its own. Change the model with `[tiers] frontier = "..."` and give the judge a skill with `[skills] judge = ["..."]` in `routewise.toml`. **Antigravity CLI** agent files cannot set a model, so there the judge runs on the session model and brings a fresh context only.
 
 **agent-skills' `/ship`** starts its own `code-reviewer` and `security-auditor` agents, which can write files and run on the session's model. To have `/ship` use routewise's read-only roles with the same checklists, turn on stand-ins in the projects where you run it:
 
