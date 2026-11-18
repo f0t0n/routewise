@@ -59,8 +59,8 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R14, criteria 2, 3, 19. `
 
 ## Checkpoint B: review (after Task 4)
 
-- [ ] `make check` green; `make self` no drift.
-- [ ] `reviewer` on R14's commits; `auditor` on S2 and S3; Critical and Required fixed (one more round scoped to a fix), Optional and Nit answered here; mutation suggestions run and recorded.
+- [x] `make check` green; `make self` no drift.
+- [x] `reviewer` on R14's commits; `auditor` on S2 and S3; Critical and Required fixed (one more round scoped to a fix), Optional and Nit answered here; mutation suggestions run and recorded.
 
 **Review record.**
 
@@ -70,6 +70,7 @@ Round 1 (2026-11-18, `7aedc0e..9b6819a`): `reviewer` (Checklist: `agent-skills:c
 - reviewer Optional 2 (a TOML date-time accepted): fixed. Optional 3 (non-UTF-8 binding traceback): fixed, a message naming the file. Optional 5 (the `= 4` example in the template): fixed, `N` with "only a version the person approved". Nit (install-level bad-value cases): kept, settings tests cover each value.
 - Round 2 (`auditor`, scoped to `9b6819a..88459b4`): one Required, README mapped releases to versions ("4 for 0.3.x", the version 0.4.0 ships) and said old bindings record no version (a 0.3.0 binding names version 4): fixed, set the version only when the old binding names it or the person confirms it; a test pins the README. Optional: the newer-than-shipped message said "set it to N" (fixed); a FIFO named `ROUTING-BINDING.md` hung the run (fixed: only a regular file is read; a test with `mkfifo` hung before the fix).
 - Round 3 (`auditor`, scoped to `e0f716a`): one Required, the README's "old binding names the version" rule trusted text 0.3.0's template wrote into every binding ("approved here by adopting rules spec version 4"), so a fresh 0.3.0 project could still be marked approved: fixed, the version comes only from asking the person, in every text; and the code backs it: a version without `approved_by` renders "approval not recorded" (test). Optional (stop message and SPEC.md said "an old binding records none"): aligned.
+- Round 4 (`auditor`, scoped to `aab5f61`): Round 3 closed, texts consistent, no Critical or Required; review closed. Optional (a blank name or the old `_who, when_` placeholder passed the name check): fixed, refused with a message. Nit (README quote wording): fixed. Mutation: dropping the name check in `status` fails the tests.
 - Mutations: `ord == 127` → the Cc category (removing it fails the DEL case); `>` → `>=` in `status`; `is False` → `is None` in `plan_binding`: all killed. During the first mutation run a `git checkout` restored uncommitted fixes to `lib/settings.py`; they were re-applied and committed before the next mutation.
 
 ## Task 5: verify the update path

@@ -38,6 +38,7 @@ BINDING_DATES = ("approved_on", "review_from")
 BINDING_KEYS = (*BINDING_TEXT, *BINDING_DATES, "approved_rules_version")
 ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 MAX_TEXT = 200
+PLACEHOLDER_NAME = "_who, when_"  # the pre-0.4.0 template's blank: not a name
 HIDDEN = ("Cc", "Cf", "Zl", "Zp")  # control, format (bidi), line and paragraph separators
 BREAKING = ("|", "<", "-->", "{{")  # a table cell, HTML, the marker's end, a placeholder
 
@@ -180,6 +181,11 @@ def binding(data: dict[str, Any]) -> Binding:
             f"{NAME}: [binding] approved_rules_version must be a whole number of at least 1"
         )
     texts = {key: binding_text(key, value.get(key, "")) for key in BINDING_TEXT}
+    by = texts["approved_by"]
+    if by and (not by.strip() or by.strip() == PLACEHOLDER_NAME):
+        raise SettingsError(
+            f'{NAME}: [binding] approved_by must name the person who approved, or be ""'
+        )
     dates = {key: binding_date(key, value.get(key, "")) for key in BINDING_DATES}
     return Binding(approved_rules_version=version, **texts, **dates)
 

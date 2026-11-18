@@ -33,8 +33,8 @@ Spec: [SPEC.md](../SPEC.md), R14, Objective items 4 and 5, success criteria 2, 3
 
 ### Checkpoint B (after Task 4)
 
-- [ ] `make check` green; `make self` no drift
-- [ ] Review: `reviewer` on R14's commits, `auditor` (S2, S3 touched: a file routewise now rewrites, and the stop on an unmarked one); findings fixed or answered; mutation suggestions run
+- [x] `make check` green; `make self` no drift
+- [x] Review: `reviewer` on R14's commits, `auditor` (S2, S3 touched: a file routewise now rewrites, and the stop on an unmarked one); findings fixed or answered; mutation suggestions run
 
 ### Phase 3: verify and ship
 
