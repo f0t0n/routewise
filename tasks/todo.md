@@ -100,7 +100,9 @@ Doc check (`reviewer`, `3dec1b3..776dd90`): approve, no findings beyond one Opti
 **Description:** Version `0.3.0` in `pyproject.toml`, `uv.lock` and every README `v=`; `## Unreleased` becomes `## 0.3.0 (<date>)`; `tasks/release-0.3.0.md` for users (the judge, how to ask, cost, add the binding row, the files the update rewrites, new session needed) checked by `reviewer`; archive check; annotated tag `v0.3.0` when asked; publish commands handed over.
 
 **Acceptance criteria:**
-- [ ] `make check` green with `0.3.0`; release notes reviewed; archive holds only runtime files.
+- [x] `make check` green with `0.3.0`; release notes reviewed; archive holds only runtime files.
+
+**Ship record (2026-11-18).** Released as `3384454`; `git archive HEAD` holds only R1's runtime files (with `roles/judge.md`). `reviewer` (Checklist: `agent-skills:code-review-and-quality` loaded) approved the release notes, the changelog and the reporting rule (`3b449fb`), no Critical or Required. Optional: name `judge.md` in the new-session reason (fixed); the reporting rule read as judge-only (fixed: a bullet of its own in the assistant block, A4 and R13 say it holds for any text; README says so); README lacked the rule (fixed). Nits kept: the binding row in the notes asks for a name and date, unlike the template; the tag comes with Ship. Mutations: removing the rule from the assistant block, removing it from A4: both killed. Tag `v0.3.0` at the maintainer's request ("spec, plan, build and ship").
 
 **Verification:** `make check`; `git archive HEAD | tar -t`.
 
