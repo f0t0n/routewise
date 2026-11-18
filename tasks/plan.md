@@ -32,8 +32,8 @@ A new read-only role, `judge` (`frontier` at `medium`), that the main session st
 
 ### Checkpoint B (after Task 4)
 
-- [ ] `make check` green; `make self` leaves no drift
-- [ ] Review: `reviewer` on R13's commits; `auditor` (approval rules, assistant-mode data in briefs); findings fixed or answered; mutation suggestions run
+- [x] `make check` green; `make self` leaves no drift
+- [x] Review: `reviewer` on R13's commits; `auditor` (approval rules, assistant-mode data in briefs); findings fixed or answered; mutation suggestions run
 
 ### Phase 3: verify and ship
 

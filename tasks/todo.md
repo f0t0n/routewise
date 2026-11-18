@@ -59,8 +59,8 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R13, criterion 18. `make 
 
 ## Checkpoint B: review (after Task 4)
 
-- [ ] `make check` green on the whole change; `make self` no drift.
-- [ ] `reviewer` on R13's commits and `auditor` on the approval and assistant-mode rules; Critical and Required fixed (one more round scoped to a fix), Optional and Nit answered here; mutation suggestions run and recorded.
+- [x] `make check` green on the whole change; `make self` no drift.
+- [x] `reviewer` on R13's commits and `auditor` on the approval and assistant-mode rules; Critical and Required fixed (one more round scoped to a fix), Optional and Nit answered here; mutation suggestions run and recorded.
 
 **Review record.**
 
@@ -80,6 +80,7 @@ Round 2 (2026-11-18, scoped to `be5bef7..91128f9`): `reviewer` approve; `auditor
 - reviewer Optional 1 (`own knowledge` pages never suggested) and 2 (R-A7 shorter than the block): both settled by the round-2 rewrite (every non-brief domain is `claimed by the judge`; R-A7 states the same rule). Optional 3 (README untested): kept, README is not a safety rule. Optional 4 (bullet length): kept as one bullet per rule set. Nit (path rule unpinned): fixed ("nothing from the brief in the path" pinned).
 
 Round 3 (2026-11-18, `auditor`, scoped to `91128f9..3dec1b3`): R1, R3, R4 closed; R2 closed in every shipped file. One Required: `SPEC.md` R13's README bullet still trusted the source tag: fixed (allow only a site the person knows and would allow anyway). Optional: R-A7's "never read the text" overstated (fixed: quoted text comes along, so no domain is recommended); the DNS row's conclusion (fixed: observation only). Nits fixed: "may run you again", a comma splice, "outside any quoted passage" in README. Status line records the acceptance of the residual risks. A doc-only fix, so per the stopping rule a `reviewer` check of this diff closes the review.
+Doc check (`reviewer`, `3dec1b3..776dd90`): approve, no findings beyond one Optional ("no answer" wording for DNS in SPEC.md and README; kept, consistent as is). Review closed.
 
 ## Task 5: live runs on Claude Code
 
