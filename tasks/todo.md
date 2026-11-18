@@ -62,6 +62,14 @@ Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R14, criteria 2, 3, 19. `
 - [ ] `make check` green; `make self` no drift.
 - [ ] `reviewer` on R14's commits; `auditor` on S2 and S3; Critical and Required fixed (one more round scoped to a fix), Optional and Nit answered here; mutation suggestions run and recorded.
 
+**Review record.**
+
+Round 1 (2026-11-18, `7aedc0e..9b6819a`): `reviewer` (Checklist: `agent-skills:code-review-and-quality` loaded) approve; `auditor` (Checklist: `agent-skills:security-and-hardening` loaded) one Required.
+- auditor Required 1 (the not-recorded line, the migration message and README named the shipped version, so an agent following them would approve rules spec 4 for a project that approved 3): fixed in `88459b4`; every text now says to set `approved_rules_version` only to a version the person approved, and never prints the shipped number as the value to set; tests pin both.
+- auditor Optional 1 and reviewer Optional 1 (placeholders in values expanded again): fixed, one-pass render and `{{` refused. auditor Optional 2 and reviewer Optional 4 (Unicode separators, bidi, HTML): fixed, categories Cc, Cf, Zl, Zp and `<` refused. auditor Optional 3 (a symlinked binding replaced or deleted): fixed, install stops on a symlink and uninstall keeps it; tests for a link inside and a dangling one (a link out was already refused by `inside()`). auditor Optional 4 (tier map hard-coded): fixed, rendered from `harness.toml` with `[tiers]`; the remaining point (a `balanced` override to a strong model is not flagged) is kept: the binding cannot rank models. auditor Nit 5 (folder or dangling binding messages; AGENTS.md "edited by hand"): fixed.
+- reviewer Optional 2 (a TOML date-time accepted): fixed. Optional 3 (non-UTF-8 binding traceback): fixed, a message naming the file. Optional 5 (the `= 4` example in the template): fixed, `N` with "only a version the person approved". Nit (install-level bad-value cases): kept, settings tests cover each value.
+- Mutations: `ord == 127` → the Cc category (removing it fails the DEL case); `>` → `>=` in `status`; `is False` → `is None` in `plan_binding`: all killed. During the first mutation run a `git checkout` restored uncommitted fixes to `lib/settings.py`; they were re-applied and committed before the next mutation.
+
 ## Task 5: verify the update path
 
 **Description:** In a scratch project installed from `v0.3.0`, run the update to the release tree: the run stops with exit 2 and the fix; follow the fix (values into `[binding]`, delete the binding), re-run: the binding renders with the approval line; set `approved_rules_version = 3` and see "approval pending". Recorded in `tasks/todo.md`.
