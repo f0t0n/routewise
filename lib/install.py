@@ -335,9 +335,11 @@ def claude_notes(plan: Plan, chosen: Settings, covered: set[Path]) -> list[str]:
     return notes
 
 
-def binding_values(root: Path, harnesses: list[Harness]) -> dict[str, str]:
+def binding_values(root: Path, chosen: Settings, harnesses: list[Harness]) -> dict[str, str]:
     """The paths and commands the binding names, spelled from the project root (R3)."""
+    tiers = all_harnesses(chosen.tiers)["cc"].tiers
     return {
+        "{{tier_map}}": ", ".join(f"`{tier}` → `{model}`" for tier, model in tiers.items()),
         "{{template}}": label(HOME / "templates" / "binding.md", root),
         "{{spec}}": label(HOME / "spec" / "SPEC-model-routing.md", root),
         "{{install}}": rerun(root),
@@ -353,23 +355,37 @@ def own_binding(root: Path) -> bool | None:
     path = root / BINDING
     if not present(path):
         return None
-    return binding.is_generated(read_exact(inside(root, path)))
+    if path.is_symlink():
+        return False
+    if path.is_dir():
+        raise Fail(f"{BINDING} is a folder; move it out of the way and re-run")
+    try:
+        return binding.is_generated(read_exact(inside(root, path)))
+    except (OSError, UnicodeDecodeError) as err:
+        raise Fail(f"{BINDING} cannot be read as text ({err}); move it out of the way") from err
 
 
 def plan_binding(plan: Plan, chosen: Settings, harnesses: list[Harness], roles: list[Role]) -> None:
     """Render ROUTING-BINDING.md from the roles and [binding]; never over a file of the user's."""
+    if (plan.root / BINDING).is_symlink():
+        raise Fail(
+            f"{BINDING} is a symlink; routewise writes the binding only as a plain file it "
+            f"generated: remove the link and re-run {rerun(plan.root)}"
+        )
     if own_binding(plan.root) is False:
         raise Fail(
             f"{BINDING} was not written by routewise (it was hand-filled before 0.4.0); "
-            f"move its approval, assistant pins and review date into [binding] in "
-            f"{settings.NAME}, delete {BINDING}, and re-run {rerun(plan.root)}"
+            f"move its approver, assistant pins and review date into [binding] in "
+            f"{settings.NAME}, and set approved_rules_version only to the version the person "
+            f"approved (an old binding records none: leave it unset or ask them); then delete "
+            f"{BINDING} and re-run {rerun(plan.root)}"
         )
     spec = (HOME / "spec" / "SPEC-model-routing.md").read_text(encoding="utf-8")
     try:
         version = binding.rules_version(spec)
         text = binding.render(
             (HOME / "templates" / "binding.md").read_text(encoding="utf-8"),
-            binding_values(plan.root, harnesses),
+            binding_values(plan.root, chosen, harnesses),
             roles,
             chosen.binding,
             version,

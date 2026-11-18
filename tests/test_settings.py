@@ -155,6 +155,13 @@ def test_binding_takes_a_toml_date_as_well():
         ("[binding]\napproved_rules_version = 0", "approved_rules_version must be a whole"),
         ("[binding]\napproved_rules_version = true", "approved_rules_version must be a whole"),
         ('[binding]\nnotes = "why"', r"\[binding\] notes is not one of"),
+        ('[binding]\napproved_by = "a\\u007fb"', "must be one line"),
+        ('[binding]\napproved_by = "a\u2028b"', "must be one line"),
+        ('[binding]\napproved_by = "a\u0085b"', "must be one line"),
+        ('[binding]\napproved_by = "a\u202eb"', "must be one line"),
+        ('[binding]\napproved_by = "<b>Ann</b>"', "must not hold"),
+        ('[binding]\napproved_by = "Ann {{role_rows}}"', "must not hold"),
+        ("[binding]\napproved_on = 2026-11-18T10:00:00", r"\[binding\] approved_on must be a date"),
     ],
 )
 def test_binding_refuses_bad_values(source: str, message: str):

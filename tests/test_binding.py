@@ -20,6 +20,8 @@ VALUES = {
     "{{miss_log}}": "routewise/bin/miss-log",
     "{{agent_dirs}}": "`.claude/agents/` (cc)",
     "{{template}}": "routewise/templates/binding.md",
+    "{{tier_map}}": "`fast` → `haiku`, `balanced` → `sonnet`, "
+    "`deep` → `opus`, `frontier` → `fable`",
 }
 APPROVED = Binding("Ann (maintainer)", "2026-11-18", 4, "not an assistant project", "2026-12-02")
 
@@ -93,3 +95,27 @@ def test_rules_version_is_read_from_the_shipped_spec():
     assert rules_version(spec) >= 4
     with pytest.raises(BindingError, match="no version line"):
         rules_version("# Spec\n\nno version here\n")
+
+
+def test_values_are_never_expanded_again():
+    """A value holding a placeholder stays text (settings refuses `{{`; render is one pass)."""
+    pins = replace(APPROVED, assistant_pins="pins {{role_rows}}")
+
+    out = text(pins)
+
+    assert "| Assistant model and effort pins (A3) | pins {{role_rows}} |" in out
+
+
+def test_not_recorded_never_names_the_shipped_version_as_the_one_to_set():
+    out = text(Binding())
+
+    assert "approved_rules_version = 4" not in out
+    assert "only to the version the person approved" in out
+
+
+def test_the_tier_map_is_rendered_with_overrides():
+    values = {**VALUES, "{{tier_map}}": "`fast` → `claude-haiku-5-5`"}
+
+    out = render(TEMPLATE, values, ROLES, APPROVED, 4)
+
+    assert "Claude Code: `fast` → `claude-haiku-5-5`." in out

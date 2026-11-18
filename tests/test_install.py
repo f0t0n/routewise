@@ -1316,3 +1316,58 @@ def test_a_hand_edit_to_the_binding_is_drift_and_is_overwritten(project: Path):
     assert run(project, "install", "--check").returncode == 1
     run(project, "install")
     assert path.read_text() == generated
+
+
+def test_the_migration_message_never_hands_out_the_shipped_version(project: Path):
+    """Audit: an old binding records no version, so the fix must not say which one to set."""
+    run(project, "install")
+    (project / BINDING).write_text(OLD_BINDING)
+
+    result = run(project, "install")
+
+    assert "approved_rules_version only to the version the person approved" in result.stderr
+    assert "= 4" not in result.stderr
+
+
+@pytest.mark.parametrize("kind", ["inside", "dangling"])
+def test_a_symlinked_binding_is_never_replaced(project: Path, kind: str):
+    run(project, "install")
+    path = project / BINDING
+    if kind == "inside":
+        target = project / "docs-binding.md"
+        target.write_text(path.read_text())
+    else:
+        target = project / "missing.md"
+    path.unlink()
+    path.symlink_to(target.name)
+
+    result = run(project, "install")
+    kept = run(project, "install", "--uninstall")
+
+    assert result.returncode == 2
+    assert "is a symlink" in result.stderr
+    assert path.is_symlink() and kept.returncode == 0
+
+
+def test_a_folder_or_unreadable_binding_stops_with_a_message(project: Path):
+    run(project, "install")
+    path = project / BINDING
+    path.unlink()
+    path.write_bytes(b"\xff\xfe not utf-8")
+
+    result = run(project, "install")
+
+    assert result.returncode == 2
+    assert result.stderr.startswith("routewise: ROUTING-BINDING.md")
+    path.unlink()
+    path.mkdir()
+    assert run(project, "install").stderr.startswith("routewise: ROUTING-BINDING.md")
+
+
+def test_the_binding_shows_tier_overrides(project: Path):
+    run(project, "install")
+    set_config(project, '# fast = "claude-haiku-5-5"', 'fast = "claude-haiku-5-5"')
+
+    run(project, "install")
+
+    assert "Claude Code: `fast` → `claude-haiku-5-5`, " in (project / BINDING).read_text()

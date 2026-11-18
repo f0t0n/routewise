@@ -2,6 +2,7 @@
 
 import re
 import tomllib
+import unicodedata
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
@@ -37,6 +38,8 @@ BINDING_DATES = ("approved_on", "review_from")
 BINDING_KEYS = (*BINDING_TEXT, *BINDING_DATES, "approved_rules_version")
 ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 MAX_TEXT = 200
+HIDDEN = ("Cc", "Cf", "Zl", "Zp")  # control, format (bidi), line and paragraph separators
+BREAKING = ("|", "<", "-->", "{{")  # a table cell, HTML, the marker's end, a placeholder
 
 
 @dataclass(frozen=True)
@@ -138,10 +141,10 @@ def binding_text(key: str, value: Any) -> str:
     where = f"{NAME}: [binding] {key}"
     if not isinstance(value, str):
         raise SettingsError(f'{where} must be text, such as "Ann (maintainer)"')
-    if any(ord(char) < 32 or ord(char) == 127 for char in value):
+    if any(unicodedata.category(char) in HIDDEN for char in value):
         raise SettingsError(f"{where} must be one line, with no tabs or control characters")
-    if "|" in value or "-->" in value:
-        raise SettingsError(f"{where} must not hold | or -->, which would break the binding")
+    if any(mark in value for mark in BREAKING):
+        raise SettingsError(f"{where} must not hold | < --> or {{{{, which would break the binding")
     if len(value) > MAX_TEXT:
         raise SettingsError(f"{where} must be at most {MAX_TEXT} characters")
     return value
@@ -149,7 +152,7 @@ def binding_text(key: str, value: Any) -> str:
 
 def binding_date(key: str, value: Any) -> str:
     """A date as YYYY-MM-DD: a TOML date or a string in that form."""
-    if isinstance(value, date):
+    if type(value) is date:  # a TOML date; a date-time is refused
         return value.isoformat()
     if isinstance(value, str) and (value == "" or ISO_DATE.fullmatch(value)):
         try:

@@ -55,6 +55,6 @@ miss_log = "logs/delegation-misses.jsonl"
 [binding]
 approved_by = ""          # who approved the routing, e.g. "Ann (maintainer)"
 approved_on = ""          # when, as "YYYY-MM-DD"
-# approved_rules_version = 4   # the rules spec version approved (its first line)
+# approved_rules_version = N   # only a version the person approved (see the rules spec's first line)
 assistant_pins = ""       # assistant model and effort pins (A3), or "not an assistant project"
 review_from = ""          # first miss-log review, as "YYYY-MM-DD"; then monthly
