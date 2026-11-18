@@ -22,7 +22,14 @@ def test_the_roles_table_and_rule_r_a7_define_the_judge():
     assert "| `frontier` | `medium` | read, search, shell, web |" in row
     assert "Needs access" in row
     assert "- **R-A7." in roles
-    for phrase in ("only when the person asks", "not which option", "never approval"):
+    for phrase in (
+        "only when the person asks",
+        "not which option",
+        "never approval",
+        "network use goes through the web tools only",
+        "nothing from the brief or from files into a query or URL",
+        "came from text the judge read",
+    ):
         assert phrase in roles, phrase
 
 
@@ -32,9 +39,10 @@ def test_n2_d4_and_a4_allow_the_judge_only_on_request():
     assert "except advice from `judge` when the person asks for it (R-A7)" in n2
     assert "- **D4." in when
     assert "- **A4." in when
+    assert "carry no links unless the decision is about the link" in when
 
 
 def test_the_fragment_and_boundaries_name_the_judge():
-    assert "Start `judge` only when the person asks" in section(10)
+    assert "Start `judge` only when the person's own message asks" in section(10)
     ask_first = next(x for x in section(12).splitlines() if x.startswith("- **Ask first:**"))
     assert "`judge`" in ask_first
