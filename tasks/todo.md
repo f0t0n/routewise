@@ -78,7 +78,9 @@ Round 1 (2026-11-18, `7aedc0e..9b6819a`): `reviewer` (Checklist: `agent-skills:c
 **Description:** In a scratch project installed from `v0.3.0`, run the update to the release tree: the run stops with exit 2 and the fix; follow the fix (values into `[binding]`, delete the binding), re-run: the binding renders with the approval line; set `approved_rules_version = 3` and see "approval pending". Recorded in `tasks/todo.md`.
 
 **Acceptance criteria:**
-- [ ] Each step behaves as R14 says; a failure fixes the code and runs again.
+- [x] Each step behaves as R14 says; a failure fixes the code and runs again.
+
+**Update-path record (2026-11-18,** a scratch project installed from `git archive v0.3.0`, its binding's "Approved by" filled in, then `routewise/` replaced by `git archive HEAD` at `f02ceda`): (1) `routewise/install` stopped, exit 2, with the fix (ask the person for the version; no proof in old text); only `routewise/` differed in `git status`. (2) `[binding]` filled with approver, date, pins and review date, no version; binding deleted; re-run: the generated binding says "Approval not recorded" and marks `judge` "(approval not recorded)". (3) `approved_rules_version = 3`: "Approved by … for rules spec version 3. **Approval pending:** rules spec version 4 (approved: 3)", `judge` "(approval pending)", the pending line printed, `--check` exit 0. (4) `= 4`: "Approved by … for rules spec version 4", `judge` unmarked, no "pending" left.
 
 **Verification:** the recorded commands and outputs.
 

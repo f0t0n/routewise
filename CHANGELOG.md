@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 (2026-11-18)
 
 - `ROUTING-BINDING.md` is generated: rendered on every run from the shipped roles, the harness map and `[binding]` in `routewise.toml`, with a marker as its first line (spec R14). A new role or a changed tier reaches the binding with the update; there is no hand edit. The "Installed" date line is gone (git history has it), and the role rows give tier and effort only (the rules spec gives the reasons).
 - Approval: the binding shows "Approved by … for rules spec version N", "approval not recorded", or, when `approved_rules_version` is older than the shipped rules spec, "approval pending" with each `frontier` role marked; the installer prints the pending line too. A pending approval never fails a run or `--check`, and nothing in an update can approve: routewise never writes `routewise.toml` after the first run.
