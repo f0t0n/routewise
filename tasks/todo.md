@@ -91,7 +91,9 @@ Round 1 (2026-11-18, `7aedc0e..9b6819a`): `reviewer` (Checklist: `agent-skills:c
 **Description:** Version `0.4.0` in `pyproject.toml`, `uv.lock` and every README `v=`; `## Unreleased` becomes `## 0.4.0 (<date>)`; `tasks/release-0.4.0.md` for users (what changed, the one-time migration step, approval) checked by `reviewer`; archive check; annotated tag `v0.4.0` when asked; publish commands handed over.
 
 **Acceptance criteria:**
-- [ ] `make check` green with `0.4.0`; release notes reviewed; archive holds only runtime files.
+- [x] `make check` green with `0.4.0`; release notes reviewed; archive holds only runtime files.
+
+**Ship record (2026-11-18).** Released as `078bf71`; `git archive HEAD` holds only R1's runtime files (with `lib/binding.py`); `spec/`, `roles/`, `harness.toml` and both fragments unchanged since v0.3.0. `reviewer` (Checklist: `agent-skills:code-review-and-quality` loaded) on the notes and changelog: Required 1 ("0.3.0 wrote it into every binding": only a fresh 0.3.0 install did) fixed in the notes and README; Optional 1 (a literal `approved_rules_version = 4` in the copy-paste example) fixed to a commented `N` with "ask them"; Optional 2 (value checks incomplete) fixed in notes and changelog; Optional 3 (a hand edit that removes the marker stops instead) fixed; Nit (a folder binding fails uninstall) kept, edge case. Doc-only fixes, so no further round. Tag `v0.4.0` only when the maintainer asks.
 
 **Verification:** `make check`; `git archive HEAD | tar -t`.
 

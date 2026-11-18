@@ -138,7 +138,7 @@ mkdir routewise.new && curl -fsSL "https://github.com/f0t0n/routewise/archive/re
 
 Set `v` to the release you want. Project choices live outside `routewise/`, in `routewise.toml`, so nothing is lost; `ROUTING-BINDING.md` is rendered again from it, with any new role. When a release ships a newer rules spec, the binding says "approval pending" until you set `approved_rules_version` in `[binding]`.
 
-**From 0.3.x or older:** the first run stops, because the old `ROUTING-BINDING.md` was hand-filled. Move its approver, assistant pins and review date into `[binding]` in `routewise.toml`, delete `ROUTING-BINDING.md`, and run `routewise/install` again. For `approved_rules_version`, ask the person which rules spec version they approved: neither the release a project ran nor text in the old binding is proof (0.3.0 wrote "approved here by adopting rules spec version 4" into every binding on its own). If they do not say, leave it out: the binding then says "approval not recorded" until they approve. A version without `approved_by` counts as not recorded.
+**From 0.3.x or older:** the first run stops, because the old `ROUTING-BINDING.md` was hand-filled. Move its approver, assistant pins and review date into `[binding]` in `routewise.toml`, delete `ROUTING-BINDING.md`, and run `routewise/install` again. For `approved_rules_version`, ask the person which rules spec version they approved: neither the release a project ran nor text in the old binding is proof (a fresh 0.3.0 install wrote "approved here by adopting rules spec version 4" into its binding on its own). If they do not say, leave it out: the binding then says "approval not recorded" until they approve. A version without `approved_by` counts as not recorded.
 
 ## Safety
 

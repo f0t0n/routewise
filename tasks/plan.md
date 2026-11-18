@@ -39,7 +39,7 @@ Spec: [SPEC.md](../SPEC.md), R14, Objective items 4 and 5, success criteria 2, 3
 ### Phase 3: verify and ship
 
 - [x] Task 5: verify the update path on a project installed with 0.3.0
-- [ ] Task 6: release 0.4.0
+- [x] Task 6: release 0.4.0
 
 ## Risks and mitigations
 
