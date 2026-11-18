@@ -37,7 +37,7 @@ A new read-only role, `judge` (`frontier` at `medium`), that the main session st
 
 ### Phase 3: verify and ship
 
-- [ ] Task 5: live runs on Claude Code, recorded in rules spec section 13
+- [x] Task 5: live runs on Claude Code, recorded in rules spec section 13
 - [ ] Task 6: release 0.3.0
 
 ## Risks and mitigations

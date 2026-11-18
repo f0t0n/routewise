@@ -87,7 +87,9 @@ Doc check (`reviewer`, `3dec1b3..776dd90`): approve, no findings beyond one Opti
 **Description:** In a scratch project with routewise installed (dev block): (1) a session offers options and the person says "ask a judge": the transcript shows `judge` on `fable` at `medium`, a brief with every option and without the main session's preference, a return in R13's shape, and a main session that shows question, options and verdict and waits; (2) a decision prompt without "ask a judge" does not start `judge`; (3) a decision that needs a blocked page returns a `Needs access` line and no workaround. One assistant-block run checks that quoted data arrives as data. Recorded as a dated entry in rules spec section 13.
 
 **Acceptance criteria:**
-- [ ] Each run's result recorded with the Claude Code version and date; a failure fixes the role or the rule and runs again.
+- [x] Each run's result recorded with the Claude Code version and date; a failure fixes the role or the rule and runs again.
+
+**Live-run record (2026-11-18):** five runs in rules spec section 13, all passed on safety and shape. Observation: in assistant mode the main session dropped an injected paragraph from a quoted mail without telling the person; a clause to report it is put to the maintainer. The maintainer accepted R13's residual risks (WebSearch queries, shell reads past Read deny rules, whole-domain allows) on 2026-11-18 ("go ahead").
 
 **Verification:** transcripts read by `log-reader`; the section 13 entry.
 
