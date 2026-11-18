@@ -89,7 +89,7 @@ Doc check (`reviewer`, `3dec1b3..776dd90`): approve, no findings beyond one Opti
 **Acceptance criteria:**
 - [x] Each run's result recorded with the Claude Code version and date; a failure fixes the role or the rule and runs again.
 
-**Live-run record (2026-11-18):** five runs in rules spec section 13, all passed on safety and shape. Observation: in assistant mode the main session dropped an injected paragraph from a quoted mail without telling the person; a clause to report it is put to the maintainer. The maintainer accepted R13's residual risks (WebSearch queries, shell reads past Read deny rules, whole-domain allows) on 2026-11-18 ("go ahead").
+**Live-run record (2026-11-18):** five runs in rules spec section 13, all passed on safety and shape. Observation: in assistant mode the main session dropped an injected paragraph from a quoted mail without telling the person; a clause to report it was approved by the maintainer and added (3b449fb); a sixth run shows the person is now told. The maintainer accepted R13's residual risks (WebSearch queries, shell reads past Read deny rules, whole-domain allows) on 2026-11-18 ("go ahead").
 
 **Verification:** transcripts read by `log-reader`; the section 13 entry.
 
