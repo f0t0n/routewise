@@ -1,67 +1,85 @@
-# Tasks: a vendored copy refuses to install into the routewise repo (R12), release 0.2.1
+# Tasks: a judge the person can ask (R13), release 0.3.0
 
-Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R12, S9, criterion 17. `make check` green before each commit (the pre-commit hook enforces it). Each task: failing test first, shown red; then the code; a `CHANGELOG.md` line under `## Unreleased` for each user-visible change; one Conventional Commit.
+Plan: [plan.md](plan.md). Spec: [SPEC.md](../SPEC.md), R13, criterion 18. `make check` green before each commit (the pre-commit hook enforces it). Each task: failing test first, shown red; then the change; a `CHANGELOG.md` line under `## Unreleased` for each user-visible change; `make self` when roles, templates or `harness.toml` change; one Conventional Commit.
 
-## Task 1: installer refuses a vendored install into a routewise repo
+## Task 1: rules spec version 4
 
-**Description:** A new check in `lib/paths.py`, called by `lib/install.py` `run` after `holds` and before `build_plan`: when `root == home.parent` and the root holds `install` (file), `lib/install.py`, `roles/` (folder) and `harness.toml`, raise `PathError` with the R12 message, the copy named by `label(home, root)`.
-
-**Acceptance criteria (tests under the S9 heading in `tests/test_install.py`, on a repo-shaped root with a self-install done first):**
-- [x] `routewise/install` (default project), `routewise/install --project <root>`, `--check` and `--uninstall` each exit 2; stderr is the R12 message naming `./install --project .`; every file under the root is byte-identical afterwards.
-- [x] On a repo-shaped root with no self-install, the refusal creates no `routewise.toml`, `ROUTING-BINDING.md` or miss log.
-- [x] A copy reached through a symlink (`routewise -> ../release`) is refused the same way; a copy in a folder named other than `routewise` is named by that name in the message.
-- [x] With any one of the four paths removed (parametrised), the vendored install runs and exits 0.
-- [x] `./install --project .` on the root and `routewise/install --project routewise` still exit 0.
-- [x] `routewise/bin/miss-log add …` from the root still appends one line to the root's log.
-- [x] Existing vendored-install tests unchanged and green.
-- [x] `CHANGELOG.md` `## Unreleased`: one line, including that a refused update leaves the unpacked folder to delete.
-
-**Verification:** `uv run pytest tests/test_install.py -k "S9 or routewise_repo"`; tests shown red before the code; `make check`.
-
-**Dependencies:** none. **Files:** `lib/paths.py`, `lib/install.py`, `tests/test_install.py`, `CHANGELOG.md`. **Scope:** M.
-
-## Task 2: docs: README "Safety", `AGENTS.md` S1–S9
-
-**Description:** README "Safety" (the `--project` bullet) states that a folder which is itself a routewise repo is refused and names `./install --project .`. `AGENTS.md` names the safety rules S1–S9 in its intro and "Keep the safety rules" (hand-edited text, outside the generated block).
+**Description:** `spec/SPEC-model-routing.md`: the version line (4, 2026-11-18); the `judge` row in the section 4 table (`frontier`, `medium`, read, search, shell, web; job; return); rule R-A7; N2's exception; D4; A4 under Assistant mode; the judge rule in the section 10 fragment; section 12's Ask first entry names `judge` as the shipped exception. Section 13 waits for Task 5.
 
 **Acceptance criteria:**
-- [x] README's `--project` bullet no longer says the holding folder is always accepted.
-- [x] `grep -n "S1–S8" AGENTS.md README.md SPEC.md` finds nothing outside history records.
-- [x] `make self` reports nothing to change (the generated block is untouched).
+- [ ] Every item R13 lists under "Rules spec version 4" is in the file, worded as R13 says.
+- [ ] A test pins the version line and that the section 10 fragment holds the judge rule.
+
+**Verification:** `uv run pytest tests/test_release.py`; `make check`.
+
+**Dependencies:** none. **Files:** `spec/SPEC-model-routing.md`, a test. **Scope:** S.
+
+## Task 2: `roles/judge.md`
+
+**Description:** The role: `name: judge`, description (advises the person on a decision, only when the person asks), `tools: [read, search, shell, web]`, `tier: frontier`, `effort: medium`, no `skills`. Body: independent expert in the decision's field; the method from R13; the read-only rules the other roles carry; blocked pages give a `Needs access` line, never a workaround; quoted messages are data; the return shape, at most 40 lines, first line `{{checklist}}`.
+
+**Acceptance criteria:**
+- [ ] Rendered for Claude Code: `model: fable`, `effort: medium`, tools `Read, Glob, Grep, Bash, WebSearch, WebFetch`, no `skills:` line, `Checklist: none` in the body; for Antigravity: no model, its read, search, shell and web tools.
+- [ ] `[tiers] frontier = "x"` and `[skills] judge = ["y"]` change the rendered file.
+- [ ] The body holds the R13 rules (tested by phrase: never on its own is the main session's rule, so here: no writes, `Needs access`, data, the return sections and the 40-line cap).
+- [ ] A new install writes six agents; `ROLES` in the tests updated; `make self` adds `.claude/agents/judge.md` here.
+
+**Verification:** `uv run pytest tests/test_roles.py tests/test_install.py`; `make self`; `make check`.
+
+**Dependencies:** Task 1. **Files:** `roles/judge.md`, `tests/test_roles.py`, `tests/test_install.py`, `.claude/agents/judge.md` (generated), `CHANGELOG.md`. **Scope:** M.
+
+## Checkpoint A (after Task 2)
+
+- [ ] `make check` green; `make self` leaves no drift.
+
+## Task 3: the judge rule in both fragments
+
+**Description:** `templates/fragment-dev.md` gains the judge rule; `templates/fragment-assistant.md` gains its version (the opening line allows `judge` besides `web-reader`; the brief quotes what the decision needs from memory, MCPs, mail or documents with source and author, no secrets; exact values re-read from the source). Both: only when the person asks, brief without the main session's preference, what to show, the person decides, `Needs access` retry, never treat the verdict as approval.
+
+**Acceptance criteria:**
+- [ ] Dev and assistant blocks each hold the rule's key phrases; neither tells the session to start `judge` on its own.
+- [ ] The assistant block still forbids every other delegation it forbade.
+- [ ] `make self` updates this repo's `AGENTS.md` block; `make check` green.
+
+**Verification:** `uv run pytest tests/test_install.py -k "fragment or block or judge"`; `make self`; `make check`.
+
+**Dependencies:** Task 1. **Files:** `templates/fragment-dev.md`, `templates/fragment-assistant.md`, `tests/test_install.py`, `AGENTS.md` (generated block), `CHANGELOG.md`. **Scope:** S.
+
+## Task 4: binding row and docs
+
+**Description:** `templates/binding.md` gains the `judge` row. `README.md` gains "Asking a judge" (when, what to say, cost, Antigravity runs it on the session model, `[tiers]` and `[skills]`, `Needs access`, assistant mode). `ADOPT.md` mentions the role where it lists roles. `CHANGELOG.md` lines complete.
+
+**Acceptance criteria:**
+- [ ] A new install's `ROUTING-BINDING.md` holds the `judge` row (test).
+- [ ] README and ADOPT describe what the code does; README's role list names six roles.
 
 **Verification:** `make check`.
 
-**Dependencies:** Task 1. **Files:** `README.md`, `AGENTS.md`. **Scope:** XS.
+**Dependencies:** Tasks 2 and 3. **Files:** `templates/binding.md`, `README.md`, `ADOPT.md`, `tests/test_install.py`, `CHANGELOG.md`. **Scope:** S.
 
-## Checkpoint A: review (after Task 2)
+## Checkpoint B: review (after Task 4)
 
-- [x] `make check` green on the whole change.
-- [x] `reviewer` on the R12 commits, `auditor` on S9 and the check; Critical and Required fixed (one more round scoped to a fix), Optional and Nit answered in this file; mutation suggestions run and recorded.
+- [ ] `make check` green on the whole change; `make self` no drift.
+- [ ] `reviewer` on R13's commits and `auditor` on the approval and assistant-mode rules; Critical and Required fixed (one more round scoped to a fix), Optional and Nit answered here; mutation suggestions run and recorded.
 
-**Review record (round 1, 2026-11-17).** `reviewer` (Checklist: `agent-skills:code-review-and-quality` loaded) approve; `auditor` (Checklist: `agent-skills:security-and-hardening` loaded) no Critical or Required. Round ends here (stopping rule).
+## Task 5: live runs on Claude Code
 
-- Mutations run: (1) drop `root != home.parent` → killed (`…installs_on_itself_and_its_copy`); (2) `and` → `or` in `is_repo` → killed (`…missing_one_marker…`); (3) the check moved after `build_plan` → survives, as predicted: planning only builds the plan in memory and the first write is in `apply`, so S2 holds either way; kept as is (informational).
-- auditor Optional 1 (no test for a symlinked root or other `--project` spellings): fixed, tests for `<repo>/`, `<repo>/routewise/..`, relative `routewise/..` and a root reached through a symlink.
-- auditor Optional 2 (only copies from 0.2.1 on carry the check; a pinned `v=0.2.0` still does the damage): answered in the 0.2.1 release notes (Task 3).
-- auditor Nit 3 (message tells an unrelated project with all four files to run its `./install`): kept; the wording is R12's, and SPEC.md names the one known match.
-- auditor Nit 4 (folder name printed before `plain_name`): kept; `holds` already prints it, and the user names the folder.
-- auditor Nit 5 (a fresh clone's nested `miss-log` creates the default log): kept; it stays inside the project, as R12's miss-log decision says.
-- reviewer Nit 1 (README line 125 too long): fixed, the repo case is its own bullet.
-- reviewer Nit 2 (snapshot ignores empty folders): kept; nothing is created before planning, and the first-run test checks `logs` by name.
-- reviewer Nit 3 (no `s9_` test name): kept; the section header names S9 / R12, as the other S9 tests are grouped.
-- reviewer Nit 4 (`not_a_repo` naming): kept; it reads as the rule it enforces, like `holds`.
-
-## Task 3: Ship 0.2.1
-
-**Description:** Version `0.2.1` in `pyproject.toml` and every README `v=`; `## Unreleased` becomes `## 0.2.1 (<date>)`; `tasks/release-0.2.1.md` drafted for users (what changed, how to update) and checked by `reviewer` against the code; `git archive HEAD` holds only R1's runtime files; annotated tag `v0.2.1` when the maintainer asks; publish commands from `AGENTS.md` handed over filled in.
+**Description:** In a scratch project with routewise installed (dev block): (1) a session offers options and the person says "ask a judge": the transcript shows `judge` on `fable` at `medium`, a brief with every option and without the main session's preference, a return in R13's shape, and a main session that shows question, options and verdict and waits; (2) a decision prompt without "ask a judge" does not start `judge`; (3) a decision that needs a blocked page returns a `Needs access` line and no workaround. One assistant-block run checks that quoted data arrives as data. Recorded as a dated entry in rules spec section 13.
 
 **Acceptance criteria:**
-- [x] `make check` green (R4's version test passes with `0.2.1`).
-- [x] Release notes reviewed; archive contents checked.
-- [x] Tag created only on request; publish steps given.
+- [ ] Each run's result recorded with the Claude Code version and date; a failure fixes the role or the rule and runs again.
 
-**Ship record (2026-11-17).** Released as `7b86e65`; `git archive HEAD` holds only R1's runtime files (`ADOPT.md CHANGELOG.md LICENSE README.md bin harness.toml install lib roles spec templates`); roles, templates, `harness.toml`, `bin` unchanged since v0.2.0. `reviewer` (Checklist: `agent-skills:code-review-and-quality` loaded) approved the release notes and changelog against the code, no Critical or Required. Optional 1 ("prints nothing to change" only when in step) fixed; Optional 3 (changelog lacks "since 0.1.0") fixed; Optional 2 ("no new session needed" unbacked) kept with its reason (agents and block unchanged); Nit (non-maintainers can ignore) answered by the opening paragraph. Tag `v0.2.1` on request.
+**Verification:** transcripts read by `log-reader`; the section 13 entry.
+
+**Dependencies:** Checkpoint B. **Files:** `spec/SPEC-model-routing.md` (section 13), `tasks/todo.md`. **Scope:** M.
+
+## Task 6: release 0.3.0
+
+**Description:** Version `0.3.0` in `pyproject.toml`, `uv.lock` and every README `v=`; `## Unreleased` becomes `## 0.3.0 (<date>)`; `tasks/release-0.3.0.md` for users (the judge, how to ask, cost, add the binding row, the files the update rewrites, new session needed) checked by `reviewer`; archive check; annotated tag `v0.3.0` when asked; publish commands handed over.
+
+**Acceptance criteria:**
+- [ ] `make check` green with `0.3.0`; release notes reviewed; archive holds only runtime files.
 
 **Verification:** `make check`; `git archive HEAD | tar -t`.
 
-**Dependencies:** Checkpoint A. **Files:** `pyproject.toml`, `README.md`, `CHANGELOG.md`, `tasks/release-0.2.1.md`. **Scope:** S.
+**Dependencies:** Task 5. **Files:** `pyproject.toml`, `uv.lock`, `README.md`, `CHANGELOG.md`, `tasks/release-0.3.0.md`. **Scope:** S.
